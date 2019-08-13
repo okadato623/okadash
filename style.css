@@ -11,9 +11,12 @@ body {
   height: 100%;
   overflow: hidden;
 }
-.main-content {
+#main-content {
   overflow: none;
   white-space: nowrap;
+  display: grid;
+  grid-template-rows: 40% 60%; /* configured by settings */
+  grid-template-columns: 40% 60%; /* settings / (100 - settings) ÷ small */
   height: 100%;
   margin: 0;
   padding: 0;
@@ -29,29 +32,22 @@ body {
   height: 100%;
 }
 .large {
-  display: inline-block;
-  height: 100%;
-  width: 37%;
-  min-width: 280px;
+  grid-row: 1 / 100;
+  grid-column: 1 / 2;
   border: solid;
   border-width: thin;
+  resize: horizontal;
+  overflow: hidden;
 }
 .normal {
-  display: inline-block;
-  vertical-align: top;
-  height: 40%;
-  width: 63%;
-  min-width: 280px;
+  grid-row: 1 / 2;
+  grid-column: 2 / 100;
   border: solid;
   border-width: thin;
+  resize: vertical;
+  overflow: hidden;
 }
 .small {
-  position: relative;
-  display: inline-block;
-  height: 59.9%;
-  width: 21%;
-  left: -63.1%;
-  min-width: 180px;
   border: solid;
   border-width: thin;
 }

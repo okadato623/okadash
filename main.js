@@ -9,6 +9,8 @@ const store = new Store();
 const json = loadSettings();
 const menuModule = require("./menu");
 let uniqueIndex = 0;
+const configWidth = json.contents[0].width;
+const configHeight = json.contents[1].height;
 
 // initialize function
 initialize();
@@ -21,12 +23,8 @@ function initialize() {
   // create menu bar
   initializeMenu(menuModule.menuTemplate);
 
-  const contents = json.contents;
-
-  // modify layout if sets in setting
-  modifyLayoutFromSettings(contents);
-
   // create div elements
+  const contents = json.contents;
   contents.forEach(function(content, index) {
     initializeDiv(content["style"], content["size"], content["url"], index);
   });
@@ -67,7 +65,7 @@ function generateMenuItemForSmallBlock() {
     submenu: []
   });
   const nameAndUrls = getAdditionalPainInfo(json.url_options);
-  const additionalPainMenuItems = generateOtherWorkspaceMenuItems(nameAndUrls);
+  const additionalPainMenuItems = generateAdditionalPainMenuItems(nameAndUrls);
 
   additionalPainMenuItems.forEach(function(owsMenuItem) {
     menuItem.submenu.append(owsMenuItem);
@@ -96,12 +94,12 @@ function generateSettingsMenu() {
 
   return menuItem;
 }
-function generateOtherWorkspaceMenuItems(nameAndUrls) {
+function generateAdditionalPainMenuItems(nameAndUrls) {
   const additionalPainMenuItems = nameAndUrls.map(function(nameAndUrl) {
     return new MenuItem({
       label: nameAndUrl["name"],
       click() {
-        loadWorkspace(nameAndUrl["url"]);
+        loadAdditionalPage(nameAndUrl["url"]);
       }
     });
   });
@@ -197,8 +195,9 @@ function opendev() {
 function remove(index) {
   let targetTab = document.getElementById(index);
   targetTab.parentNode.removeChild(targetTab);
+  calcWindowSize();
 }
-function loadWorkspace(additionalPage) {
+function loadAdditionalPage(additionalPage) {
   const style = "slack-only-body";
   const size = "small";
   const index = getUniqueIndex();
@@ -232,6 +231,7 @@ function generateTab(size, style, url) {
   divContainer.appendChild(divWebview);
   divWebview.appendChild(divTabToolBar);
   divWebview.appendChild(webview);
+  calcWindowSize();
 
   return {
     divContainer: divContainer,
@@ -240,7 +240,7 @@ function generateTab(size, style, url) {
   };
 }
 function getRootElement() {
-  return document.getElementsByClassName("main-content")[0];
+  return document.getElementById("main-content");
 }
 function createContainerDiv(index, size) {
   let div = document.createElement("div");
@@ -327,7 +327,7 @@ function openFileAndSave() {
       properties: ["openFile"],
       filters: [
         {
-          name: "settings",
+          name: "config",
           extensions: ["json"]
         }
       ]
@@ -390,22 +390,24 @@ function buildJsonObjectFromStoredData() {
 function noSettings() {
   return store.size == 0;
 }
-function modifyLayoutFromSettings(contents) {
-  const style = document.getElementById("modify-from-config");
-  contents.forEach(function(content) {
-    if (content["size"] === "large" && content["width"] !== undefined) {
-      style.innerHTML += `.large { width: ${content["width"]}% !important; }
-                          .normal { width: ${100 - content["width"]}% !important; }
-                          .small { width: ${(100 - content["width"]) / 3}% !important; }
-                          .small { left: -${100.1 - content["width"]}% !important; }`
-    }
-    if (content["size"] === "normal" && content["height"] !== undefined) {
-      style.innerHTML += `.normal { height: ${content["height"]}% !important; }
-                          .small { height: ${99.9 - content["height"]}% !important; }`
-    }
-    // TODO: make small pain num configuable
-    // if (content["size"] === "small" && content["number"] !== undefined) {
-    //   style.innerHTML += `.small { width: ${content["height"]} !important; }`
-    // }
-  });
+function calcWindowSize() {
+  const smallNum = document.getElementsByClassName("small").length;
+  const main = document.getElementById("main-content");
+  let columns = "";
+  let rows = "";
+  if (configWidth !== undefined) {
+    columns = `grid-template-columns: ${configWidth}% ${100 -
+      configWidth}% !important ;`;
+  }
+  if (configHeight !== undefined) {
+    rows = `grid-template-rows: ${configHeight}% ${100 -
+      configHeight}% !important ;`;
+  }
+  if (smallNum !== 0) {
+    const ratio = `${(100 - configWidth) / smallNum}% `.repeat(smallNum);
+    columns = `grid-template-columns: ${configWidth}% ${ratio} !important ;`;
+  } else {
+    rows = `grid-template-rows: 100% !important ;`;
+  }
+  main.style = columns + rows;
 }
