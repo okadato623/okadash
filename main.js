@@ -30,10 +30,15 @@ function initialize() {
   });
 
   // create webviews in div
-  const webviews = getWebviews();
-  webviews.forEach(function(webview, index) {
+  getWebviews().forEach(function(webview, index) {
     webview.addEventListener("dom-ready", function() {
       initializeWebview(webview);
+      if (
+        webview.parentNode.classList.contains("small") &&
+        !webview.previousSibling.hasChildNodes()
+      ) {
+        addButtons(webview.previousSibling, index);
+      }
     });
     // cannot click resize operate pos...
     // webview.onresize = function() {
@@ -50,7 +55,7 @@ function initialize() {
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
   if (hasMultipleWorkspaces()) {
-    const menuItemForWorkspaces = generateMenuItemForSmallBlock();
+    const menuItemForWorkspaces = generateMenuItemForSmallPane();
     menu.append(menuItemForWorkspaces);
   }
 
@@ -68,16 +73,16 @@ function getUniqueIndex() {
 function hasMultipleWorkspaces() {
   return json.url_options;
 }
-function generateMenuItemForSmallBlock() {
+function generateMenuItemForSmallPane() {
   const menuItem = new MenuItem({
-    id: "smallBlock",
-    label: "New",
+    id: "smallPane",
+    label: "Add",
     submenu: []
   });
-  const nameAndUrls = getAdditionalPainInfo(json.url_options);
-  const additionalPainMenuItems = generateAdditionalPainMenuItems(nameAndUrls);
+  const nameAndUrls = getAdditionalPaneInfo(json.url_options);
+  const additionalPaneMenuItems = generateAdditionalPaneMenuItems(nameAndUrls);
 
-  additionalPainMenuItems.forEach(function(owsMenuItem) {
+  additionalPaneMenuItems.forEach(function(owsMenuItem) {
     menuItem.submenu.append(owsMenuItem);
   });
   return menuItem;
@@ -98,8 +103,8 @@ function generateSettingsMenu() {
 
   return menuItem;
 }
-function generateAdditionalPainMenuItems(nameAndUrls) {
-  const additionalPainMenuItems = nameAndUrls.map(function(nameAndUrl) {
+function generateAdditionalPaneMenuItems(nameAndUrls) {
+  const additionalPaneMenuItems = nameAndUrls.map(function(nameAndUrl) {
     return new MenuItem({
       label: nameAndUrl["name"],
       click() {
@@ -108,9 +113,9 @@ function generateAdditionalPainMenuItems(nameAndUrls) {
     });
   });
 
-  return additionalPainMenuItems;
+  return additionalPaneMenuItems;
 }
-function getAdditionalPainInfo(url_options) {
+function getAdditionalPaneInfo(url_options) {
   const nameAndUrls = url_options.map(function(url) {
     const domainName = new URL(url).hostname;
     return { name: domainName, url: new URL(url) };
@@ -124,6 +129,15 @@ function getNumberOfWebviews() {
   return getWebviews().length;
 }
 function initializeWebview(webview, additionalPage = "") {
+  const slackOnlyBodyCss = getSlackOnlyBodyCss();
+  const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
+  const trelloHeaderlessCss = getTrelloHeaderlessCss();
+  selectApplicableCss(webview, {
+    slackOnlyBodyCss,
+    slackChannelAndBodyCss,
+    trelloHeaderlessCss
+  });
+
   addKeyEvents(webview);
   registerToOpenUrl(webview, shell);
   setWebviewAutosize(webview, "on");
@@ -134,17 +148,8 @@ function initializeWebview(webview, additionalPage = "") {
     } else {
       var url = webview.url;
     }
-    loadURL(webview, url);
+    webview.loadURL(url.toString());
   }
-
-  const slackOnlyBodyCss = getSlackOnlyBodyCss();
-  const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
-  const trelloHeaderlessCss = getTrelloHeaderlessCss();
-  selectAplicableCss(webview, {
-    slackOnlyBodyCss,
-    slackChannelAndBodyCss,
-    trelloHeaderlessCss
-  });
 }
 function getSlackOnlyBodyCss() {
   const disableChannelList =
@@ -192,14 +197,44 @@ function addKeyEvents(webview) {
   });
 }
 function opendev() {
-  const webviews = getWebviews();
-  let webview = webviews[1];
+  const webview = getWebviews()[1];
   webview.openDevTools();
 }
 function remove(index) {
-  let targetTab = document.getElementById(index);
-  targetTab.parentNode.removeChild(targetTab);
+  const target = document.getElementById(index);
+  const parent = target.parentNode;
+  parent.removeChild(target);
   calcWindowSize();
+  refreshButtons();
+}
+function moveLeft(index) {
+  const target = document.getElementById(index);
+  target.parentNode.insertBefore(target, target.previousSibling);
+  refreshButtons();
+}
+function moveRight(index) {
+  const target = document.getElementById(index);
+  target.parentNode.insertBefore(target, target.nextSibling.nextSibling);
+  refreshButtons();
+}
+function refreshButtons() {
+  const main = document.getElementById("main-content");
+  for (let i = 0; i < main.children.length; i++) {
+    if (main.children[i].classList.contains("small")) {
+      let target = main.children[i].firstChild;
+      while (target.firstChild) {
+        target.removeChild(target.firstChild);
+      }
+      addButtons(target, target.parentNode.id);
+    }
+  }
+}
+function addButtons(div, index) {
+  if (div.parentNode.previousSibling.classList.contains("small"))
+    div.innerHTML += `<button onclick=moveLeft(${index}) style="font-size: 12px";><</button>`;
+  div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Remove</button>`;
+  if (div.parentNode.nextSibling !== null)
+    div.innerHTML += `<button onclick=moveRight(${index}) style="font-size: 12px";>></button>`;
 }
 function loadAdditionalPage(additionalPage) {
   const style = "slack-only-body";
@@ -212,35 +247,26 @@ function loadAdditionalPage(additionalPage) {
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, additionalPage);
   });
-}
-function addButtons(div, index) {
-  let divForButtons = div.children[0];
-  divForButtons.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Remove</button>`;
+  refreshButtons();
 }
 function initializeDiv(style, size, url = "") {
-  const generatedDivs = generateTab(size, style, url);
-  if (size === "small")
-    addButtons(generatedDivs["divTabToolBar"], getUniqueIndex());
-
+  generateTab(size, style, url);
   incrementUniqueIndex();
 }
 function generateTab(size, style, url) {
   let divContainer = createContainerDiv(getUniqueIndex(), size);
-  let divTabToolBar = createToolBarDiv();
-  let divWebview = createWebviewDiv();
+  let divButtons = createButtonDiv();
   let webview = createWebview(style, url);
   let root = getRootElement();
 
   root.appendChild(divContainer);
-  divContainer.appendChild(divWebview);
-  divWebview.appendChild(divTabToolBar);
-  divWebview.appendChild(webview);
+  divContainer.appendChild(divButtons);
+  divContainer.appendChild(webview);
   calcWindowSize();
 
   return {
     divContainer: divContainer,
-    divTabToolBar: divTabToolBar,
-    divWebview: divWebview
+    divButtons: divButtons
   };
 }
 function getRootElement() {
@@ -252,20 +278,11 @@ function createContainerDiv(index, size) {
   div.className = size;
   return div;
 }
-function createToolBarDiv() {
-  let divTabToolBar = document.createElement("div");
-  divTabToolBar.className = "tab-tool-bar";
-
+function createButtonDiv() {
   let buttonDiv = document.createElement("div");
-  buttonDiv.className = "tab-tool-bar-button";
-  divTabToolBar.appendChild(buttonDiv);
+  buttonDiv.className = "tool-buttons";
 
-  return divTabToolBar;
-}
-function createWebviewDiv() {
-  let divWebview = document.createElement("div");
-  divWebview.className = "webview";
-  return divWebview;
+  return buttonDiv;
 }
 function createWebview(style, url = "") {
   let webview = document.createElement("webview");
@@ -277,17 +294,15 @@ function createWebview(style, url = "") {
 function setWebviewAutosize(webview, autosize) {
   webview.autosize = autosize;
 }
-function selectAplicableCss(
+function selectApplicableCss(
   webview,
   { slackOnlyBodyCss, slackChannelAndBodyCss, trelloHeaderlessCss }
 ) {
-  if (shouldRenderSlackOnlyBody(webview)) {
+  if (webview.id == "slack-only-body") {
     applyCss(webview, slackOnlyBodyCss);
-  }
-  if (shouldRenderSlackChannelAndBody(webview)) {
+  } else if (webview.id == "slack-channel-and-body") {
     applyCss(webview, slackChannelAndBodyCss);
-  }
-  if (shouldRenderTrelloHeaderless(webview)) {
+  } else if (webview.id == "trello-headerless") {
     applyCss(webview, trelloHeaderlessCss);
   }
 }
@@ -302,20 +317,8 @@ function openExternalUrl(event) {
     shell.openExternal(url);
   }
 }
-function shouldRenderSlackOnlyBody(webview) {
-  return webview.id == "slack-only-body";
-}
-function shouldRenderSlackChannelAndBody(webview) {
-  return webview.id == "slack-channel-and-body";
-}
-function shouldRenderTrelloHeaderless(webview) {
-  return webview.id == "trello-headerless";
-}
 function checkUrlIsDefault(webview) {
   return webview.attributes.src.value == "about:blank";
-}
-function loadURL(webview, url) {
-  webview.loadURL(url.toString());
 }
 function applyCss(webview, css) {
   webview.insertCSS(css);
