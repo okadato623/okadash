@@ -20,7 +20,7 @@ body {
 }
 .tab-tool-bar-button {
   display: inline-block;
-  margin-left: 10px;
+  margin-left: 5px;
 }
 #slack-only-body,
 #slack-channel-and-body,
