@@ -199,7 +199,7 @@ function remove(index) {
   targetTab.parentNode.removeChild(targetTab);
 }
 function loadWorkspace(additionalPage) {
-  const style = "body-only";
+  const style = "slack-only-body";
   const size = "small";
   const index = getUniqueIndex();
   initializeDiv(style, size, "", index);
@@ -395,13 +395,13 @@ function modifyLayoutFromSettings(contents) {
   contents.forEach(function(content) {
     if (content["size"] === "large" && content["width"] !== undefined) {
       style.innerHTML += `.large { width: ${content["width"]}% !important; }
-                          .normal { width: ${100 - content["width"]}% !important;  }
-                          .small { width: ${(100 - content["width"]) / 3}% !important;  }
-                          .small { left: -${100.1 - content["width"]}% !important;  }`
+                          .normal { width: ${100 - content["width"]}% !important; }
+                          .small { width: ${(100 - content["width"]) / 3}% !important; }
+                          .small { left: -${100.1 - content["width"]}% !important; }`
     }
     if (content["size"] === "normal" && content["height"] !== undefined) {
       style.innerHTML += `.normal { height: ${content["height"]}% !important; }
-                          .small { height: ${99.9 - content["height"]}% !important;  }`
+                          .small { height: ${99.9 - content["height"]}% !important; }`
     }
     // TODO: make small pain num configuable
     // if (content["size"] === "small" && content["number"] !== undefined) {
