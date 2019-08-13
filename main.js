@@ -9,8 +9,8 @@ const store = new Store();
 const json = loadSettings();
 const menuModule = require("./menu");
 let uniqueIndex = 0;
-const configWidth = json.contents[0].width;
-const configHeight = json.contents[1].height;
+let configWidth = json.contents[0].width;
+let configHeight = json.contents[1].height;
 
 // initialize function
 initialize();
@@ -35,6 +35,16 @@ function initialize() {
     webview.addEventListener("dom-ready", function() {
       initializeWebview(webview);
     });
+    // cannot click resize operate pos...
+    // webview.onresize = function() {
+    //   let width = document.getElementsByClassName("large")[0].offsetWidth;
+    //   let allWidth = document.getElementById("main-content").offsetWidth;
+    //   let height = document.getElementsByClassName("normal")[0].offsetHeight;
+    //   let allHeight = document.getElementById("main-content").offsetHeight;
+    //   configWidth = (width / allWidth) * 100;
+    //   configHeight = (height / allHeight) * 100;
+    //   calcWindowSize();
+    // };
   });
 }
 function initializeMenu(template) {
@@ -78,13 +88,7 @@ function generateSettingsMenu() {
     label: "Settings",
     submenu: [
       {
-        label: "Import Settings",
-        click() {
-          saveSettings();
-        }
-      },
-      {
-        label: "Clear Settings",
+        label: "Reload",
         click() {
           clearStoredSettings();
         }
@@ -211,7 +215,7 @@ function loadAdditionalPage(additionalPage) {
 }
 function addButtons(div, index) {
   let divForButtons = div.children[0];
-  divForButtons.innerHTML += `<button onclick=remove(${index});>Remove</button>`;
+  divForButtons.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Remove</button>`;
 }
 function initializeDiv(style, size, url = "") {
   const generatedDivs = generateTab(size, style, url);

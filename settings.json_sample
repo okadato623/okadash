@@ -1,36 +1,36 @@
 {
   "url_options": [
     "https://twitter.com",
-    "https://[workspace].slack.com",
-    "http://www.clocktab.com/"
+    "https://studist.slack.com",
+    "http://www.clocktab.com"
   ],
   "contents": [
     {
       "style": "slack-channel-and-body",
       "size": "large",
-      "url": "https://[workspace].slack.com",
+      "url": "https://studist.slack.com",
       "width": "40"
     },
     {
       "style": "trello-headerless",
       "size": "normal",
-      "url": "https://trello.com/b/your/board/path",
+      "url": "https://trello.com/b/dwk73iz6/okadash",
       "height": "40"
     },
     {
       "style": "slack-only-body",
       "size": "small",
-      "url": "https://[workspace].slack.com",
+      "url": "https://studist.slack.com"
     },
     {
       "style": "normal",
       "size": "small",
-      "url": "https://twitter.com",
+      "url": "https://twitter.com"
     },
     {
       "style": "normal",
       "size": "small",
-      "url": "http://www.clocktab.com/",
+      "url": "http://www.clocktab.com"
     }
   ]
 }
