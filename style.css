@@ -1,0 +1,77 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.main-content {
+  overflow: none;
+  white-space: nowrap;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.tab-tool-bar-button {
+  display: inline-block;
+  margin-left: 10px;
+}
+#slack-only-body,
+#slack-channel-and-body,
+#trello-headerless,
+#normal {
+  height: 100%;
+}
+.large {
+  display: inline-block;
+  height: 100%;
+  width: 37%;
+  min-width: 280px;
+  border: solid;
+  border-width: thin;
+}
+.normal {
+  display: inline-block;
+  vertical-align: top;
+  height: 40%;
+  width: 63%;
+  min-width: 280px;
+  border: solid;
+  border-width: thin;
+}
+.small {
+  position: relative;
+  display: inline-block;
+  height: 59.9%;
+  width: 21%;
+  left: -63.1%;
+  min-width: 180px;
+  border: solid;
+  border-width: thin;
+}
+.webview {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+}
+.tab-tool-bar {
+  width: 100%;
+  height: 0%;
+  position: absolute;
+  bottom: 30px;
+}
+#menu-bar {
+  width: 100%;
+  padding: 5px;
+  max-height: 30px;
+  background-color: #eff0ee;
+  color: #959595;
+  display: block;
+  white-space: nowrap;
+}
