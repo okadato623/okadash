@@ -141,13 +141,11 @@ function renderByCustomCss(webview) {
   const slackOnlyBodyCss = getSlackOnlyBodyCss();
   const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
   const trelloHeaderlessCss = getTrelloHeaderlessCss();
-  const googleCalendarCss = getGoogleCalendarCss();
 
   selectApplicableCss(webview, {
     slackOnlyBodyCss,
     slackChannelAndBodyCss,
-    trelloHeaderlessCss,
-    googleCalendarCss
+    trelloHeaderlessCss
   });
 }
 function getSlackOnlyBodyCss() {
@@ -183,10 +181,6 @@ function getTrelloHeaderlessCss() {
   const disableBoardHeader = ".board-header { display: none !important; }";
   const adjustHeight = ".board-canvas { margin-top: 10px !important; }";
   return disableHeader + disableBoardHeader + adjustHeight;
-}
-function getGoogleCalendarCss() {
-  const disableSidebar = ".QQYuzf { display: none !important; }";
-  return disableSidebar;
 }
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
@@ -297,8 +291,7 @@ function selectApplicableCss(
   {
     slackOnlyBodyCss,
     slackChannelAndBodyCss,
-    trelloHeaderlessCss,
-    googleCalendarCss
+    trelloHeaderlessCss
   }
 ) {
   if (webview.id == "slack-only-body") {
@@ -307,8 +300,6 @@ function selectApplicableCss(
     applyCss(webview, slackChannelAndBodyCss);
   } else if (webview.id == "trello-headerless") {
     applyCss(webview, trelloHeaderlessCss);
-  } else if (webview.id == "gcalendar") {
-    applyCss(webview, googleCalendarCss);
   }
 }
 function checkUrlIsDefault(webview) {
