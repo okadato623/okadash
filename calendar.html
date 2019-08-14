@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .calendar-title {
+        text-align: center;
+      }
+      .calendar-table {
+        margin: 0 auto;
+      }
+      .today {
+        color: orange;
+      }
+      .sunday {
+        color: red;
+      }
+      .saturday {
+        color: blue;
+      }
+      .cal-td {
+        width: 20px;
+        height: 40px;
+        line-height: 20px;
+        text-align: center;
+      }
+    </style>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="http://www.clocktab.com/sf/_.css"
+    />
+  </head>
+  <body>
+    <table id="content">
+      <tr>
+        <td>
+          <table id="timeTable">
+            <tr>
+              <td id="timeRow">
+                <table>
+                  <tr>
+                    <td id="time"></td>
+                    <td>
+                      <table>
+                        <tr>
+                          <td id="char1"></td>
+                        </tr>
+                        <tr>
+                          <td id="digit1"></td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td>
+                      <table>
+                        <tr>
+                          <td id="char2"></td>
+                        </tr>
+                        <tr>
+                          <td id="digit2"></td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td id="date"></td>
+            </tr>
+            <table class="calendar-table" style="margin-top: 60px">
+              <thead>
+                <tr>
+                  <th>Sun</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                </tr>
+              </thead>
+              <tbody id="js-calendar-body"></tbody>
+            </table>
+          </table>
+        </td>
+      </tr>
+      <tr style="height: 15%">
+        <td></td>
+      </tr>
+    </table>
+
+    <div id="options" style="opacity:1"></div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+      var $window = $(window);
+      var $year = $("#js-year");
+      var $month = $("#js-month");
+      var $tbody = $("#js-calendar-body");
+
+      var today = new Date();
+      var currentYear = today.getFullYear(),
+        currentMonth = today.getMonth();
+
+      $window.on("load", function() {
+        calendarHeading(currentYear, currentMonth);
+        calendarBody(currentYear, currentMonth, today);
+      });
+
+      function calendarBody(year, month, today) {
+        var todayYMFlag =
+          today.getFullYear() === year && today.getMonth() === month
+            ? true
+            : false; // 本日の年と月が表示されるカレンダーと同じか判定
+        var startDate = new Date(year, month, 1); // その月の最初の日の情報
+        var endDate = new Date(year, month + 1, 0); // その月の最後の日の情報
+        var startDay = startDate.getDay(); // その月の最初の日の曜日を取得
+        var endDay = endDate.getDate(); // その月の最後の日の曜日を取得
+        var textSkip = true; // 日にちを埋める用のフラグ
+        var textDate = 1; // 日付(これがカウントアップされます)
+        var tableBody = ""; // テーブルのHTMLを格納する変数
+
+        for (var row = 0; row < 6; row++) {
+          var tr = "<tr>";
+
+          for (var col = 0; col < 7; col++) {
+            if (row === 0 && startDay === col) {
+              textSkip = false;
+            }
+            if (textDate > endDay) {
+              textSkip = true;
+            }
+            var addClass =
+              todayYMFlag && textDate === today.getDate() ? "today" : "";
+            addClass += " cal-td";
+            if (col === 0) {
+              addClass += " sunday";
+            } else if (col === 6) {
+              addClass += " saturday";
+            }
+            var textTd = textSkip ? " " : textDate++;
+            var td = '<td class="' + addClass + '">' + textTd + "</td>";
+            tr += td;
+          }
+          tr += "</tr>";
+          tableBody += tr;
+        }
+        $tbody.html(tableBody);
+      }
+
+      function calendarHeading(year, month) {
+        $year.text(year);
+        $month.text(month + 1);
+      }
+    </script>
+    <script defer src="http://www.clocktab.com/sf/_.js"></script>
+    <script>
+      if (window.navigator.product == "Gecko")
+        document.documentElement.removeAttribute("manifest");
+    </script>
+  </body>
+</html>

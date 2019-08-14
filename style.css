@@ -16,6 +16,12 @@ body {
   margin: 0;
   padding: 0;
 }
+#slack-only-body,
+#slack-channel-and-body,
+#trello-headerless,
+#normal {
+  height: 100%;
+}
 .tool-buttons {
   display: inline-block;
   margin-left: 5px;
@@ -23,12 +29,6 @@ body {
   height: 0%;
   position: absolute;
   bottom: 30px;
-}
-#slack-only-body,
-#slack-channel-and-body,
-#trello-headerless,
-#normal {
-  height: 100%;
 }
 .large {
   grid-row: 1 / 100; /* large enough */
@@ -49,9 +49,4 @@ body {
 .small {
   border: solid;
   border-width: thin;
-}
-.webview {
-  height: 100%;
-  width: 100%;
-  max-width: 100%;
 }
