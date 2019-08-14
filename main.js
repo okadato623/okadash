@@ -54,10 +54,8 @@ function initialize() {
 }
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  if (hasMultipleWorkspaces()) {
-    const menuItemForWorkspaces = generateMenuItemForSmallPane();
-    menu.append(menuItemForWorkspaces);
-  }
+  const menuItemForWorkspaces = generateMenuItemForSmallPane();
+  menu.append(menuItemForWorkspaces);
 
   const settingsMenu = generateSettingsMenu();
   menu.append(settingsMenu);
@@ -70,13 +68,10 @@ function incrementUniqueIndex() {
 function getUniqueIndex() {
   return uniqueIndex;
 }
-function hasMultipleWorkspaces() {
-  return json.url_options;
-}
 function generateMenuItemForSmallPane() {
   const menuItem = new MenuItem({
     id: "smallPane",
-    label: "Add",
+    label: "Open",
     submenu: []
   });
   const nameAndUrls = getAdditionalPaneInfo(json.url_options);
@@ -196,10 +191,6 @@ function addKeyEvents(webview) {
     }
   });
 }
-function opendev() {
-  const webview = getWebviews()[1];
-  webview.openDevTools();
-}
 function remove(index) {
   const target = document.getElementById(index);
   const parent = target.parentNode;
@@ -232,7 +223,7 @@ function refreshButtons() {
 function addButtons(div, index) {
   if (div.parentNode.previousSibling.classList.contains("small"))
     div.innerHTML += `<button onclick=moveLeft(${index}) style="font-size: 12px";><</button>`;
-  div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Remove</button>`;
+  div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
   if (div.parentNode.nextSibling !== null)
     div.innerHTML += `<button onclick=moveRight(${index}) style="font-size: 12px";>></button>`;
 }
@@ -323,9 +314,6 @@ function checkUrlIsDefault(webview) {
 function applyCss(webview, css) {
   webview.insertCSS(css);
 }
-function saveSettings() {
-  openFileAndSave();
-}
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
   remote.dialog.showOpenDialog(
@@ -376,7 +364,7 @@ function clearStoredSettings() {
 }
 function loadSettings() {
   if (noSettings()) {
-    saveSettings();
+    openFileAndSave();
     return;
   }
 
@@ -384,7 +372,6 @@ function loadSettings() {
 }
 function buildJsonObjectFromStoredData() {
   let jsonObj = {
-    url: store.get("url"),
     url_options: store.get("url_options"),
     contents: store.get("contents")
   };

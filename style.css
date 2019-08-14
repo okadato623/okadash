@@ -31,16 +31,16 @@ body {
   height: 100%;
 }
 .large {
-  grid-row: 1 / 100;
+  grid-row: 1 / 100; /* large enough */
   grid-column: 1 / 2;
   border: solid;
   border-width: thin;
   resize: horizontal;
   overflow: hidden;
 }
-.normal {
+.medium {
   grid-row: 1 / 2;
-  grid-column: 2 / 100;
+  grid-column: 2 / 100; /* large enough */
   border: solid;
   border-width: thin;
   resize: vertical;
@@ -54,13 +54,4 @@ body {
   height: 100%;
   width: 100%;
   max-width: 100%;
-}
-#menu-bar {
-  width: 100%;
-  padding: 5px;
-  max-height: 30px;
-  background-color: #eff0ee;
-  color: #959595;
-  display: block;
-  white-space: nowrap;
 }
