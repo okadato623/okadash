@@ -7,7 +7,7 @@ const store = new Store();
 
 // global variables
 const json = loadSettings();
-const menuModule = require("./menu");
+const menu = require("./menu");
 let uniqueIndex = 0;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
@@ -21,12 +21,12 @@ function initialize() {
   }
 
   // create menu bar
-  initializeMenu(menuModule.menuTemplate);
+  initializeMenu(menu.menuTemplate);
 
   // create div elements
   const contents = json.contents;
-  contents.forEach(function(content, index) {
-    initializeDiv(content["style"], content["size"], content["url"], index);
+  contents.forEach(function(content) {
+    initializeDiv(content["style"], content["size"], content["url"]);
   });
 
   // create webviews in div
@@ -124,15 +124,7 @@ function getNumberOfWebviews() {
   return getWebviews().length;
 }
 function initializeWebview(webview, additionalPage = "") {
-  const slackOnlyBodyCss = getSlackOnlyBodyCss();
-  const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
-  const trelloHeaderlessCss = getTrelloHeaderlessCss();
-  selectApplicableCss(webview, {
-    slackOnlyBodyCss,
-    slackChannelAndBodyCss,
-    trelloHeaderlessCss
-  });
-
+  renderByCustomCss(webview);
   addKeyEvents(webview);
   registerToOpenUrl(webview, shell);
   setWebviewAutosize(webview, "on");
@@ -145,6 +137,17 @@ function initializeWebview(webview, additionalPage = "") {
     }
     webview.loadURL(url.toString());
   }
+}
+function renderByCustomCss(webview) {
+  const slackOnlyBodyCss = getSlackOnlyBodyCss();
+  const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
+  const trelloHeaderlessCss = getTrelloHeaderlessCss();
+
+  selectApplicableCss(webview, {
+    slackOnlyBodyCss,
+    slackChannelAndBodyCss,
+    trelloHeaderlessCss
+  });
 }
 function getSlackOnlyBodyCss() {
   const disableChannelList =
@@ -230,8 +233,7 @@ function addButtons(div, index) {
 function loadAdditionalPage(additionalPage) {
   const style = "slack-only-body";
   const size = "small";
-  const index = getUniqueIndex();
-  initializeDiv(style, size, "", index);
+  initializeDiv(style, size, "");
 
   const webview = getWebviews()[getNumberOfWebviews() - 1];
   webview.id = style;
