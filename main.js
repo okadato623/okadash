@@ -142,11 +142,13 @@ function renderByCustomCss(webview) {
   const slackOnlyBodyCss = getSlackOnlyBodyCss();
   const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
   const trelloHeaderlessCss = getTrelloHeaderlessCss();
+  const googleCalendarCss = getGoogleCalendarCss();
 
   selectApplicableCss(webview, {
     slackOnlyBodyCss,
     slackChannelAndBodyCss,
-    trelloHeaderlessCss
+    trelloHeaderlessCss,
+    googleCalendarCss
   });
 }
 function getSlackOnlyBodyCss() {
@@ -183,6 +185,10 @@ function getTrelloHeaderlessCss() {
   const adjustHeight = ".board-canvas { margin-top: 10px !important; }";
   return disableHeader + disableBoardHeader + adjustHeight;
 }
+function getGoogleCalendarCss() {
+  const disableSidebar = ".QQYuzf { display: none !important; }";
+  return disableSidebar;
+}
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
     if (input.meta && input.key === "[" && webview.canGoBack()) {
@@ -213,15 +219,15 @@ function moveRight(index) {
 }
 function refreshButtons() {
   const main = document.getElementById("main-content");
-  for (let i = 0; i < main.children.length; i++) {
-    if (main.children[i].classList.contains("small")) {
-      let target = main.children[i].firstChild;
-      while (target.firstChild) {
-        target.removeChild(target.firstChild);
-      }
-      addButtons(target, target.parentNode.id);
+  const panes = Array.from(main.children);
+  panes.forEach(function(child) {
+    if (!child.classList.contains("small")) return;
+    const target = child.firstChild;
+    while (target.firstChild) {
+      target.removeChild(target.firstChild);
     }
-  }
+    addButtons(target, target.parentNode.id);
+  });
 }
 function addButtons(div, index) {
   if (div.parentNode.previousSibling.classList.contains("small"))
@@ -289,7 +295,12 @@ function setWebviewAutosize(webview, autosize) {
 }
 function selectApplicableCss(
   webview,
-  { slackOnlyBodyCss, slackChannelAndBodyCss, trelloHeaderlessCss }
+  {
+    slackOnlyBodyCss,
+    slackChannelAndBodyCss,
+    trelloHeaderlessCss,
+    googleCalendarCss
+  }
 ) {
   if (webview.id == "slack-only-body") {
     applyCss(webview, slackOnlyBodyCss);
@@ -297,6 +308,8 @@ function selectApplicableCss(
     applyCss(webview, slackChannelAndBodyCss);
   } else if (webview.id == "trello-headerless") {
     applyCss(webview, trelloHeaderlessCss);
+  } else if (webview.id == "gcalendar") {
+    applyCss(webview, googleCalendarCss);
   }
 }
 function registerToOpenUrl(webview, shell) {
