@@ -126,6 +126,7 @@ function getNumberOfWebviews() {
 function initializeWebview(webview, additionalPage = "") {
   renderByCustomCss(webview);
   addKeyEvents(webview);
+  registerToOpenUrl(webview, shell);
   setWebviewAutosize(webview, "on");
 
   if (checkUrlIsDefault(webview)) {
@@ -300,6 +301,17 @@ function selectApplicableCss(
     applyCss(webview, slackChannelAndBodyCss);
   } else if (webview.id == "trello-headerless") {
     applyCss(webview, trelloHeaderlessCss);
+  }
+}
+function registerToOpenUrl(webview, shell) {
+  // Hack: remove EventListener if already added	
+  webview.removeEventListener("new-window", openExternalUrl);
+  webview.addEventListener("new-window", openExternalUrl);
+}
+function openExternalUrl(event) {
+  const url = event.url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    shell.openExternal(url);
   }
 }
 function checkUrlIsDefault(webview) {
