@@ -8,21 +8,23 @@
       .calendar-table {
         margin: 0 auto;
       }
-      .today {
-        color: orange;
-      }
-      .sunday {
-        color: red;
-      }
-      .saturday {
-        color: blue;
-      }
       .cal-td {
+        color: #aaa;
         font-size: 24px;
         width: 35px;
         height: 40px;
         line-height: 20px;
         text-align: center;
+      }
+      .today {
+        color: #000 !important;
+        text-decoration: overline underline;
+      }
+      .sunday {
+        color: #faa;
+      }
+      .saturday {
+        color: #aaf;
       }
     </style>
     <meta
@@ -40,6 +42,27 @@
     <table id="content">
       <tr>
         <td>
+          <a
+            class="weatherwidget-io"
+            href="https://forecast7.com/en/35d69139d69/tokyo/"
+            data-label_1="TOKYO"
+            data-label_2="WEATHER"
+            data-days="3"
+            style="width: 316px; margin-bottom: 30px"
+            >TOKYO WEATHER</a
+          >
+          <script>
+            !(function(d, s, id) {
+              var js,
+                fjs = d.getElementsByTagName(s)[0];
+              if (!d.getElementById(id)) {
+                js = d.createElement(s);
+                js.id = id;
+                js.src = "https://weatherwidget.io/js/widget.min.js";
+                fjs.parentNode.insertBefore(js, fjs);
+              }
+            })(document, "script", "weatherwidget-io-js");
+          </script>
           <table id="timeTable">
             <tr>
               <td id="timeRow">
@@ -73,7 +96,7 @@
             <tr>
               <td id="date"></td>
             </tr>
-            <table class="calendar-table" style="margin-top: 60px">
+            <table class="calendar-table" style="margin-top: 30px">
               <tbody id="js-calendar-body"></tbody>
             </table>
           </table>
@@ -115,7 +138,7 @@
         var textDate = 1; // 日付(これがカウントアップされます)
         var tableBody = ""; // テーブルのHTMLを格納する変数
 
-        for (var row = 0; row < 6; row++) {
+        for (var row = 0; row < 5; row++) {
           var tr = "<tr>";
 
           for (var col = 0; col < 7; col++) {
