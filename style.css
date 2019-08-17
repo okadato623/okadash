@@ -29,6 +29,7 @@ body {
   height: 0%;
   position: absolute;
   bottom: 30px;
+  z-index: 1;
 }
 .large {
   grid-row: 1 / 100; /* large enough */
@@ -76,9 +77,6 @@ body {
   position: absolute;
   cursor: row-resize;
 }
-.terminal,
-.xterm-viewport,
-.xterm-screen {
-  width: 100%;
+.terminal {
   height: 100%;
 }
