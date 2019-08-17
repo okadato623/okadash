@@ -76,3 +76,9 @@ body {
   position: absolute;
   cursor: row-resize;
 }
+.terminal,
+.xterm-viewport,
+.xterm-screen {
+  width: 100%;
+  height: 100%;
+}
