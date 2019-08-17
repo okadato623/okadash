@@ -4,6 +4,10 @@ var { isMac, app, Menu, MenuItem } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
+const json = loadSettings();
+const menu = require("./menu");
+let configWidth = json.contents[0].width;
+let configHeight = json.contents[1].height;
 
 // for xterm
 const pty = require("node-pty");
@@ -13,14 +17,13 @@ const ptyProcess = pty.spawn(xtshell, [], {
   env: process.env
 });
 Terminal.applyAddon(fit);
-var xterm = new Terminal({});
+json.contents.forEach(function(content) {
+  if (content.style === "xterm") fontSize = content.fontSize;
+});
+var xterm = new Terminal({
+  fontSize: `${fontSize}`
+});
 xterm.isOpen = false;
-
-// global variables
-const json = loadSettings();
-const menu = require("./menu");
-let configWidth = json.contents[0].width;
-let configHeight = json.contents[1].height;
 
 // initialize function
 initialize();
