@@ -12,7 +12,7 @@ let configHeight = json.contents[1].height;
 // for xterm
 const pty = require("node-pty");
 const xtshell = process.env["SHELL"];
-const ptyProcess = pty.spawn(xtshell, [], {
+let ptyProcess = pty.spawn(xtshell, [], {
   cwd: process.cwd(),
   env: process.env
 });
@@ -126,8 +126,8 @@ $(document).mouseup(function(e) {
 });
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  const menuItemForWorkspaces = generateMenuItemForSmallPane();
-  menu.append(menuItemForWorkspaces);
+  const menuItemForSmallPace = generateMenuItemForSmallPane();
+  menu.append(menuItemForSmallPace);
 
   const settingsMenu = generateSettingsMenu();
   menu.append(settingsMenu);
@@ -143,8 +143,8 @@ function generateMenuItemForSmallPane() {
   const nameAndUrls = getAdditionalPaneInfo(json.url_options);
   const additionalPaneMenuItems = generateAdditionalPaneMenuItems(nameAndUrls);
 
-  additionalPaneMenuItems.forEach(function(owsMenuItem) {
-    menuItem.submenu.append(owsMenuItem);
+  additionalPaneMenuItems.forEach(function(apMenuItem) {
+    menuItem.submenu.append(apMenuItem);
   });
   return menuItem;
 }
@@ -168,6 +168,7 @@ function generateAdditionalPaneMenuItems(nameAndUrls) {
   const additionalPaneMenuItems = nameAndUrls.map(function(nameAndUrl) {
     return new MenuItem({
       label: nameAndUrl["name"],
+      accelerator: `Command+${nameAndUrl["index"] + 1}`,
       click() {
         loadAdditionalPage(nameAndUrl["url"]);
       }
@@ -177,9 +178,9 @@ function generateAdditionalPaneMenuItems(nameAndUrls) {
   return additionalPaneMenuItems;
 }
 function getAdditionalPaneInfo(url_options) {
-  const nameAndUrls = url_options.map(function(url) {
-    const domainName = new URL(url).hostname;
-    return { name: domainName, url: new URL(url) };
+  const nameAndUrls = url_options.map(function(url, index) {
+    let dispName = url.split("/").slice(-1)[0]; // 最後の / 以降を取得
+    return { name: dispName, url: new URL(url), index: index };
   });
   return nameAndUrls;
 }
@@ -191,7 +192,7 @@ function getNumberOfWebviews() {
 }
 function initializeWebview(webview, additionalPage = "") {
   renderByCustomCss(webview);
-  addKeyEvents(webview);
+  if (webview.src !== "about:blank") addKeyEvents(webview);
   registerToOpenUrl(webview, shell);
   setWebviewAutosize(webview, "on");
 
@@ -251,12 +252,9 @@ function getTrelloHeaderlessCss() {
 }
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
-    if (input.meta && input.key === "[" && webview.canGoBack()) {
-      webview.goBack();
-    }
-    // NOTE: canGoForward() and goForward() do not work somewhy....
-    if (input.meta && input.key === "]" && webview.canGoForward()) {
-      webview.goForward();
+    if (input.meta && input.key === "w") {
+      if (webview.parentNode.classList.contains("small"))
+        remove(webview.parentNode.id);
     }
   });
 }
@@ -315,16 +313,23 @@ function getPaneNum() {
   return $(".large").length + $(".medium").length + $(".small").length;
 }
 function loadAdditionalPage(additionalPage) {
-  const style = "slack-only-body";
-  const size = "small";
-  initializeDiv(style, size, "");
+  if (additionalPage.href === "http://xterm/") {
+    if (xterm.isOpen) return;
+    var style = "xterm";
+    const size = "small";
+    initializeDiv(style, size, "");
+  } else {
+    var style = "slack-only-body";
+    const size = "small";
+    initializeDiv(style, size, "");
 
-  const webview = getWebviews()[getNumberOfWebviews() - 1];
-  webview.id = style;
-  webview.addEventListener("dom-ready", function() {
-    initializeWebview(webview, additionalPage);
-  });
-  refreshButtons();
+    const webview = getWebviews()[getNumberOfWebviews() - 1];
+    webview.id = style;
+    webview.addEventListener("dom-ready", function() {
+      initializeWebview(webview, additionalPage);
+    });
+    refreshButtons();
+  }
 }
 function initializeDiv(style, size, url = "") {
   generatePane(size, style, url);
@@ -345,6 +350,13 @@ function generatePane(size, style, url) {
   calcWindowSize();
 }
 function createXtermPane() {
+  ptyProcess = pty.spawn(xtshell, [], {
+    cwd: process.cwd(),
+    env: process.env
+  });
+  xterm = new Terminal({
+    fontSize: `${fontSize}`
+  });
   xterm.open(document.getElementById(getPaneNum() - 1));
   xterm.isOpen = true;
   xterm.on("data", data => {
@@ -358,6 +370,7 @@ function createXtermPane() {
 function closeXtermPane() {
   const target = document.getElementsByClassName("terminal")[0];
   remove(target.parentNode.id);
+  xterm.isOpen = false;
 }
 function generateDraggableBar(size) {
   let divBar = document.createElement("div");
@@ -406,7 +419,10 @@ function registerToOpenUrl(webview, shell) {
 }
 function openExternalUrl(event) {
   const url = event.url;
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://" || url.startsWith("file://"))
+  ) {
     shell.openExternal(url);
   }
 }
