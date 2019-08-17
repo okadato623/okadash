@@ -8,7 +8,6 @@ const store = new Store();
 // global variables
 const json = loadSettings();
 const menu = require("./menu");
-let uniqueIndex = 0;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
@@ -120,12 +119,6 @@ function initializeMenu(template) {
   menu.append(settingsMenu);
 
   Menu.setApplicationMenu(menu);
-}
-function incrementUniqueIndex() {
-  uniqueIndex += 1;
-}
-function getUniqueIndex() {
-  return uniqueIndex;
 }
 function generateMenuItemForSmallPane() {
   const menuItem = new MenuItem({
@@ -256,18 +249,32 @@ function addKeyEvents(webview) {
 function remove(index) {
   const target = document.getElementById(index);
   const parent = target.parentNode;
+  const smallPanes = Array.from(document.getElementsByClassName("small"));
+  smallPanes.forEach(function(pane) {
+    if (pane.id > index) pane.id = pane.id - 1;
+  });
   parent.removeChild(target);
   calcWindowSize();
   refreshButtons();
 }
 function moveLeft(index) {
   const target = document.getElementById(index);
-  target.parentNode.insertBefore(target, target.previousSibling);
+  const prev = document.getElementById(index - 1);
+  const tmp = target.id;
+  target.id = prev.id;
+  target.style.order = prev.style.order;
+  prev.id = tmp;
+  prev.style.order = tmp;
   refreshButtons();
 }
 function moveRight(index) {
   const target = document.getElementById(index);
-  target.parentNode.insertBefore(target, target.nextSibling.nextSibling);
+  const next = document.getElementById(index + 1);
+  const tmp = target.id;
+  target.id = next.id;
+  target.style.order = next.style.order;
+  next.id = tmp;
+  next.style.order = tmp;
   refreshButtons();
 }
 function refreshButtons() {
@@ -283,11 +290,14 @@ function refreshButtons() {
   });
 }
 function addButtons(div, index) {
-  if (div.parentNode.previousSibling.classList.contains("small"))
+  if (index != 2)
     div.innerHTML += `<button onclick=moveLeft(${index}) style="font-size: 12px";><</button>`;
   div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
-  if (div.parentNode.nextSibling !== null)
+  if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=moveRight(${index}) style="font-size: 12px";>></button>`;
+}
+function getPaneNum() {
+  return $(".large").length + $(".medium").length + $(".small").length;
 }
 function loadAdditionalPage(additionalPage) {
   const style = "slack-only-body";
@@ -302,13 +312,11 @@ function loadAdditionalPage(additionalPage) {
   refreshButtons();
 }
 function initializeDiv(style, size, url = "") {
-  generateTab(size, style, url);
+  generatePane(size, style, url);
   if (size === "large" || size === "medium") generateDraggableBar(size);
-
-  incrementUniqueIndex();
 }
-function generateTab(size, style, url) {
-  let divContainer = createContainerDiv(getUniqueIndex(), size);
+function generatePane(size, style, url) {
+  let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
   let webview = createWebview(style, url);
 
@@ -316,21 +324,17 @@ function generateTab(size, style, url) {
   divContainer.appendChild(divButtons);
   divContainer.appendChild(webview);
   calcWindowSize();
-
-  return {
-    divContainer: divContainer,
-    divButtons: divButtons
-  };
 }
 function generateDraggableBar(size) {
   let divBar = document.createElement("div");
   divBar.id = size === "large" ? "dragbar-vertical" : "dragbar-horizontal";
   document.getElementById("main-content").appendChild(divBar);
 }
-function createContainerDiv(index, size) {
+function createContainerDiv(size) {
   let div = document.createElement("div");
-  div.id = index;
+  div.id = getPaneNum();
   div.className = size;
+  div.style.order = getPaneNum();
   return div;
 }
 function createButtonDiv() {
@@ -362,7 +366,7 @@ function selectApplicableCss(
   }
 }
 function registerToOpenUrl(webview, shell) {
-  // Hack: remove EventListener if already added	
+  // Hack: remove EventListener if already added
   webview.removeEventListener("new-window", openExternalUrl);
   webview.addEventListener("new-window", openExternalUrl);
 }
