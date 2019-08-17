@@ -40,18 +40,77 @@ function initialize() {
         addButtons(webview.previousSibling, index);
       }
     });
-    // cannot click resize operate pos...
-    // webview.onresize = function() {
-    //   let width = document.getElementsByClassName("large")[0].offsetWidth;
-    //   let allWidth = document.getElementById("main-content").offsetWidth;
-    //   let height = document.getElementsByClassName("normal")[0].offsetHeight;
-    //   let allHeight = document.getElementById("main-content").offsetHeight;
-    //   configWidth = (width / allWidth) * 100;
-    //   configHeight = (height / allHeight) * 100;
-    //   calcWindowSize();
-    // };
+    webview.onresize = function() {
+      let width = document.getElementsByClassName("large")[0].offsetWidth;
+      let allWidth = document.getElementById("main-content").offsetWidth;
+      let height = document.getElementsByClassName("medium")[0].offsetHeight;
+      let allHeight = document.getElementById("main-content").offsetHeight;
+      configWidth = (width / allWidth) * 100;
+      configHeight = (height / allHeight) * 100;
+      calcWindowSize();
+    };
   });
 }
+var i = 0;
+var dragging_vertical = false;
+var dragging_horizontal = false;
+$("#dragbar-vertical").mousedown(function(e) {
+  e.preventDefault();
+  $("#main-content").css("pointer-events", "none");
+
+  dragging_vertical = true;
+  var main = $("#main-content");
+  var ghostbar = $("<div>", {
+    id: "ghostbar-vertical",
+    css: {
+      height: main.outerHeight(),
+      top: main.offset().top,
+      left: main.offset().left
+    }
+  }).appendTo("body");
+
+  $(document).mousemove(function(e) {
+    ghostbar.css("left", e.pageX + 2);
+  });
+});
+
+$("#dragbar-horizontal").mousedown(function(e) {
+  e.preventDefault();
+  $("#main-content").css("pointer-events", "none");
+
+  dragging_horizontal = true;
+  var main = $(".medium");
+  var ghostbar = $("<div>", {
+    id: "ghostbar-horizontal",
+    css: {
+      width: main.outerWidth(),
+      top: main.offset().top,
+      left: main.offset().left
+    }
+  }).appendTo("body");
+
+  $(document).mousemove(function(e) {
+    ghostbar.css("top", e.pageY + 2);
+  });
+});
+
+$(document).mouseup(function(e) {
+  if (dragging_vertical) {
+    $(".large").css("width", e.pageX + 2);
+    $("#main-content").css("left", e.pageX + 2);
+    $("#ghostbar-vertical").remove();
+    $(document).unbind("mousemove");
+    dragging_vertical = false;
+  }
+  if (dragging_horizontal) {
+    $(".medium").css("height", e.pageY + 2);
+    $("#main-content").css("left", e.pageY + 2);
+    $("#ghostbar-horizontal").remove();
+    $(document).unbind("mousemove");
+    dragging_horizontal = false;
+  }
+});
+
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
   const menuItemForWorkspaces = generateMenuItemForSmallPane();
@@ -243,15 +302,16 @@ function loadAdditionalPage(additionalPage) {
 }
 function initializeDiv(style, size, url = "") {
   generateTab(size, style, url);
+  if (size === "large" || size === "medium") generateDraggableBar(size);
+
   incrementUniqueIndex();
 }
 function generateTab(size, style, url) {
   let divContainer = createContainerDiv(getUniqueIndex(), size);
   let divButtons = createButtonDiv();
   let webview = createWebview(style, url);
-  let root = getRootElement();
 
-  root.appendChild(divContainer);
+  document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
   divContainer.appendChild(webview);
   calcWindowSize();
@@ -261,8 +321,10 @@ function generateTab(size, style, url) {
     divButtons: divButtons
   };
 }
-function getRootElement() {
-  return document.getElementById("main-content");
+function generateDraggableBar(size) {
+  let divBar = document.createElement("div");
+  divBar.id = size === "large" ? "dragbar-vertical" : "dragbar-horizontal";
+  document.getElementById("main-content").appendChild(divBar);
 }
 function createContainerDiv(index, size) {
   let div = document.createElement("div");
@@ -288,11 +350,7 @@ function setWebviewAutosize(webview, autosize) {
 }
 function selectApplicableCss(
   webview,
-  {
-    slackOnlyBodyCss,
-    slackChannelAndBodyCss,
-    trelloHeaderlessCss
-  }
+  { slackOnlyBodyCss, slackChannelAndBodyCss, trelloHeaderlessCss }
 ) {
   if (webview.id == "slack-only-body") {
     applyCss(webview, slackOnlyBodyCss);
@@ -388,12 +446,12 @@ function calcWindowSize() {
       configWidth}% !important ;`;
   }
   if (configHeight !== undefined) {
-    rows = `grid-template-rows: ${configHeight}% ${100 -
+    rows = `grid-template-rows: ${configHeight}% 0% ${100 -
       configHeight}% !important ;`;
   }
   if (smallNum !== 0) {
     const ratio = `${(100 - configWidth) / smallNum}% `.repeat(smallNum);
-    columns = `grid-template-columns: ${configWidth}% ${ratio} !important ;`;
+    columns = `grid-template-columns: ${configWidth}% 0% ${ratio}  !important ;`;
   } else {
     rows = `grid-template-rows: 100% !important ;`;
   }

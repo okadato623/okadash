@@ -33,20 +33,45 @@ body {
 .large {
   grid-row: 1 / 100; /* large enough */
   grid-column: 1 / 2;
-  border: solid;
-  border-width: thin;
-  resize: horizontal;
-  overflow: hidden;
 }
 .medium {
   grid-row: 1 / 2;
-  grid-column: 2 / 100; /* large enough */
-  border: solid;
-  border-width: thin;
-  resize: vertical;
-  overflow: hidden;
+  grid-column: 3 / 100; /* large enough */
 }
 .small {
+  grid-row: 3 / 100;
   border: solid;
-  border-width: thin;
+  border-width: 1px;
+}
+#dragbar-vertical {
+  grid-row: 1 / 100; /* large enough */
+  grid-column: 2 / 3;
+  position: relative;
+  background-color: black;
+  height: 100%;
+  width: 3px;
+  cursor: col-resize;
+}
+#dragbar-horizontal {
+  grid-row: 2 / 3;
+  grid-column: 3 / 100;
+  position: relative;
+  background-color: black;
+  width: 100%;
+  height: 3px;
+  cursor: row-resize;
+}
+#ghostbar-vertical {
+  width: 2px;
+  background-color: #000;
+  opacity: 0.5;
+  position: absolute;
+  cursor: col-resize;
+}
+#ghostbar-horizontal {
+  height: 2px;
+  background-color: #000;
+  opacity: 0.5;
+  position: absolute;
+  cursor: row-resize;
 }
