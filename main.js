@@ -236,13 +236,22 @@ function getSlackOnlyBodyCss() {
   );
 }
 function getSlackChannelAndBodyCss() {
+  const disableChannelList = ".p-channel_sidebar { width: 160px !important; }";
   const disableTeamHeader =
     ".p-classic_nav__team_header { display: none !important; }";
+  const widenBody =
+    ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }";
   const adjustHeight =
     ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }";
   const adjustLeftPadding =
     ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }";
-  return adjustHeight + disableTeamHeader + adjustLeftPadding;
+  return (
+    disableChannelList +
+    adjustHeight +
+    widenBody +
+    disableTeamHeader +
+    adjustLeftPadding
+  );
 }
 function getTrelloHeaderlessCss() {
   const disableHeader = "#header { display: none !important; }";
