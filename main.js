@@ -5,6 +5,9 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 
+// for xterm
+const pty = require("node-pty");
+
 // global variables
 const json = loadSettings();
 const menu = require("./menu");
@@ -325,7 +328,26 @@ function generatePane(size, style, url) {
     var webview = createWebview(style, url);
     divContainer.appendChild(webview);
   } else {
-    shell.open(url);
+    // Initialize node-pty with an appropriate shell
+    const shell = process.env["SHELL"];
+    const ptyProcess = pty.spawn(shell, [], {
+      cwd: process.cwd(),
+      env: process.env
+    });
+
+    // Initialize xterm.js and attach it to the DOM
+    Terminal.applyAddon(fit);
+    const xterm = new Terminal();
+    xterm.open(document.getElementById("4"));
+    xterm.fit();
+
+    // Setup communication between xterm.js and node-pty
+    xterm.on("data", data => {
+      ptyProcess.write(data);
+    });
+    ptyProcess.on("data", function(data) {
+      xterm.write(data);
+    });
   }
   calcWindowSize();
 }
