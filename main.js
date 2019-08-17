@@ -17,6 +17,7 @@ let ptyProcess = pty.spawn(xtshell, [], {
   env: process.env
 });
 Terminal.applyAddon(fit);
+fontSize = 0;
 json.contents.forEach(function(content) {
   if (content.style === "xterm") fontSize = content.fontSize;
 });

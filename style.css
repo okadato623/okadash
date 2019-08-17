@@ -19,7 +19,8 @@ body {
 #slack-only-body,
 #slack-channel-and-body,
 #trello-headerless,
-#normal {
+#normal,
+.terminal {
   height: 100%;
 }
 .tool-buttons {
@@ -76,7 +77,4 @@ body {
   opacity: 0.5;
   position: absolute;
   cursor: row-resize;
-}
-.terminal {
-  height: 100%;
 }
