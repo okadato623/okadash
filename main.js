@@ -7,6 +7,14 @@ const store = new Store();
 
 // for xterm
 const pty = require("node-pty");
+const xtshell = process.env["SHELL"];
+const ptyProcess = pty.spawn(xtshell, [], {
+  cwd: process.cwd(),
+  env: process.env
+});
+Terminal.applyAddon(fit);
+var xterm = new Terminal({});
+xterm.isOpen = false;
 
 // global variables
 const json = loadSettings();
@@ -21,6 +29,7 @@ function initialize() {
   if (noSettings()) {
     return;
   }
+  calcWindowSize();
 
   // create menu bar
   initializeMenu(menu.menuTemplate);
@@ -39,7 +48,7 @@ function initialize() {
         webview.parentNode.classList.contains("small") &&
         !webview.previousSibling.hasChildNodes()
       ) {
-        addButtons(webview.previousSibling, index);
+        addButtons(webview.previousSibling, webview.parentNode.id);
       }
     });
     webview.onresize = function() {
@@ -112,7 +121,6 @@ $(document).mouseup(function(e) {
     dragging_horizontal = false;
   }
 });
-
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
   const menuItemForWorkspaces = generateMenuItemForSmallPane();
@@ -286,6 +294,7 @@ function refreshButtons() {
   panes.forEach(function(child) {
     if (!child.classList.contains("small")) return;
     const target = child.firstChild;
+    if (target.nextSibling.classList.contains("terminal")) return;
     while (target.firstChild) {
       target.removeChild(target.firstChild);
     }
@@ -324,32 +333,28 @@ function generatePane(size, style, url) {
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  if (style !== "app") {
-    var webview = createWebview(style, url);
-    divContainer.appendChild(webview);
+  if (style === "xterm") {
+    createXtermPane();
   } else {
-    // Initialize node-pty with an appropriate shell
-    const shell = process.env["SHELL"];
-    const ptyProcess = pty.spawn(shell, [], {
-      cwd: process.cwd(),
-      env: process.env
-    });
-
-    // Initialize xterm.js and attach it to the DOM
-    Terminal.applyAddon(fit);
-    const xterm = new Terminal();
-    xterm.open(document.getElementById("4"));
-    xterm.fit();
-
-    // Setup communication between xterm.js and node-pty
-    xterm.on("data", data => {
-      ptyProcess.write(data);
-    });
-    ptyProcess.on("data", function(data) {
-      xterm.write(data);
-    });
+    const webview = createWebview(style, url);
+    divContainer.appendChild(webview);
   }
   calcWindowSize();
+}
+function createXtermPane() {
+  xterm.open(document.getElementById(getPaneNum() - 1));
+  xterm.isOpen = true;
+  xterm.on("data", data => {
+    ptyProcess.write(data);
+    if (data === "") closeXtermPane(); // Ctrl+d
+  });
+  ptyProcess.on("data", function(data) {
+    xterm.write(data);
+  });
+}
+function closeXtermPane() {
+  const target = document.getElementsByClassName("terminal")[0];
+  remove(target.parentNode.id);
 }
 function generateDraggableBar(size) {
   let divBar = document.createElement("div");
@@ -408,6 +413,10 @@ function checkUrlIsDefault(webview) {
 function applyCss(webview, css) {
   webview.insertCSS(css);
 }
+function savePaneSize() {
+  store.set("contents.1.height", configHeight);
+  store.set("contents.0.width", configWidth);
+}
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
   remote.dialog.showOpenDialog(
@@ -430,31 +439,12 @@ function openFileAndSave() {
 }
 function saveJson(jsonPath) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
-  if (!validateJson(settings)) {
-    return null;
-  }
-
   store.set(settings);
-  forceReload();
-}
-function validateJson(jsonObj) {
-  if (!jsonObj.url_options) {
-    alert("jsonObj.url_options is invalid");
-    return false;
-  }
-  if (!jsonObj.contents) {
-    alert("jsonObj.contents is invalid");
-    return false;
-  }
-
-  return true;
-}
-function forceReload() {
   remote.getCurrentWindow().reload();
 }
 function clearStoredSettings() {
   store.clear();
-  forceReload();
+  remote.getCurrentWindow().reload();
 }
 function loadSettings() {
   if (noSettings()) {
@@ -469,9 +459,6 @@ function buildJsonObjectFromStoredData() {
     url_options: store.get("url_options"),
     contents: store.get("contents")
   };
-  if (!validateJson(jsonObj)) {
-    return null;
-  }
 
   return jsonObj;
 }
@@ -479,6 +466,7 @@ function noSettings() {
   return store.size == 0;
 }
 function calcWindowSize() {
+  if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   let columns = "";
@@ -493,9 +481,12 @@ function calcWindowSize() {
   }
   if (smallNum !== 0) {
     const ratio = `${(100 - configWidth) / smallNum}% `.repeat(smallNum);
-    columns = `grid-template-columns: ${configWidth}% 0% ${ratio}  !important ;`;
+    columns = `grid-template-columns: ${configWidth}% 0% ${ratio} !important ;`;
   } else {
-    rows = `grid-template-rows: 100% !important ;`;
+    columns = `grid-template-columns: ${configWidth}% 0% ${100 -
+      configWidth}% !important ;`;
+    rows = `grid-template-rows: 99% 1% !important ;`;
   }
   main.style = columns + rows;
+  if (configWidth !== undefined) savePaneSize();
 }
