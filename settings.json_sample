@@ -1,14 +1,14 @@
 {
   "url_options": [
     "https://twitter.com",
-    "https://studist.slack.com",
+    "https://[workspace].slack.com",
     "http://www.clocktab.com"
   ],
   "contents": [
     {
-      "style": "slack-channel-and-body",
+      "style": "normal",
       "size": "large",
-      "url": "https://studist.slack.com",
+      "url": "https://[workspace].slack.com",
       "width": "40"
     },
     {
@@ -20,7 +20,7 @@
     {
       "style": "slack-only-body",
       "size": "small",
-      "url": "https://studist.slack.com"
+      "url": "https://[workspace].slack.com"
     },
     {
       "style": "normal",
