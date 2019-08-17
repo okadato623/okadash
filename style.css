@@ -42,23 +42,24 @@ body {
   grid-row: 3 / 100;
   border: solid;
   border-width: 1px;
+  border-color: #444;
 }
 #dragbar-vertical {
   grid-row: 1 / 100; /* large enough */
   grid-column: 2 / 3;
   position: relative;
-  background-color: black;
+  background-color: #aaa;
   height: 100%;
-  width: 3px;
+  width: 4px;
   cursor: col-resize;
 }
 #dragbar-horizontal {
   grid-row: 2 / 3;
   grid-column: 3 / 100;
   position: relative;
-  background-color: black;
+  background-color: #aaa;
   width: 100%;
-  height: 3px;
+  height: 4px;
   cursor: row-resize;
 }
 #ghostbar-vertical {
