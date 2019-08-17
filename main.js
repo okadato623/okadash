@@ -318,11 +318,15 @@ function initializeDiv(style, size, url = "") {
 function generatePane(size, style, url) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
-  let webview = createWebview(style, url);
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  divContainer.appendChild(webview);
+  if (style !== "app") {
+    var webview = createWebview(style, url);
+    divContainer.appendChild(webview);
+  } else {
+    shell.open(url);
+  }
   calcWindowSize();
 }
 function generateDraggableBar(size) {
