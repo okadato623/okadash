@@ -43,8 +43,6 @@ function initialize() {
   contents.forEach(function(content) {
     initializeDiv(content["style"], content["size"], content["url"]);
   });
-  const main = document.getElementById("main-content");
-  main.removeChild(main.lastChild);
 
   // create webviews in div
   getWebviews().forEach(function(webview, index) {
@@ -60,8 +58,10 @@ function initialize() {
     webview.onresize = function() {
       const allWidth = document.getElementById("main-content").offsetWidth;
       const allHeight = document.getElementById("main-content").offsetHeight;
-      const largeWidth = document.getElementsByClassName("large")[0].offsetWidth;
-      const mediumHheight = document.getElementsByClassName("medium")[0].offsetHeight;
+      const largeWidth = document.getElementsByClassName("large")[0]
+        .offsetWidth;
+      const mediumHheight = document.getElementsByClassName("medium")[0]
+        .offsetHeight;
       configWidth = (largeWidth / allWidth) * 100;
       configHeight = (mediumHheight / allHeight) * 100;
       calcWindowSize();
@@ -73,14 +73,20 @@ var dragging_vertical = false;
 var dragging_horizontal = false;
 var dragging_vertical_small = false;
 var dragging_id = "";
+var smallWidth = 0;
 $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
   if (this.id === "dragbar-vertical") {
+    dragging_id = "";
     dragging_vertical = true;
   } else {
     dragging_vertical_small = true;
     dragging_id = this.id.replace(/[^0-9]/g, "");
+    smallWidth =
+      (document.getElementById(`${dragging_id}`).clientWidth /
+        document.getElementById("main-content").clientWidth) *
+      100;
   }
   var main = $("#main-content");
   var ghostbar = $("<div>", {
@@ -135,12 +141,13 @@ $(document).mouseup(function(e) {
     const smallPanes = Array.from(document.getElementsByClassName("small"));
     var otherPanesLen = largeWidth;
     var nextPaneLen = largeWidth;
-    smallPanes.forEach(function (pane) {
+    smallPanes.forEach(function(pane) {
       if (pane.id < dragging_id) otherPanesLen += pane.clientWidth;
       if (pane.id <= Number(dragging_id) + 1) nextPaneLen += pane.clientWidth;
     });
     if (e.pageX <= otherPanesLen || e.pageX >= nextPaneLen) return;
     $(`#${dragging_id}`).css("width", e.pageX - otherPanesLen);
+    $(`#${Number(dragging_id) + 1}`).css("width", nextPaneLen - e.pageX);
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical_small = false;
@@ -292,12 +299,25 @@ function addKeyEvents(webview) {
 function remove(index) {
   dragging_id = "";
   const target = document.getElementById(index);
+  const targetBar = document.getElementById(`dvs-${index}`);
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
+  const bars = Array.from(
+    document.getElementsByClassName("dragbar-vertical-small")
+  );
   smallPanes.forEach(function(pane) {
     if (pane.id > index) pane.id = pane.id - 1;
   });
+  bars.forEach(function(bar) {
+    console.log(bar);
+    id = Number(bar.id.replace(/[^0-9]/g, ""));
+    if (id > index) {
+      bar.id = `dvs-${id - 1}`;
+      bar.style = `grid-column: ${(id - 1) * 2} / ${(id - 1) * 2 + 1}`;
+    }
+  });
   parent.removeChild(target);
+  parent.removeChild(targetBar);
   calcWindowSize();
   refreshButtons();
 }
@@ -345,6 +365,7 @@ function getPaneNum() {
   return $(".large").length + $(".medium").length + $(".small").length;
 }
 function loadAdditionalPage(additionalPage) {
+  resetWindowSize();
   if (additionalPage.href === "http://xterm/") {
     if (xterm.isOpen) return;
     var style = "xterm";
@@ -408,12 +429,15 @@ function generateDraggableBar(size) {
   let divBar = document.createElement("div");
   if (size === "large") {
     divBar.id = "dragbar-vertical";
-  } else if (size ==="medium") {
+  } else if (size === "medium") {
     divBar.id = "dragbar-horizontal";
   } else {
     divBar.id = `dvs-${getPaneNum() - 1}`;
     divBar.className = "dragbar-vertical-small";
-    divBar.style = `grid-column: ${(getPaneNum() - 1) * 2} / ${(getPaneNum() - 1) * 2 + 1}`;
+    divBar.style = `grid-column: ${(getPaneNum() - 1) * 2} / ${(getPaneNum() -
+      1) *
+      2 +
+      1}`;
   }
   // divBar.id = size !== "medium" ? "dragbar-vertical" : "dragbar-horizontal";
   document.getElementById("main-content").appendChild(divBar);
@@ -525,6 +549,18 @@ function buildJsonObjectFromStoredData() {
 function noSettings() {
   return store.size == 0;
 }
+function resetWindowSize() {
+  const smallNum = document.getElementsByClassName("small").length;
+  const main = document.getElementById("main-content");
+  ratio =
+    `${configWidth}% 0% ` +
+    `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+  columns = `grid-template-columns: ${ratio} !important ;`;
+  rows = `grid-template-rows: ${configHeight}% 0% ${100 -
+    configHeight}% !important ;`;
+  main.style = columns + rows;
+  dragging_id = "";
+}
 function calcWindowSize() {
   if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
@@ -532,15 +568,28 @@ function calcWindowSize() {
   let columns = "";
   let rows = "";
   if (smallNum !== 0) {
-    if (document.getElementById(`${dragging_id}`) !== null) {
+    const target = document.getElementById(`${dragging_id}`);
+    const next = document.getElementById(`${Number(dragging_id) + 1}`);
+    if (dragging_id !== undefined && dragging_id !== "") {
       let arColumns = main.style["grid-template-columns"].split(" ");
-      var newSmallWidth = document.getElementById(`${dragging_id}`).clientWidth / main.clientWidth * 100;
-      var counterWidth = (100 - configWidth) / smallNum * 2 - newSmallWidth;
-      arColumns[Number(dragging_id) * 2 -2] = `${newSmallWidth}% `;
-      arColumns[Number(dragging_id) * 2] = `${counterWidth}% `;
+      var newSmallWidth = (target.clientWidth / main.clientWidth) * 100;
+      var nextWidth = Math.abs(
+        (next.clientWidth / main.clientWidth) * 100 +
+          (smallWidth - newSmallWidth)
+      );
+      arColumns[Number(dragging_id) * 2 - 2] = `${newSmallWidth}% `;
+      arColumns[Number(dragging_id) * 2] = `${nextWidth}% `;
       ratio = arColumns.join(" ");
+      smallWidth = newSmallWidth;
     } else {
-      ratio = `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+      ratio =
+        `${configWidth}% 0% ` +
+        `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+      const smallPanes = Array.from(document.getElementsByClassName("small"));
+      smallPanes.forEach(function(pane) {
+        pane.style.width = "100%";
+        pane.style.height = "100%";
+      });
     }
     columns = `grid-template-columns: ${ratio} !important ;`;
     rows = `grid-template-rows: ${configHeight}% 0% ${100 -
