@@ -352,6 +352,8 @@ function refreshButtons() {
       target.removeChild(target.firstChild);
     }
     addButtons(target, target.parentNode.id);
+    child.style.width = "100%";
+    child.style.height = "100%";
   });
 }
 function addButtons(div, index) {
