@@ -26,70 +26,29 @@ var xterm = new Terminal({
 });
 xterm.isOpen = false;
 
-// initialize function
 initialize();
 
-function initialize() {
-  if (noSettings()) {
-    return;
-  }
-  calcWindowSize();
-
-  // create menu bar
-  initializeMenu(menu.menuTemplate);
-
-  // create div elements
-  const contents = json.contents;
-  contents.forEach(function(content) {
-    initializeDiv(content["style"], content["size"], content["url"]);
-  });
-
-  // create webviews in div
-  getWebviews().forEach(function(webview, index) {
-    webview.addEventListener("dom-ready", function() {
-      initializeWebview(webview);
-      if (
-        webview.parentNode.classList.contains("small") &&
-        !webview.previousSibling.hasChildNodes()
-      ) {
-        addButtons(webview.previousSibling, webview.parentNode.id);
-      }
-    });
-    webview.onresize = function() {
-      const allWidth = document.getElementById("main-content").offsetWidth;
-      const allHeight = document.getElementById("main-content").offsetHeight;
-      const largeWidth = document.getElementsByClassName("large")[0]
-        .offsetWidth;
-      const mediumHheight = document.getElementsByClassName("medium")[0]
-        .offsetHeight;
-      configWidth = (largeWidth / allWidth) * 100;
-      configHeight = (mediumHheight / allHeight) * 100;
-      calcWindowSize();
-    };
-  });
-}
-var i = 0;
 var dragging_vertical = false;
 var dragging_horizontal = false;
 var dragging_vertical_small = false;
-var dragging_id = "";
+var draggingId = "";
 var smallWidth = 0;
 $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
   if (this.id === "dragbar-vertical") {
-    dragging_id = "";
+    draggingId = "";
     dragging_vertical = true;
   } else {
     dragging_vertical_small = true;
-    dragging_id = this.id.replace(/[^0-9]/g, "");
+    draggingId = this.id.replace(/[^0-9]/g, "");
     smallWidth =
-      (document.getElementById(`${dragging_id}`).clientWidth /
+      (document.getElementById(`${draggingId}`).clientWidth /
         document.getElementById("main-content").clientWidth) *
       100;
   }
-  var main = $("#main-content");
-  var ghostbar = $("<div>", {
+  const main = $("#main-content");
+  const ghostbar = $("<div>", {
     id: "ghostbar-vertical",
     css: {
       height: main.outerHeight(),
@@ -108,8 +67,8 @@ $("#dragbar-horizontal").mousedown(function(e) {
   $("#main-content").css("pointer-events", "none");
 
   dragging_horizontal = true;
-  var main = $(".medium");
-  var ghostbar = $("<div>", {
+  const main = $(".medium");
+  const ghostbar = $("<div>", {
     id: "ghostbar-horizontal",
     css: {
       width: main.outerWidth(),
@@ -141,43 +100,79 @@ $(document).mouseup(function(e) {
     const smallPanes = Array.from(document.getElementsByClassName("small"));
     var otherPanesLen = largeWidth;
     var nextPaneLen = largeWidth;
+
+    // drop可能な範囲を限定
     smallPanes.forEach(function(pane) {
-      if (pane.id < dragging_id) otherPanesLen += pane.clientWidth;
-      if (pane.id <= Number(dragging_id) + 1) nextPaneLen += pane.clientWidth;
+      if (pane.id < draggingId) otherPanesLen += pane.clientWidth;
+      if (pane.id <= Number(draggingId) + 1) nextPaneLen += pane.clientWidth;
     });
     if (e.pageX <= otherPanesLen || e.pageX >= nextPaneLen) return;
-    $(`#${dragging_id}`).css("width", e.pageX - otherPanesLen);
-    $(`#${Number(dragging_id) + 1}`).css("width", nextPaneLen - e.pageX);
+    $(`#${draggingId}`).css("width", e.pageX - otherPanesLen);
+    $(`#${Number(draggingId) + 1}`).css("width", nextPaneLen - e.pageX);
+
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical_small = false;
   }
 });
+
+function initialize() {
+  if (store.size == 0) return;
+
+  initializeMenu(menu.menuTemplate);
+  const contents = json.contents;
+  contents.forEach(function (content) {
+    createPane(content["size"], content["style"], content["url"]);
+  });
+
+  getWebviews().forEach(function (webview, index) {
+    webview.addEventListener("dom-ready", function () {
+      initializeWebview(webview);
+      if (
+        webview.parentNode.classList.contains("small") &&
+        !webview.previousSibling.hasChildNodes()
+      ) {
+        addButtons(webview.previousSibling, webview.parentNode.id);
+      }
+    });
+    webview.onresize = function () {
+      const allWidth = document.getElementById("main-content").offsetWidth;
+      const allHeight = document.getElementById("main-content").offsetHeight;
+      const largeWidth = document.getElementsByClassName("large")[0]
+        .offsetWidth;
+      const mediumHheight = document.getElementsByClassName("medium")[0]
+        .offsetHeight;
+      configWidth = (largeWidth / allWidth) * 100;
+      configHeight = (mediumHheight / allHeight) * 100;
+      calcWindowSize();
+    };
+  });
+}
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  const settingsMenu = generateSettingsMenu();
+  const settingsMenu = createSettingsMenu();
   menu.append(settingsMenu);
 
-  const menuItemForSmallPane = generateMenuItemForSmallPane();
+  const menuItemForSmallPane = createMenuItemForSmallPane();
   menu.append(menuItemForSmallPane);
 
   Menu.setApplicationMenu(menu);
 }
-function generateMenuItemForSmallPane() {
+function createMenuItemForSmallPane() {
   const menuItem = new MenuItem({
     id: "smallPane",
     label: "Open",
     submenu: []
   });
   const nameAndUrls = getAdditionalPaneInfo(json.url_options);
-  const additionalPaneMenuItems = generateAdditionalPaneMenuItems(nameAndUrls);
+  const additionalPaneMenuItems = createAdditionalPaneMenuItems(nameAndUrls);
 
   additionalPaneMenuItems.forEach(function(apMenuItem) {
     menuItem.submenu.append(apMenuItem);
   });
   return menuItem;
 }
-function generateSettingsMenu() {
+function createSettingsMenu() {
   const menuItem = new MenuItem({
     id: "settings",
     label: "Settings",
@@ -193,7 +188,7 @@ function generateSettingsMenu() {
 
   return menuItem;
 }
-function generateAdditionalPaneMenuItems(nameAndUrls) {
+function createAdditionalPaneMenuItems(nameAndUrls) {
   const additionalPaneMenuItems = nameAndUrls.map(function(nameAndUrl) {
     return new MenuItem({
       label: nameAndUrl["name"],
@@ -221,72 +216,46 @@ function getNumberOfWebviews() {
 }
 function initializeWebview(webview, additionalPage = "") {
   renderByCustomCss(webview);
-  if (webview.src !== "about:blank") addKeyEvents(webview);
   registerToOpenUrl(webview, shell);
-  setWebviewAutosize(webview, "on");
+  webview.autosize = "on";
 
-  if (checkUrlIsDefault(webview)) {
+  if (webview.src === "about:blank") {
     if (additionalPage !== "") {
-      var url = additionalPage;
+      webview.loadURL(additionalPage.toString());
     } else {
-      var url = webview.url;
+      webview.loadURL(webview.url.toString());
     }
-    webview.loadURL(url.toString());
+  } else {
+    addKeyEvents(webview);
   }
 }
 function renderByCustomCss(webview) {
-  const slackOnlyBodyCss = getSlackOnlyBodyCss();
-  const slackChannelAndBodyCss = getSlackChannelAndBodyCss();
-  const trelloHeaderlessCss = getTrelloHeaderlessCss();
-
-  selectApplicableCss(webview, {
-    slackOnlyBodyCss,
-    slackChannelAndBodyCss,
-    trelloHeaderlessCss
-  });
+  if (webview.id == "slack-only-body") {
+    webview.insertCSS(getSlackOnlyBodyCss());
+  } else if (webview.id == "slack-channel-and-body") {
+    webview.insertCSS(getSlackChannelAndBodyCss());
+  } else if (webview.id == "trello-headerless") {
+    webview.insertCSS(getTrelloHeaderlessCss());
+  }
 }
 function getSlackOnlyBodyCss() {
-  const disableChannelList =
-    ".p-workspace__sidebar { display: none !important; }";
-  const disableTeamHeader =
-    ".p-classic_nav__team_header { display: none !important; }";
-  const widenBody =
-    ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important; }";
-  const adjustHeight =
-    ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }";
-  const adjustLeftPadding =
-    ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }";
-  return (
-    disableChannelList +
-    widenBody +
-    adjustHeight +
-    disableTeamHeader +
-    adjustLeftPadding
-  );
+  return `.p-workspace__sidebar { display: none !important; }
+    .p-classic_nav__team_header { display: none !important; }
+    .p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important; }
+    .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
+    .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
 }
 function getSlackChannelAndBodyCss() {
-  const disableChannelList = ".p-channel_sidebar { width: 160px !important; }";
-  const disableTeamHeader =
-    ".p-classic_nav__team_header { display: none !important; }";
-  const widenBody =
-    ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }";
-  const adjustHeight =
-    ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }";
-  const adjustLeftPadding =
-    ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }";
-  return (
-    disableChannelList +
-    adjustHeight +
-    widenBody +
-    disableTeamHeader +
-    adjustLeftPadding
-  );
+  return `.p-channel_sidebar { width: 160px !important; }
+    .p-classic_nav__team_header { display: none !important; }
+    .p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }
+    .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
+    .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
 }
 function getTrelloHeaderlessCss() {
-  const disableHeader = "#header { display: none !important; }";
-  const disableBoardHeader = ".board-header { display: none !important; }";
-  const adjustHeight = ".board-canvas { margin-top: 10px !important; }";
-  return disableHeader + disableBoardHeader + adjustHeight;
+  return `#header { display: none !important; }
+    .board-header { display: none !important; }
+    .board-canvas { margin-top: 10px !important; }`
 }
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
@@ -297,7 +266,7 @@ function addKeyEvents(webview) {
   });
 }
 function remove(index) {
-  dragging_id = "";
+  draggingId = "";
   const target = document.getElementById(index);
   const targetBar = document.getElementById(`dvs-${index}`);
   const parent = target.parentNode;
@@ -309,7 +278,6 @@ function remove(index) {
     if (pane.id > index) pane.id = pane.id - 1;
   });
   bars.forEach(function(bar) {
-    console.log(bar);
     id = Number(bar.id.replace(/[^0-9]/g, ""));
     if (id > index) {
       bar.id = `dvs-${id - 1}`;
@@ -321,24 +289,12 @@ function remove(index) {
   calcWindowSize();
   refreshButtons();
 }
-function moveLeft(index) {
-  const target = document.getElementById(index);
-  const prev = document.getElementById(index - 1);
-  const tmp = target.id;
-  target.id = prev.id;
-  target.style.order = prev.style.order;
-  prev.id = tmp;
-  prev.style.order = tmp;
-  refreshButtons();
-}
-function moveRight(index) {
-  const target = document.getElementById(index);
-  const next = document.getElementById(index + 1);
-  const tmp = target.id;
-  target.id = next.id;
-  target.style.order = next.style.order;
-  next.id = tmp;
-  next.style.order = tmp;
+function move(index, next) {
+  const src = document.getElementById(index);
+  const dst = document.getElementById(Number(index) + Number(next));
+  const tmp = src.id;
+  src.id = src.style.order = dst.id;
+  dst.id = dst.style.order = tmp;
   refreshButtons();
 }
 function refreshButtons() {
@@ -358,10 +314,10 @@ function refreshButtons() {
 }
 function addButtons(div, index) {
   if (index != 2)
-    div.innerHTML += `<button onclick=moveLeft(${index}) style="font-size: 12px";><</button>`;
+    div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
   div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
   if (index != getPaneNum() - 1)
-    div.innerHTML += `<button onclick=moveRight(${index}) style="font-size: 12px";>></button>`;
+    div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
 function getPaneNum() {
   return $(".large").length + $(".medium").length + $(".small").length;
@@ -372,11 +328,11 @@ function loadAdditionalPage(additionalPage) {
     if (xterm.isOpen) return;
     var style = "xterm";
     const size = "small";
-    initializeDiv(style, size, "");
+    createPane(size, style, "");
   } else {
     var style = "slack-only-body";
     const size = "small";
-    initializeDiv(style, size, "");
+    createPane(size, style, "");
 
     const webview = getWebviews()[getNumberOfWebviews() - 1];
     webview.id = style;
@@ -386,11 +342,7 @@ function loadAdditionalPage(additionalPage) {
     refreshButtons();
   }
 }
-function initializeDiv(style, size, url = "") {
-  generatePane(size, style, url);
-  generateDraggableBar(size);
-}
-function generatePane(size, style, url) {
+function createPane(size, style, url = "") {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
@@ -402,6 +354,7 @@ function generatePane(size, style, url) {
     const webview = createWebview(style, url);
     divContainer.appendChild(webview);
   }
+  createDraggableBar(size);
   calcWindowSize();
 }
 function createXtermPane() {
@@ -427,22 +380,19 @@ function closeXtermPane() {
   remove(target.parentNode.id);
   xterm.isOpen = false;
 }
-function generateDraggableBar(size) {
-  let divBar = document.createElement("div");
+function createDraggableBar(size) {
+  let div = document.createElement("div");
   if (size === "large") {
-    divBar.id = "dragbar-vertical";
+    div.id = "dragbar-vertical";
   } else if (size === "medium") {
-    divBar.id = "dragbar-horizontal";
+    div.id = "dragbar-horizontal";
   } else {
-    divBar.id = `dvs-${getPaneNum() - 1}`;
-    divBar.className = "dragbar-vertical-small";
-    divBar.style = `grid-column: ${(getPaneNum() - 1) * 2} / ${(getPaneNum() -
-      1) *
-      2 +
-      1}`;
+    div.id = `dvs-${getPaneNum() - 1}`;
+    div.className = "dragbar-vertical-small";
+    div.style = `grid-column: ${(getPaneNum() - 1) * 2} / 
+      ${(getPaneNum() - 1) * 2 + 1}`;
   }
-  // divBar.id = size !== "medium" ? "dragbar-vertical" : "dragbar-horizontal";
-  document.getElementById("main-content").appendChild(divBar);
+  document.getElementById("main-content").appendChild(div);
 }
 function createContainerDiv(size) {
   let div = document.createElement("div");
@@ -452,10 +402,10 @@ function createContainerDiv(size) {
   return div;
 }
 function createButtonDiv() {
-  let buttonDiv = document.createElement("div");
-  buttonDiv.className = "tool-buttons";
+  let div = document.createElement("div");
+  div.className = "tool-buttons";
 
-  return buttonDiv;
+  return div;
 }
 function createWebview(style, url = "") {
   let webview = document.createElement("webview");
@@ -463,21 +413,6 @@ function createWebview(style, url = "") {
   webview.id = style;
   webview.url = url;
   return webview;
-}
-function setWebviewAutosize(webview, autosize) {
-  webview.autosize = autosize;
-}
-function selectApplicableCss(
-  webview,
-  { slackOnlyBodyCss, slackChannelAndBodyCss, trelloHeaderlessCss }
-) {
-  if (webview.id == "slack-only-body") {
-    applyCss(webview, slackOnlyBodyCss);
-  } else if (webview.id == "slack-channel-and-body") {
-    applyCss(webview, slackChannelAndBodyCss);
-  } else if (webview.id == "trello-headerless") {
-    applyCss(webview, trelloHeaderlessCss);
-  }
 }
 function registerToOpenUrl(webview, shell) {
   // Hack: remove EventListener if already added
@@ -492,12 +427,6 @@ function openExternalUrl(event) {
   ) {
     shell.openExternal(url);
   }
-}
-function checkUrlIsDefault(webview) {
-  return webview.attributes.src.value == "about:blank";
-}
-function applyCss(webview, css) {
-  webview.insertCSS(css);
 }
 function savePaneSize() {
   store.set("contents.1.height", configHeight);
@@ -533,7 +462,7 @@ function clearStoredSettings() {
   remote.getCurrentWindow().reload();
 }
 function loadSettings() {
-  if (noSettings()) {
+  if (store.size == 0) {
     openFileAndSave();
     return;
   }
@@ -548,9 +477,6 @@ function buildJsonObjectFromStoredData() {
 
   return jsonObj;
 }
-function noSettings() {
-  return store.size == 0;
-}
 function resetWindowSize() {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
@@ -561,7 +487,7 @@ function resetWindowSize() {
   rows = `grid-template-rows: ${configHeight}% 0% ${100 -
     configHeight}% !important ;`;
   main.style = columns + rows;
-  dragging_id = "";
+  draggingId = "";
 }
 function calcWindowSize() {
   if (xterm.isOpen === true) xterm.fit();
@@ -570,17 +496,17 @@ function calcWindowSize() {
   let columns = "";
   let rows = "";
   if (smallNum !== 0) {
-    const target = document.getElementById(`${dragging_id}`);
-    const next = document.getElementById(`${Number(dragging_id) + 1}`);
-    if (dragging_id !== undefined && dragging_id !== "") {
+    const target = document.getElementById(`${draggingId}`);
+    const next = document.getElementById(`${Number(draggingId) + 1}`);
+    if (draggingId !== undefined && draggingId !== "") {
       let arColumns = main.style["grid-template-columns"].split(" ");
       var newSmallWidth = (target.clientWidth / main.clientWidth) * 100;
       var nextWidth = Math.abs(
         (next.clientWidth / main.clientWidth) * 100 +
           (smallWidth - newSmallWidth)
       );
-      arColumns[Number(dragging_id) * 2 - 2] = `${newSmallWidth}% `;
-      arColumns[Number(dragging_id) * 2] = `${nextWidth}% `;
+      arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
+      arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
       ratio = arColumns.join(" ");
       smallWidth = newSmallWidth;
     } else {
