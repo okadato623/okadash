@@ -42,13 +42,18 @@ body {
 }
 .small {
   grid-row: 3 / 100;
-  border: solid;
-  border-width: 1px;
-  border-color: #444;
 }
 #dragbar-vertical {
   grid-row: 1 / 100; /* large enough */
   grid-column: 2 / 3;
+  position: relative;
+  background-color: #aaa;
+  height: 100%;
+  width: 4px;
+  cursor: col-resize;
+}
+.dragbar-vertical-small {
+  grid-row: 3 / 100; /* large enough */
   position: relative;
   background-color: #aaa;
   height: 100%;

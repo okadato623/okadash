@@ -17,7 +17,7 @@ let ptyProcess = pty.spawn(xtshell, [], {
   env: process.env
 });
 Terminal.applyAddon(fit);
-fontSize = 0;
+fontSize = 12;
 json.contents.forEach(function(content) {
   if (content.style === "xterm") fontSize = content.fontSize;
 });
@@ -43,6 +43,8 @@ function initialize() {
   contents.forEach(function(content) {
     initializeDiv(content["style"], content["size"], content["url"]);
   });
+  const main = document.getElementById("main-content");
+  main.removeChild(main.lastChild);
 
   // create webviews in div
   getWebviews().forEach(function(webview, index) {
@@ -56,12 +58,12 @@ function initialize() {
       }
     });
     webview.onresize = function() {
-      let width = document.getElementsByClassName("large")[0].offsetWidth;
-      let allWidth = document.getElementById("main-content").offsetWidth;
-      let height = document.getElementsByClassName("medium")[0].offsetHeight;
-      let allHeight = document.getElementById("main-content").offsetHeight;
-      configWidth = (width / allWidth) * 100;
-      configHeight = (height / allHeight) * 100;
+      const allWidth = document.getElementById("main-content").offsetWidth;
+      const allHeight = document.getElementById("main-content").offsetHeight;
+      const largeWidth = document.getElementsByClassName("large")[0].offsetWidth;
+      const mediumHheight = document.getElementsByClassName("medium")[0].offsetHeight;
+      configWidth = (largeWidth / allWidth) * 100;
+      configHeight = (mediumHheight / allHeight) * 100;
       calcWindowSize();
     };
   });
@@ -69,11 +71,17 @@ function initialize() {
 var i = 0;
 var dragging_vertical = false;
 var dragging_horizontal = false;
-$("#dragbar-vertical").mousedown(function(e) {
+var dragging_vertical_small = false;
+var dragging_id = "";
+$("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
-
-  dragging_vertical = true;
+  if (this.id === "dragbar-vertical") {
+    dragging_vertical = true;
+  } else {
+    dragging_vertical_small = true;
+    dragging_id = this.id.replace(/[^0-9]/g, "");
+  }
   var main = $("#main-content");
   var ghostbar = $("<div>", {
     id: "ghostbar-vertical",
@@ -112,26 +120,39 @@ $("#dragbar-horizontal").mousedown(function(e) {
 $(document).mouseup(function(e) {
   if (dragging_vertical) {
     $(".large").css("width", e.pageX + 2);
-    $("#main-content").css("left", e.pageX + 2);
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical = false;
   }
   if (dragging_horizontal) {
     $(".medium").css("height", e.pageY + 2);
-    $("#main-content").css("left", e.pageY + 2);
     $("#ghostbar-horizontal").remove();
     $(document).unbind("mousemove");
     dragging_horizontal = false;
   }
+  if (dragging_vertical_small) {
+    const largeWidth = document.getElementById("0").clientWidth;
+    const smallPanes = Array.from(document.getElementsByClassName("small"));
+    var otherPanesLen = largeWidth;
+    var nextPaneLen = largeWidth;
+    smallPanes.forEach(function (pane) {
+      if (pane.id < dragging_id) otherPanesLen += pane.clientWidth;
+      if (pane.id <= Number(dragging_id) + 1) nextPaneLen += pane.clientWidth;
+    });
+    if (e.pageX <= otherPanesLen || e.pageX >= nextPaneLen) return;
+    $(`#${dragging_id}`).css("width", e.pageX - otherPanesLen);
+    $("#ghostbar-vertical").remove();
+    $(document).unbind("mousemove");
+    dragging_vertical_small = false;
+  }
 });
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  const menuItemForSmallPace = generateMenuItemForSmallPane();
-  menu.append(menuItemForSmallPace);
-
   const settingsMenu = generateSettingsMenu();
   menu.append(settingsMenu);
+
+  const menuItemForSmallPane = generateMenuItemForSmallPane();
+  menu.append(menuItemForSmallPane);
 
   Menu.setApplicationMenu(menu);
 }
@@ -269,6 +290,7 @@ function addKeyEvents(webview) {
   });
 }
 function remove(index) {
+  dragging_id = "";
   const target = document.getElementById(index);
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
@@ -343,7 +365,7 @@ function loadAdditionalPage(additionalPage) {
 }
 function initializeDiv(style, size, url = "") {
   generatePane(size, style, url);
-  if (size === "large" || size === "medium") generateDraggableBar(size);
+  generateDraggableBar(size);
 }
 function generatePane(size, style, url) {
   let divContainer = createContainerDiv(size);
@@ -384,7 +406,16 @@ function closeXtermPane() {
 }
 function generateDraggableBar(size) {
   let divBar = document.createElement("div");
-  divBar.id = size === "large" ? "dragbar-vertical" : "dragbar-horizontal";
+  if (size === "large") {
+    divBar.id = "dragbar-vertical";
+  } else if (size ==="medium") {
+    divBar.id = "dragbar-horizontal";
+  } else {
+    divBar.id = `dvs-${getPaneNum() - 1}`;
+    divBar.className = "dragbar-vertical-small";
+    divBar.style = `grid-column: ${(getPaneNum() - 1) * 2} / ${(getPaneNum() - 1) * 2 + 1}`;
+  }
+  // divBar.id = size !== "medium" ? "dragbar-vertical" : "dragbar-horizontal";
   document.getElementById("main-content").appendChild(divBar);
 }
 function createContainerDiv(size) {
@@ -500,17 +531,20 @@ function calcWindowSize() {
   const main = document.getElementById("main-content");
   let columns = "";
   let rows = "";
-  if (configWidth !== undefined) {
-    columns = `grid-template-columns: ${configWidth}% ${100 -
-      configWidth}% !important ;`;
-  }
-  if (configHeight !== undefined) {
+  if (smallNum !== 0) {
+    if (document.getElementById(`${dragging_id}`) !== null) {
+      let arColumns = main.style["grid-template-columns"].split(" ");
+      var newSmallWidth = document.getElementById(`${dragging_id}`).clientWidth / main.clientWidth * 100;
+      var counterWidth = (100 - configWidth) / smallNum * 2 - newSmallWidth;
+      arColumns[Number(dragging_id) * 2 -2] = `${newSmallWidth}% `;
+      arColumns[Number(dragging_id) * 2] = `${counterWidth}% `;
+      ratio = arColumns.join(" ");
+    } else {
+      ratio = `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+    }
+    columns = `grid-template-columns: ${ratio} !important ;`;
     rows = `grid-template-rows: ${configHeight}% 0% ${100 -
       configHeight}% !important ;`;
-  }
-  if (smallNum !== 0) {
-    const ratio = `${(100 - configWidth) / smallNum}% `.repeat(smallNum);
-    columns = `grid-template-columns: ${configWidth}% 0% ${ratio} !important ;`;
   } else {
     columns = `grid-template-columns: ${configWidth}% 0% ${100 -
       configWidth}% !important ;`;
