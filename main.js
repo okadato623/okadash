@@ -18,9 +18,6 @@ let ptyProcess = pty.spawn(xtshell, [], {
 });
 Terminal.applyAddon(fit);
 fontSize = 12;
-json.contents.forEach(function(content) {
-  if (content.style === "xterm") fontSize = content.fontSize;
-});
 var xterm = new Terminal({
   fontSize: `${fontSize}`
 });
@@ -288,6 +285,9 @@ function remove(index) {
   const bars = Array.from(
     document.getElementsByClassName("dragbar-vertical-small")
   );
+  store.delete(`contents.${index}`);
+  saveNewContents();
+
   smallPanes.forEach(function(pane) {
     if (pane.id > index) pane.id = pane.id - 1;
   });
@@ -307,6 +307,12 @@ function remove(index) {
 function move(index, next) {
   const src = document.getElementById(index);
   const dst = document.getElementById(Number(index) + Number(next));
+  const storeSrc = src.querySelector("webview");
+  const storeDst = dst.querySelector("webview");
+  storeStyle(dst.id, storeSrc.id);
+  storeUrl(dst.id, storeSrc.src);
+  storeStyle(src.id, storeDst.id);
+  storeUrl(src.id, storeDst.src);
   const tmp = src.id;
   src.id = src.style.order = dst.id;
   dst.id = dst.style.order = tmp;
@@ -352,6 +358,9 @@ function loadAdditionalPage(additionalPage) {
     var style = "slack-only-body";
     const size = "small";
     createPane(size, style, "");
+    storeStyle(getPaneNum() - 1, style);
+    storeSize(getPaneNum() - 1, size);
+    storeUrl(getPaneNum() - 1, additionalPage);
 
     const delta = xterm.isOpen ? 2 : 1;
     const webview = getWebviews()[getPaneNum() - delta];
@@ -360,6 +369,18 @@ function loadAdditionalPage(additionalPage) {
     });
     refreshButtons();
   }
+}
+
+function storeStyle(index, style) {
+  store.set(`contents.${index}.style`, style);
+}
+
+function storeSize(index, size) {
+  store.set(`contents.${index}.size`, size);
+}
+
+function storeUrl(index, url) {
+  store.set(`contents.${index}.url`, url);
 }
 
 function createPane(size, style, url = "") {
@@ -493,10 +514,25 @@ function loadSettings() {
   return buildJsonObjectFromStoredData();
 }
 
+function saveNewContents() {
+  const contents = store.get("contents");
+  let newContents = [];
+  contents.forEach(function(content) {
+    if (content !== null) newContents.push(content);
+  });
+  store.set("contents", newContents);
+}
+
 function buildJsonObjectFromStoredData() {
+  const contents = store.get("contents");
+  let newContents = [];
+  contents.forEach(function(content) {
+    if (content !== null) newContents.push(content);
+  });
+  store.set("contents", newContents);
   let jsonObj = {
     url_options: store.get("url_options"),
-    contents: store.get("contents")
+    contents: newContents
   };
 
   return jsonObj;
