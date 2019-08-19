@@ -116,18 +116,17 @@ $(document).mouseup(function(e) {
   }
 });
 
-
 function initialize() {
   if (store.size == 0) return;
 
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
-  contents.forEach(function (content) {
+  contents.forEach(function(content) {
     createPane(content["size"], content["style"], content["url"]);
   });
 
-  getWebviews().forEach(function (webview, index) {
-    webview.addEventListener("dom-ready", function () {
+  getWebviews().forEach(function(webview, index) {
+    webview.addEventListener("dom-ready", function() {
       initializeWebview(webview);
       if (
         webview.parentNode.classList.contains("small") &&
@@ -136,7 +135,7 @@ function initialize() {
         addButtons(webview.previousSibling, webview.parentNode.id);
       }
     });
-    webview.onresize = function () {
+    webview.onresize = function() {
       const allWidth = document.getElementById("main-content").offsetWidth;
       const allHeight = document.getElementById("main-content").offsetHeight;
       const largeWidth = document.getElementsByClassName("large")[0]
@@ -268,7 +267,7 @@ function getSlackChannelAndBodyCss() {
 function getTrelloHeaderlessCss() {
   return `#header { display: none !important; }
     .board-header { display: none !important; }
-    .board-canvas { margin-top: 10px !important; }`
+    .board-canvas { margin-top: 10px !important; }`;
 }
 
 function addKeyEvents(webview) {
