@@ -7,7 +7,7 @@ Dashboard Tool made with Electron
 Detail is [here](https://trello.com/b/dwk73iz6/okadash)
 
 ## Download (only for Mac)
-[okadash-1.0.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.0.0/okadash-1.0.0-mac.zip)
+[okadash-1.1.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.1.0/okadash-1.1.0-mac.zip)
 
 ## Quick Start
 1. Download zip. 👆
@@ -20,4 +20,5 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)
 1. `cp settings.json_sample settings.json`  
 1. change [workspace].slack.com in `settings.json`  
 1. `npm install`
+1. `npm rebuild`
 1. `npm start`
