@@ -9,13 +9,11 @@
       "style": "normal",
       "size": "large",
       "url": "https://[workspace].slack.com",
-      "width": "40"
     },
     {
       "style": "trello-headerless",
       "size": "normal",
       "url": "https://trello.com/b/dwk73iz6/okadash",
-      "height": "40"
     },
     {
       "style": "slack-only-body",
