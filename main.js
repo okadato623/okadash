@@ -116,6 +116,7 @@ $(document).mouseup(function(e) {
   }
 });
 
+
 function initialize() {
   if (store.size == 0) return;
 
@@ -148,6 +149,7 @@ function initialize() {
     };
   });
 }
+
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
   const settingsMenu = createSettingsMenu();
@@ -158,6 +160,7 @@ function initializeMenu(template) {
 
   Menu.setApplicationMenu(menu);
 }
+
 function createMenuItemForSmallPane() {
   const menuItem = new MenuItem({
     id: "smallPane",
@@ -172,6 +175,7 @@ function createMenuItemForSmallPane() {
   });
   return menuItem;
 }
+
 function createSettingsMenu() {
   const menuItem = new MenuItem({
     id: "settings",
@@ -180,7 +184,8 @@ function createSettingsMenu() {
       {
         label: "Reload",
         click() {
-          clearStoredSettings();
+          store.clear();
+          remote.getCurrentWindow().reload();
         }
       }
     ]
@@ -188,6 +193,7 @@ function createSettingsMenu() {
 
   return menuItem;
 }
+
 function createAdditionalPaneMenuItems(nameAndUrls) {
   const additionalPaneMenuItems = nameAndUrls.map(function(nameAndUrl) {
     return new MenuItem({
@@ -201,6 +207,7 @@ function createAdditionalPaneMenuItems(nameAndUrls) {
 
   return additionalPaneMenuItems;
 }
+
 function getAdditionalPaneInfo(url_options) {
   const nameAndUrls = url_options.map(function(url, index) {
     let dispName = url.split("/").slice(-1)[0]; // 最後の / 以降を取得
@@ -208,12 +215,14 @@ function getAdditionalPaneInfo(url_options) {
   });
   return nameAndUrls;
 }
+
 function getWebviews() {
-  return Array.from(document.getElementsByTagName("webview"));
+  let webviews = Array.from(document.getElementsByTagName("webview"));
+  let xterm = Array.from(document.getElementsByClassName("terminal"));
+
+  return webviews.concat(xterm);
 }
-function getNumberOfWebviews() {
-  return getWebviews().length;
-}
+
 function initializeWebview(webview, additionalPage = "") {
   renderByCustomCss(webview);
   registerToOpenUrl(webview, shell);
@@ -229,6 +238,7 @@ function initializeWebview(webview, additionalPage = "") {
     addKeyEvents(webview);
   }
 }
+
 function renderByCustomCss(webview) {
   if (webview.id == "slack-only-body") {
     webview.insertCSS(getSlackOnlyBodyCss());
@@ -238,6 +248,7 @@ function renderByCustomCss(webview) {
     webview.insertCSS(getTrelloHeaderlessCss());
   }
 }
+
 function getSlackOnlyBodyCss() {
   return `.p-workspace__sidebar { display: none !important; }
     .p-classic_nav__team_header { display: none !important; }
@@ -245,6 +256,7 @@ function getSlackOnlyBodyCss() {
     .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
     .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
 }
+
 function getSlackChannelAndBodyCss() {
   return `.p-channel_sidebar { width: 160px !important; }
     .p-classic_nav__team_header { display: none !important; }
@@ -252,11 +264,13 @@ function getSlackChannelAndBodyCss() {
     .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
     .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
 }
+
 function getTrelloHeaderlessCss() {
   return `#header { display: none !important; }
     .board-header { display: none !important; }
     .board-canvas { margin-top: 10px !important; }`
 }
+
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
     if (input.meta && input.key === "w") {
@@ -265,6 +279,7 @@ function addKeyEvents(webview) {
     }
   });
 }
+
 function remove(index) {
   draggingId = "";
   const target = document.getElementById(index);
@@ -289,6 +304,7 @@ function remove(index) {
   calcWindowSize();
   refreshButtons();
 }
+
 function move(index, next) {
   const src = document.getElementById(index);
   const dst = document.getElementById(Number(index) + Number(next));
@@ -297,6 +313,7 @@ function move(index, next) {
   dst.id = dst.style.order = tmp;
   refreshButtons();
 }
+
 function refreshButtons() {
   const main = document.getElementById("main-content");
   const panes = Array.from(main.children);
@@ -312,6 +329,7 @@ function refreshButtons() {
     child.style.height = "100%";
   });
 }
+
 function addButtons(div, index) {
   if (index != 2)
     div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
@@ -319,9 +337,11 @@ function addButtons(div, index) {
   if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
+
 function getPaneNum() {
   return $(".large").length + $(".medium").length + $(".small").length;
 }
+
 function loadAdditionalPage(additionalPage) {
   resetWindowSize();
   if (additionalPage.href === "http://xterm/") {
@@ -334,14 +354,15 @@ function loadAdditionalPage(additionalPage) {
     const size = "small";
     createPane(size, style, "");
 
-    const webview = getWebviews()[getNumberOfWebviews() - 1];
-    webview.id = style;
+    const delta = xterm.isOpen ? 2 : 1;
+    const webview = getWebviews()[getPaneNum() - delta];
     webview.addEventListener("dom-ready", function() {
       initializeWebview(webview, additionalPage);
     });
     refreshButtons();
   }
 }
+
 function createPane(size, style, url = "") {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
@@ -357,6 +378,7 @@ function createPane(size, style, url = "") {
   createDraggableBar(size);
   calcWindowSize();
 }
+
 function createXtermPane() {
   ptyProcess = pty.spawn(xtshell, [], {
     cwd: process.cwd(),
@@ -375,11 +397,13 @@ function createXtermPane() {
     xterm.write(data);
   });
 }
+
 function closeXtermPane() {
   const target = document.getElementsByClassName("terminal")[0];
   remove(target.parentNode.id);
   xterm.isOpen = false;
 }
+
 function createDraggableBar(size) {
   let div = document.createElement("div");
   if (size === "large") {
@@ -394,6 +418,7 @@ function createDraggableBar(size) {
   }
   document.getElementById("main-content").appendChild(div);
 }
+
 function createContainerDiv(size) {
   let div = document.createElement("div");
   div.id = getPaneNum();
@@ -401,12 +426,14 @@ function createContainerDiv(size) {
   div.style.order = getPaneNum();
   return div;
 }
+
 function createButtonDiv() {
   let div = document.createElement("div");
   div.className = "tool-buttons";
 
   return div;
 }
+
 function createWebview(style, url = "") {
   let webview = document.createElement("webview");
   webview.src = "about:blank";
@@ -414,11 +441,13 @@ function createWebview(style, url = "") {
   webview.url = url;
   return webview;
 }
+
 function registerToOpenUrl(webview, shell) {
   // Hack: remove EventListener if already added
   webview.removeEventListener("new-window", openExternalUrl);
   webview.addEventListener("new-window", openExternalUrl);
 }
+
 function openExternalUrl(event) {
   const url = event.url;
   if (
@@ -428,10 +457,7 @@ function openExternalUrl(event) {
     shell.openExternal(url);
   }
 }
-function savePaneSize() {
-  store.set("contents.1.height", configHeight);
-  store.set("contents.0.width", configWidth);
-}
+
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
   remote.dialog.showOpenDialog(
@@ -452,15 +478,13 @@ function openFileAndSave() {
     }
   );
 }
+
 function saveJson(jsonPath) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   store.set(settings);
   remote.getCurrentWindow().reload();
 }
-function clearStoredSettings() {
-  store.clear();
-  remote.getCurrentWindow().reload();
-}
+
 function loadSettings() {
   if (store.size == 0) {
     openFileAndSave();
@@ -469,6 +493,7 @@ function loadSettings() {
 
   return buildJsonObjectFromStoredData();
 }
+
 function buildJsonObjectFromStoredData() {
   let jsonObj = {
     url_options: store.get("url_options"),
@@ -477,6 +502,7 @@ function buildJsonObjectFromStoredData() {
 
   return jsonObj;
 }
+
 function resetWindowSize() {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
@@ -489,6 +515,7 @@ function resetWindowSize() {
   main.style = columns + rows;
   draggingId = "";
 }
+
 function calcWindowSize() {
   if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
@@ -528,5 +555,8 @@ function calcWindowSize() {
     rows = `grid-template-rows: 99% 1% !important ;`;
   }
   main.style = columns + rows;
-  if (configWidth !== undefined) savePaneSize();
+  if (configWidth !== undefined) {
+    store.set("contents.1.height", configHeight);
+    store.set("contents.0.width", configWidth);
+  }
 }
