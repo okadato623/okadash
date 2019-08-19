@@ -4,6 +4,7 @@ builder.build({
   config: {
     'mac': {
       'target': 'zip',
+      'files': ["!images/*"]
     },
   },
 });
