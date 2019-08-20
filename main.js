@@ -119,6 +119,16 @@ $(document).mouseup(function(e) {
   }
 });
 
+$(document).keydown(function(e) {
+  if (
+    e.keyCode == 27 &&
+    document.getElementsByClassName("overflow").length !== 0
+  ) {
+    const main = document.getElementById("main-content");
+    main.removeChild(document.getElementsByClassName("overflow")[0]);
+  }
+});
+
 function initialize() {
   if (store.size == 0) return;
 
@@ -131,6 +141,7 @@ function initialize() {
   getWebviews().forEach(function(webview, index) {
     webview.addEventListener("dom-ready", function() {
       initializeWebview(webview);
+      addMaximizeButton(webview.parentNode, webview.parentNode.id);
       if (
         webview.parentNode.classList.contains("small") &&
         !webview.previousSibling.hasChildNodes()
@@ -265,8 +276,19 @@ function getTrelloHeaderlessCss() {
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
     if (input.meta && input.key === "w") {
-      if (webview.parentNode.classList.contains("small"))
+      if (webview.parentNode.classList.contains("small")) {
         remove(webview.parentNode.id);
+      } else if (webview.parentNode.classList.contains("overflow")) {
+        const main = document.getElementById("main-content");
+        main.removeChild(main.lastChild);
+      }
+    }
+    if (
+      input.key === "Escape" &&
+      webview.parentNode.classList.contains("overflow")
+    ) {
+      const main = document.getElementById("main-content");
+      main.removeChild(main.lastChild);
     }
   });
 }
@@ -314,6 +336,20 @@ function move(index, next) {
   refreshButtons();
 }
 
+function maximize(index) {
+  const target = document.getElementById(index);
+  const url = target.querySelector("webview").src;
+  const main = document.getElementById("main-content");
+  const div = document.createElement("div");
+  div.className = "overflow";
+  main.appendChild(div);
+  const webview = createWebview("normal", url);
+  webview.addEventListener("dom-ready", function() {
+    initializeWebview(webview, url);
+  });
+  div.appendChild(webview);
+}
+
 function refreshButtons() {
   const main = document.getElementById("main-content");
   const panes = Array.from(main.children);
@@ -336,6 +372,15 @@ function addButtons(div, index) {
   div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
   if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
+}
+
+function addMaximizeButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "max-button";
+  btn.setAttribute("onclick", `maximize(${index})`);
+  btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
+  btn.style = "font-size: 14px;";
+  div.insertBefore(btn, div.firstChild);
 }
 
 function getPaneNum() {
