@@ -6,6 +6,8 @@ const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
 const menu = require("./menu");
+const mainWidth = document.getElementById("main-content").clientWidth;
+const mainHeight = document.getElementById("main-content").clientHeight;
 let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
@@ -123,7 +125,7 @@ function initialize() {
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
   contents.forEach(function(content) {
-    createPane(content["size"], content["style"], content["url"]);
+    createPane(content["size"], content["style"], content["url"], true);
   });
 
   getWebviews().forEach(function(webview, index) {
@@ -293,7 +295,7 @@ function remove(index) {
   });
   parent.removeChild(target);
   parent.removeChild(targetBar);
-  calcWindowSize(true);
+  calcWindowSize();
   refreshButtons();
 }
 
@@ -346,11 +348,11 @@ function loadAdditionalPage(additionalPage) {
     if (xterm.isOpen) return;
     var style = "xterm";
     const size = "small";
-    createPane(size, style, "", true);
+    createPane(size, style, "");
   } else {
     var style = "slack-only-body";
     const size = "small";
-    createPane(size, style, "", true);
+    createPane(size, style, "");
     storeStyle(getPaneNum() - 1, style);
     storeSize(getPaneNum() - 1, size);
     storeUrl(getPaneNum() - 1, additionalPage);
@@ -376,7 +378,7 @@ function storeUrl(index, url) {
   store.set(`contents.${index}.url`, url);
 }
 
-function createPane(size, style, url = "", reset = false) {
+function createPane(size, style, url = "", init = false) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
@@ -389,7 +391,7 @@ function createPane(size, style, url = "", reset = false) {
     divContainer.appendChild(webview);
   }
   createDraggableBar(size);
-  calcWindowSize(reset);
+  calcWindowSize(init);
 }
 
 function createXtermPane() {
@@ -544,57 +546,57 @@ function resetWindowSize() {
   draggingId = "";
 }
 
-function calcWindowSize(reset = false) {
-  const mainWidth = document.getElementById("main-content").clientWidth;
-  const mainHeight = document.getElementById("main-content").clientHeight;
-  if (document.getElementsByClassName("medium")[0] !== undefined) {
-    const largeWidth = document.getElementsByClassName("large")[0].clientWidth;
-    const mediumHheight = document.getElementsByClassName("medium")[0]
-      .clientHeight;
-    configWidth = (largeWidth / mainWidth) * 100;
-    configHeight = (mediumHheight / mainHeight) * 100;
-  }
+function setWindowSizeByConfig() {
+  const main = document.getElementById("main-content");
+  const columns = `grid-template-columns: ${configWidth}% 0% ${100 -
+    configWidth}% 0% !important ;`;
+  const rows = `grid-template-rows: ${configHeight}% 0% ${100 -
+    configHeight}% !important ;`;
+  main.style = columns + rows;
+}
+
+function calcWindowSize(init = false) {
   if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
+  if (smallNum === 0) {
+    setWindowSizeByConfig();
+    return;
+  }
+
   const main = document.getElementById("main-content");
+  const largeWidth = $(".large")[0].clientWidth;
+  const mediumHheight = $(".medium")[0].clientHeight;
   let columns = "";
   let rows = "";
-  if (smallNum !== 0) {
+  configWidth = (largeWidth / mainWidth) * 100;
+  configHeight = (mediumHheight / mainHeight) * 100;
+  if (draggingId !== undefined && draggingId !== "") {
     const target = document.getElementById(`${draggingId}`);
     const next = document.getElementById(`${Number(draggingId) + 1}`);
-    if (draggingId !== undefined && draggingId !== "" && !reset) {
-      let arColumns = main.style["grid-template-columns"].split(" ");
-      var newSmallWidth = (target.clientWidth / main.clientWidth) * 100;
-      var nextWidth = Math.abs((next.clientWidth / main.clientWidth) * 100);
-      arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
-      arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
-      ratio = arColumns.join(" ");
-      smallWidth = newSmallWidth;
-    } else {
-      // reset時の処理
-      ratio =
-        `${configWidth}% 0% ` +
-        `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
-      const smallPanes = Array.from(document.getElementsByClassName("small"));
-      smallPanes.forEach(function(pane) {
-        pane.style.width = "100%";
-        pane.style.height = "100%";
-      });
-    }
-    columns = `grid-template-columns: ${ratio} !important ;`;
-    rows = `grid-template-rows: ${configHeight}% 0% ${100 -
-      configHeight}% !important ;`;
-    if ((draggingId === undefined || draggingId === "") && !reset) {
-      columns = allWidth;
-    }
+    let arColumns = main.style["grid-template-columns"].split(" ");
+    var newSmallWidth = (target.clientWidth / mainWidth) * 100;
+    var nextWidth = Math.abs((next.clientWidth / mainWidth) * 100);
+    arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
+    arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
+    ratio = arColumns.join(" ");
+    smallWidth = newSmallWidth;
   } else {
-    columns = `grid-template-columns: ${configWidth}% 0% ${100 -
-      configWidth}% !important ;`;
-    rows = `grid-template-rows: ${configHeight}% ${100 -
-      configHeight}% !important ;`;
+    // リセット時の処理なので等分するだけ
+    ratio =
+      `${configWidth}% 0% ` +
+      `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
+  const panes = Array.from(document.getElementsByTagName("webview"));
+  panes.forEach(function(pane) {
+    pane.style.width = "100%";
+    pane.style.height = "100%";
+  });
+  columns = `grid-template-columns: ${ratio} !important ;`;
+  rows = `grid-template-rows: ${configHeight}% 0% ${100 -
+    configHeight}% !important ;`;
+  if (init && allWidth !== undefined) columns = allWidth;
   main.style = columns + rows;
-  if (configWidth !== undefined) {
+  if (configHeight !== undefined) {
     store.set("contents.0.width", configWidth);
     store.set("contents.0.allWidth", columns);
     store.set("contents.1.height", configHeight);
