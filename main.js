@@ -6,6 +6,7 @@ const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
 const menu = require("./menu");
+let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
@@ -292,7 +293,7 @@ function remove(index) {
   });
   parent.removeChild(target);
   parent.removeChild(targetBar);
-  calcWindowSize();
+  calcWindowSize(true);
   refreshButtons();
 }
 
@@ -345,11 +346,11 @@ function loadAdditionalPage(additionalPage) {
     if (xterm.isOpen) return;
     var style = "xterm";
     const size = "small";
-    createPane(size, style, "");
+    createPane(size, style, "", true);
   } else {
     var style = "slack-only-body";
     const size = "small";
-    createPane(size, style, "");
+    createPane(size, style, "", true);
     storeStyle(getPaneNum() - 1, style);
     storeSize(getPaneNum() - 1, size);
     storeUrl(getPaneNum() - 1, additionalPage);
@@ -375,7 +376,7 @@ function storeUrl(index, url) {
   store.set(`contents.${index}.url`, url);
 }
 
-function createPane(size, style, url = "") {
+function createPane(size, style, url = "", reset = false) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
@@ -388,7 +389,7 @@ function createPane(size, style, url = "") {
     divContainer.appendChild(webview);
   }
   createDraggableBar(size);
-  calcWindowSize();
+  calcWindowSize(reset);
 }
 
 function createXtermPane() {
@@ -543,7 +544,7 @@ function resetWindowSize() {
   draggingId = "";
 }
 
-function calcWindowSize() {
+function calcWindowSize(reset = false) {
   const mainWidth = document.getElementById("main-content").clientWidth;
   const mainHeight = document.getElementById("main-content").clientHeight;
   if (document.getElementsByClassName("medium")[0] !== undefined) {
@@ -561,7 +562,7 @@ function calcWindowSize() {
   if (smallNum !== 0) {
     const target = document.getElementById(`${draggingId}`);
     const next = document.getElementById(`${Number(draggingId) + 1}`);
-    if (draggingId !== undefined && draggingId !== "") {
+    if (draggingId !== undefined && draggingId !== "" && !reset) {
       let arColumns = main.style["grid-template-columns"].split(" ");
       var newSmallWidth = (target.clientWidth / main.clientWidth) * 100;
       var nextWidth = Math.abs((next.clientWidth / main.clientWidth) * 100);
@@ -570,6 +571,7 @@ function calcWindowSize() {
       ratio = arColumns.join(" ");
       smallWidth = newSmallWidth;
     } else {
+      // reset時の処理
       ratio =
         `${configWidth}% 0% ` +
         `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
@@ -582,15 +584,19 @@ function calcWindowSize() {
     columns = `grid-template-columns: ${ratio} !important ;`;
     rows = `grid-template-rows: ${configHeight}% 0% ${100 -
       configHeight}% !important ;`;
+    if ((draggingId === undefined || draggingId === "") && !reset) {
+      columns = allWidth;
+    }
   } else {
     columns = `grid-template-columns: ${configWidth}% 0% ${100 -
       configWidth}% !important ;`;
     rows = `grid-template-rows: ${configHeight}% ${100 -
       configHeight}% !important ;`;
   }
+  main.style = columns + rows;
   if (configWidth !== undefined) {
     store.set("contents.0.width", configWidth);
+    store.set("contents.0.allWidth", columns);
     store.set("contents.1.height", configHeight);
   }
-  main.style = columns + rows;
 }
