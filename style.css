@@ -23,9 +23,32 @@ body {
 .terminal {
   height: 100%;
 }
+.max-button {
+  display: inline-block;
+  margin-left: 10px;
+  margin-top: 5px;
+  height: 2.3%;
+  position: absolute;
+  z-index: 2;
+  width: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 0;
+  line-height: 0;
+  overflow: visible;
+  cursor: pointer;
+}
+.fa-rotate-135 {
+  -webkit-transform: rotate(135deg);
+  -moz-transform: rotate(135deg);
+  -ms-transform: rotate(135deg);
+  -o-transform: rotate(135deg);
+  transform: rotate(135deg);
+}
 .tool-buttons {
   display: inline-block;
-  margin-left: 5px;
+  margin-left: 8px;
   width: 100%;
   height: 0%;
   position: absolute;
@@ -42,6 +65,21 @@ body {
 }
 .small {
   grid-row: 3 / 100;
+}
+.overflow {
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  width: 98%;
+  height: 98%;
+  background: white;
+  border-color: #666;
+  border-style: solid;
+  z-index: 2;
 }
 #dragbar-vertical {
   grid-row: 1 / 100; /* large enough */
