@@ -1,0 +1,71 @@
+{
+  "url_options": [
+    "https://twitter.com",
+    "https://okadato.slack.com",
+    "https://cosmonote.xyz",
+    "file:///Users/okada-toshiki/works/okadash/calendar.html",
+    "https://hatebu-finder.tk"
+  ],
+  "spaces": [
+    {
+      "name": "dashboard",
+      "contents": [
+        {
+          "style": "slack-channel-and-body",
+          "size": "large",
+          "url": "https://okadato.slack.com"
+        },
+        {
+          "style": "trello-headerless",
+          "size": "medium",
+          "url": "https://trello.com/b/dwk73iz6/okadash"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "https://konoyono.kibe.la"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "https://twitter.com"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "file:///Users/okada-toshiki/works/okadash/calendar.html"
+        }
+      ]
+    },
+    {
+      "name": "monitoring",
+      "contents": [
+        {
+          "style": "slack-channel-and-body",
+          "size": "large",
+          "url": "https://okadato.slack.com"
+        },
+        {
+          "style": "trello-headerless",
+          "size": "medium",
+          "url": "https://trello.com/b/dwk73iz6/okadash"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "https://konoyono.kibe.la"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "https://twitter.com"
+        },
+        {
+          "style": "normal",
+          "size": "small",
+          "url": "file:///Users/okada-toshiki/works/okadash/calendar.html"
+        }
+      ]
+    }
+  ]
+}
