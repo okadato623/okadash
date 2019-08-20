@@ -85,12 +85,14 @@ $(document).mouseup(function(e) {
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical = false;
+    calcWindowSize();
   }
   if (dragging_horizontal) {
     $(".medium").css("height", e.pageY + 2);
     $("#ghostbar-horizontal").remove();
     $(document).unbind("mousemove");
     dragging_horizontal = false;
+    calcWindowSize();
   }
   if (dragging_vertical_small) {
     const largeWidth = document.getElementById("0").clientWidth;
@@ -110,6 +112,7 @@ $(document).mouseup(function(e) {
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical_small = false;
+    calcWindowSize();
   }
 });
 
@@ -132,17 +135,6 @@ function initialize() {
         addButtons(webview.previousSibling, webview.parentNode.id);
       }
     });
-    webview.onresize = function() {
-      const allWidth = document.getElementById("main-content").offsetWidth;
-      const allHeight = document.getElementById("main-content").offsetHeight;
-      const largeWidth = document.getElementsByClassName("large")[0]
-        .offsetWidth;
-      const mediumHheight = document.getElementsByClassName("medium")[0]
-        .offsetHeight;
-      configWidth = (largeWidth / allWidth) * 100;
-      configHeight = (mediumHheight / allHeight) * 100;
-      calcWindowSize();
-    };
   });
 }
 
@@ -552,6 +544,15 @@ function resetWindowSize() {
 }
 
 function calcWindowSize() {
+  const mainWidth = document.getElementById("main-content").clientWidth;
+  const mainHeight = document.getElementById("main-content").clientHeight;
+  if (document.getElementsByClassName("medium")[0] !== undefined) {
+    const largeWidth = document.getElementsByClassName("large")[0].clientWidth;
+    const mediumHheight = document.getElementsByClassName("medium")[0]
+      .clientHeight;
+    configWidth = (largeWidth / mainWidth) * 100;
+    configHeight = (mediumHheight / mainHeight) * 100;
+  }
   if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
@@ -563,10 +564,7 @@ function calcWindowSize() {
     if (draggingId !== undefined && draggingId !== "") {
       let arColumns = main.style["grid-template-columns"].split(" ");
       var newSmallWidth = (target.clientWidth / main.clientWidth) * 100;
-      var nextWidth = Math.abs(
-        (next.clientWidth / main.clientWidth) * 100 +
-          (smallWidth - newSmallWidth)
-      );
+      var nextWidth = Math.abs((next.clientWidth / main.clientWidth) * 100);
       arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
       arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
       ratio = arColumns.join(" ");
@@ -587,11 +585,12 @@ function calcWindowSize() {
   } else {
     columns = `grid-template-columns: ${configWidth}% 0% ${100 -
       configWidth}% !important ;`;
-    rows = `grid-template-rows: 99% 1% !important ;`;
+    rows = `grid-template-rows: ${configHeight}% ${100 -
+      configHeight}% !important ;`;
+  }
+  if (configWidth !== undefined) {
+    store.set("contents.0.width", configWidth);
+    store.set("contents.1.height", configHeight);
   }
   main.style = columns + rows;
-  if (configWidth !== undefined) {
-    store.set("contents.1.height", configHeight);
-    store.set("contents.0.width", configWidth);
-  }
 }
