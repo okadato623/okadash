@@ -32,7 +32,6 @@ var dragging_vertical = false;
 var dragging_horizontal = false;
 var dragging_vertical_small = false;
 var draggingId = "";
-var smallWidth = 0;
 $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
@@ -42,10 +41,6 @@ $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   } else {
     dragging_vertical_small = true;
     draggingId = this.id.replace(/[^0-9]/g, "");
-    smallWidth =
-      (document.getElementById(`${draggingId}`).clientWidth /
-        document.getElementById("main-content").clientWidth) *
-      100;
   }
   const main = $("#main-content");
   const ghostbar = $("<div>", {
@@ -624,7 +619,6 @@ function calcWindowSize(init = false) {
     arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
     arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
     ratio = arColumns.join(" ");
-    smallWidth = newSmallWidth;
   } else {
     // リセット時の処理なので等分するだけ
     ratio =
