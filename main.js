@@ -232,7 +232,8 @@ function initializeWebview(webview, additionalPage = "") {
     }
   } else {
     addKeyEvents(webview);
-    addMaximizeButton(webview.parentNode, webview.parentNode.id);
+    if (!webview.parentNode.classList.contains("overflow"))
+      addMaximizeButton(webview.parentNode, webview.parentNode.id);
   }
 }
 
