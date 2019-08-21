@@ -275,7 +275,7 @@ function addKeyEvents(webview) {
         remove(webview.parentNode.id);
       } else if (webview.parentNode.classList.contains("overflow")) {
         const main = document.getElementById("main-content");
-        main.removeChild(main.lastChild);
+        main.removeChild(document.getElementsByClassName("overflow")[0]);
       }
     }
     if (
@@ -283,7 +283,7 @@ function addKeyEvents(webview) {
       webview.parentNode.classList.contains("overflow")
     ) {
       const main = document.getElementById("main-content");
-      main.removeChild(main.lastChild);
+      main.removeChild(document.getElementsByClassName("overflow")[0]);
     }
   });
 }
