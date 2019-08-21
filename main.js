@@ -352,8 +352,8 @@ function maximize(index) {
 
 function refreshButtons() {
   const main = document.getElementById("main-content");
-  const panes = Array.from(main.children);
-  panes.forEach(function(child) {
+  const children = Array.from(main.children);
+  children.forEach(function(child) {
     if (!child.classList.contains("small")) return;
     const target = child.querySelector(".tool-buttons");
     if (target.nextSibling.classList.contains("terminal")) return;
@@ -363,6 +363,10 @@ function refreshButtons() {
     addButtons(target, target.parentNode.id);
     child.style.width = "100%";
     child.style.height = "100%";
+
+    const maxBtn = child.querySelector(".max-button");
+    maxBtn.parentNode.removeChild(maxBtn);
+    addMaximizeButton(child, target.parentNode.id);
   });
 }
 
