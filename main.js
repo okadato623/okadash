@@ -275,7 +275,7 @@ function addKeyEvents(webview) {
         remove(webview.parentNode.id);
       } else if (webview.parentNode.classList.contains("overflow")) {
         const main = document.getElementById("main-content");
-        main.removeChild(document.getElementsByClassName("overflow")[0]);
+        main.removeChild(main.lastChild);
       }
     }
     if (
@@ -283,7 +283,7 @@ function addKeyEvents(webview) {
       webview.parentNode.classList.contains("overflow")
     ) {
       const main = document.getElementById("main-content");
-      main.removeChild(document.getElementsByClassName("overflow")[0]);
+      main.removeChild(main.lastChild);
     }
   });
 }
@@ -336,7 +336,11 @@ function maximize(index) {
   const url = target.querySelector("webview").src;
   const main = document.getElementById("main-content");
   const div = document.createElement("div");
+  const label = document.createElement("label");
   div.className = "overflow";
+  label.className = "overflow-message";
+  label.innerHTML = "Press Esc to Close";
+  div.appendChild(label);
   main.appendChild(div);
   const webview = createWebview("normal", url);
   webview.addEventListener("dom-ready", function() {
