@@ -136,7 +136,6 @@ function initialize() {
   getWebviews().forEach(function(webview, index) {
     webview.addEventListener("dom-ready", function() {
       initializeWebview(webview);
-      addMaximizeButton(webview.parentNode, webview.parentNode.id);
       if (
         webview.parentNode.classList.contains("small") &&
         !webview.previousSibling.hasChildNodes()
@@ -233,6 +232,7 @@ function initializeWebview(webview, additionalPage = "") {
     }
   } else {
     addKeyEvents(webview);
+    addMaximizeButton(webview.parentNode, webview.parentNode.id);
   }
 }
 
@@ -354,7 +354,7 @@ function refreshButtons() {
   const panes = Array.from(main.children);
   panes.forEach(function(child) {
     if (!child.classList.contains("small")) return;
-    const target = child.firstChild;
+    const target = child.querySelector(".tool-buttons");
     if (target.nextSibling.classList.contains("terminal")) return;
     while (target.firstChild) {
       target.removeChild(target.firstChild);
