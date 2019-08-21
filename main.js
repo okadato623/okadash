@@ -629,16 +629,16 @@ function calcWindowSize(init = false) {
       `${configWidth}% 0% ` +
       `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
-  const panes = Array.from(document.getElementsByTagName("webview"));
-  panes.forEach(function(pane) {
-    pane.style.width = "100%";
-    pane.style.height = "100%";
-  });
   columns = `grid-template-columns: ${ratio} !important ;`;
   rows = `grid-template-rows: ${configHeight}% 0% ${100 -
     configHeight}% !important ;`;
   if (init && allWidth !== undefined) columns = allWidth;
   main.style = columns + rows;
+  const panes = Array.from(document.getElementsByClassName("small"));
+  panes.forEach(function(pane) {
+    pane.style.width = "100%";
+    pane.style.height = "100%";
+  });
   if (configHeight !== undefined) {
     store.set("contents.0.width", configWidth);
     store.set("contents.0.allWidth", columns);
