@@ -7,7 +7,7 @@ Dashboard Tool made with Electron
 Detail is [here](https://trello.com/b/dwk73iz6/okadash)
 
 ## Download
-[okadash-1.2.2-win.zip](https://github.com/konoyono/okadash/releases/download/1.2.2/okadash-1.2.2-win.zip)
+[okadash-1.2.2-win.zip](https://github.com/konoyono/okadash/releases/download/1.2.2/okadash-1.2.2-win.zip)  
 [okadash-1.2.2-mac.zip](https://github.com/konoyono/okadash/releases/download/1.2.2/okadash-1.2.2-mac.zip)
 
 ## Quick Start
