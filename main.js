@@ -36,7 +36,7 @@ $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
   if (this.id === "dragbar-vertical") {
-    draggingId = "";
+    draggingId = "0";
     dragging_vertical = true;
   } else {
     dragging_vertical_small = true;
@@ -83,14 +83,25 @@ $("#dragbar-horizontal").mousedown(function(e) {
 
 $(document).mouseup(function(e) {
   if (dragging_vertical) {
-    $(".large").css("width", e.pageX + 2);
+    const largeWidth = document.getElementById("0").clientWidth;
+    const smallPanes = Array.from(document.getElementsByClassName("small"));
+    if (smallPanes.length !== 0) {
+      let nextPaneLen = largeWidth;
+      smallPanes.forEach(function(pane) {
+        if (pane.id <= 2) nextPaneLen += pane.clientWidth;
+      });
+      if (e.pageX >= nextPaneLen) return;
+      $("#2").css("width", nextPaneLen - e.pageX);
+    }
+
+    $("#0").css("width", e.pageX);
     $("#ghostbar-vertical").remove();
     $(document).unbind("mousemove");
     dragging_vertical = false;
     calcWindowSize();
   }
   if (dragging_horizontal) {
-    $(".medium").css("height", e.pageY + 2);
+    $(".medium").css("height", e.pageY);
     $("#ghostbar-horizontal").remove();
     $(document).unbind("mousemove");
     dragging_horizontal = false;
@@ -628,13 +639,21 @@ function calcWindowSize(init = false) {
   configWidth = (largeWidth / mainWidth) * 100;
   configHeight = (mediumHheight / mainHeight) * 100;
   if (draggingId !== undefined && draggingId !== "") {
+    nextNum =
+      draggingId === "0" ? Number(draggingId) + 2 : Number(draggingId) + 1;
     const target = document.getElementById(`${draggingId}`);
-    const next = document.getElementById(`${Number(draggingId) + 1}`);
+    const next = document.getElementById(`${nextNum}`);
     let arColumns = main.style["grid-template-columns"].split(" ");
     var newSmallWidth = (target.clientWidth / mainWidth) * 100;
     var nextWidth = Math.abs((next.clientWidth / mainWidth) * 100);
-    arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
-    arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
+    // Largeペインだけ特別扱い（統合したい…）
+    if (draggingId === "0") {
+      arColumns[0] = `${newSmallWidth}% `;
+      arColumns[2] = `${nextWidth}% `;
+    } else {
+      arColumns[Number(draggingId) * 2 - 2] = `${newSmallWidth}% `;
+      arColumns[Number(draggingId) * 2] = `${nextWidth}% `;
+    }
     ratio = arColumns.join(" ");
   } else {
     // リセット時の処理なので等分するだけ
