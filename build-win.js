@@ -1,12 +1,13 @@
 const builder = require("electron-builder");
+const Platform = builder.Platform;
 
 builder.build({
-  platform: "win",
+  targets: Platform.WINDOWS.createTarget(),
   config: {
     win: {
       target: {
         target: "zip",
-        arch: ["x64", "ia32"]
+        arch: ["x64"]
       }
     }
   }

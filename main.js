@@ -57,6 +57,10 @@ $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
   });
 });
 
+window.onresize = function() {
+  remote.getCurrentWindow().reload();
+};
+
 $("#dragbar-horizontal").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
@@ -522,36 +526,40 @@ function openExternalUrl(event) {
   }
 }
 
-function openFileAndSave() {
-  const win = remote.getCurrentWindow();
-  remote.dialog.showOpenDialog(
-    win,
-    {
-      properties: ["openFile"],
-      filters: [
-        {
-          name: "config",
-          extensions: ["json"]
-        }
-      ]
-    },
-    filePath => {
-      if (filePath) {
-        saveJson(filePath[0]);
-      }
-    }
-  );
+function autoLoadSettingsInCurrentDir() {
+  try {
+    if (__dirname + "/settings.json") saveJson(__dirname + "/settings.json");
+  } catch (err) {
+    alert("[Error in loading settings] " + err.message);
+  }
 }
 
 function saveJson(jsonPath) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
+  if (!validateJson(settings)) {
+    return null;
+  }
+
   store.set(settings);
   remote.getCurrentWindow().reload();
 }
 
+function validateJson(jsonObj) {
+  if (!jsonObj.url_options) {
+    alert("Error in settings: url_options is invalid");
+    return false;
+  }
+  if (!jsonObj.contents) {
+    alert("Error in settings: contents is invalid");
+    return false;
+  }
+
+  return true;
+}
+
 function loadSettings() {
   if (store.size == 0) {
-    openFileAndSave();
+    autoLoadSettingsInCurrentDir();
     return;
   }
 

@@ -8,12 +8,12 @@
     {
       "style": "normal",
       "size": "large",
-      "url": "https://[workspace].slack.com",
+      "url": "https://[workspace].slack.com"
     },
     {
       "style": "trello-headerless",
-      "size": "normal",
-      "url": "https://trello.com/b/dwk73iz6/okadash",
+      "size": "medium",
+      "url": "https://trello.com/b/dwk73iz6/okadash"
     },
     {
       "style": "slack-only-body",
