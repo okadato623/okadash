@@ -718,3 +718,32 @@ function calcWindowSize(init = false) {
     store.set("contents.1.height", configHeight);
   }
 }
+
+var savedLargeWidth = 0;
+function foldLargePane() {
+  const largeWidth = document.getElementById("0").clientWidth;
+  const smallPanes = Array.from(document.getElementsByClassName("small"));
+  if (smallPanes.length !== 0) {
+    var nextPaneLen = largeWidth;
+    smallPanes.forEach(function(pane) {
+      if (pane.id <= 2) nextPaneLen += pane.clientWidth;
+    });
+  }
+  draggingId = "0";
+  if (savedLargeWidth === 0) {
+    savedLargeWidth = largeWidth;
+    $("#0").css("width", 2);
+    $("#2").css("width", nextPaneLen - 2);
+    calcWindowSize();
+  } else if (savedLargeWidth === 2) {
+    $("#0").css("width", 800);
+    $("#2").css("width", nextPaneLen - 800);
+    calcWindowSize();
+    savedLargeWidth = 800;
+  } else {
+    $("#0").css("width", savedLargeWidth);
+    $("#2").css("width", nextPaneLen - savedLargeWidth);
+    calcWindowSize();
+    savedLargeWidth = 0;
+  }
+}
