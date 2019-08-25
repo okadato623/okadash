@@ -288,6 +288,8 @@ function renderByCustomCss(webview) {
     webview.insertCSS(getSlackChannelAndBodyCss());
   } else if (webview.id == "trello-headerless") {
     webview.insertCSS(getTrelloHeaderlessCss());
+  } else if (webview.id == "twitter-nobanner") {
+    webview.insertCSS(getTwitterNobannerCss());
   }
 }
 
@@ -311,6 +313,10 @@ function getTrelloHeaderlessCss() {
   return `#header { display: none !important; }
     .board-header { display: none !important; }
     .board-canvas { margin-top: 10px !important; }`;
+}
+
+function getTwitterNobannerCss() {
+  return "header { display: none !important; }";
 }
 
 function addKeyEvents(webview) {

@@ -47,7 +47,8 @@
             href="https://forecast7.com/en/35d69139d69/tokyo/"
             data-label_1="TOKYO"
             data-label_2="WEATHER"
-            data-days="3"
+            data-days="5"
+            data-theme="pure"
             style="margin-bottom: 30px"
             >TOKYO WEATHER</a
           >
@@ -63,7 +64,14 @@
               }
             })(document, "script", "weatherwidget-io-js");
           </script>
-          <table id="timeTable">
+          <table class="calendar-table" style="margin-top: 30px">
+            <tbody id="js-calendar-body"></tbody>
+          </table>
+
+          <table id="timeTable" style="margin-top: 30px">
+            <tr>
+              <td id="date"></td>
+            </tr>
             <tr>
               <td id="timeRow">
                 <table>
@@ -93,17 +101,8 @@
                 </table>
               </td>
             </tr>
-            <tr>
-              <td id="date"></td>
-            </tr>
-            <table class="calendar-table" style="margin-top: 30px">
-              <tbody id="js-calendar-body"></tbody>
-            </table>
           </table>
         </td>
-      </tr>
-      <tr style="height: 15%">
-        <td></td>
       </tr>
     </table>
 
