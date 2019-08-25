@@ -132,10 +132,10 @@ $(document).mouseup(function(e) {
 $(document).keydown(function(e) {
   if (
     e.keyCode == 27 &&
-    document.getElementsByClassName("overflow").length !== 0
+    document.getElementsByClassName("overlay").length !== 0
   ) {
     const main = document.getElementById("main-content");
-    main.removeChild(document.getElementsByClassName("overflow")[0]);
+    main.removeChild(document.getElementsByClassName("overlay")[0]);
   }
 });
 
@@ -184,6 +184,8 @@ function createMenuItemForSmallPane() {
   additionalPaneMenuItems.forEach(function(apMenuItem) {
     menuItem.submenu.append(apMenuItem);
   });
+  menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  menuItem.submenu.append(createGoogleMenuItem());
   return menuItem;
 }
 
@@ -219,6 +221,33 @@ function createAdditionalPaneMenuItems(nameAndUrls) {
   return additionalPaneMenuItems;
 }
 
+function createGoogleMenuItem() {
+  return new MenuItem({
+    label: "Search in Google",
+    accelerator: "Command+l",
+    click() {
+      openGoogleInOverlay();
+    }
+  });
+}
+
+function openGoogleInOverlay() {
+  const main = document.getElementById("main-content");
+  const div = document.createElement("div");
+  const label = document.createElement("label");
+  div.className = "overlay";
+  label.className = "overlay-message";
+  label.innerHTML = "Press Esc to Close";
+  div.appendChild(label);
+  main.appendChild(div);
+  const webview = createWebview("normal", "https://google.com");
+  webview.addEventListener("dom-ready", function() {
+    initializeWebview(webview, "https://google.com");
+    webview.focus();
+  });
+  div.appendChild(webview);
+}
+
 function getAdditionalPaneInfo(url_options) {
   const nameAndUrls = url_options.map(function(url, index) {
     let dispName = url.split("/").slice(-1)[0]; // 最後の / 以降を取得
@@ -247,7 +276,7 @@ function initializeWebview(webview, additionalPage = "") {
     }
   } else {
     addKeyEvents(webview);
-    if (!webview.parentNode.classList.contains("overflow"))
+    if (!webview.parentNode.classList.contains("overlay"))
       addMaximizeButton(webview.parentNode, webview.parentNode.id);
   }
 }
@@ -286,20 +315,26 @@ function getTrelloHeaderlessCss() {
 
 function addKeyEvents(webview) {
   webview.getWebContents().on("before-input-event", (event, input) => {
-    if (input.meta && input.key === "w") {
-      if (webview.parentNode.classList.contains("small")) {
-        remove(webview.parentNode.id);
-      } else if (webview.parentNode.classList.contains("overflow")) {
-        const main = document.getElementById("main-content");
-        main.removeChild(main.lastChild);
-      }
-    }
     if (
-      input.key === "Escape" &&
-      webview.parentNode.classList.contains("overflow")
+      input.meta &&
+      input.key === "w" &&
+      webview.parentNode.classList.contains("small")
     ) {
-      const main = document.getElementById("main-content");
-      main.removeChild(main.lastChild);
+      remove(webview.parentNode.id);
+    }
+    if (webview.parentNode.classList.contains("overlay")) {
+      if (input.key === "Escape" || (input.meta && input.key === "w")) {
+        const main = document.getElementById("main-content");
+        main.removeChild(document.getElementsByClassName("overlay")[0]);
+      }
+      if (input.meta && input.key === "[") {
+        console.log("back");
+        webview.goBack();
+      }
+      if (input.meta && input.key === "]") {
+        console.log("forward");
+        webview.goForward();
+      }
     }
   });
 }
@@ -353,8 +388,8 @@ function maximize(index) {
   const main = document.getElementById("main-content");
   const div = document.createElement("div");
   const label = document.createElement("label");
-  div.className = "overflow";
-  label.className = "overflow-message";
+  div.className = "overlay";
+  label.className = "overlay-message";
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
