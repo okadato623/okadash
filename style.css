@@ -66,7 +66,7 @@ body {
 .small {
   grid-row: 3 / 100;
 }
-.overflow {
+.overlay {
   text-align: center;
   position: absolute;
   left: 0;
@@ -83,7 +83,7 @@ body {
   box-shadow: 0px 0px 6px 3px #888;
   border-radius: 5px;
 }
-.overflow-message {
+.overlay-message {
   position: absolute;
   bottom: 10px;
   left: 10px;
