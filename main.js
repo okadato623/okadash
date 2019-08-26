@@ -732,10 +732,10 @@ function foldLargePane() {
   draggingId = "0";
   if (savedLargeWidth === 0) {
     savedLargeWidth = largeWidth;
-    $("#0").css("width", 2);
-    $("#2").css("width", nextPaneLen - 2);
+    $("#0").css("width", 160);
+    $("#2").css("width", nextPaneLen - 160);
     calcWindowSize();
-  } else if (savedLargeWidth === 2) {
+  } else if (savedLargeWidth === 160) {
     $("#0").css("width", 800);
     $("#2").css("width", nextPaneLen - 800);
     calcWindowSize();
