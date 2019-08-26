@@ -135,7 +135,7 @@ body {
 .fold-large {
   position: absolute;
   top: 0%;
-  left: -4px;
+  right: -4px;
   height: 100%;
   background: none;
   z-index: 1;
