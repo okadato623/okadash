@@ -396,7 +396,6 @@ function refreshButtons() {
   children.forEach(function(child) {
     if (!child.classList.contains("small")) return;
     const target = child.querySelector(".tool-buttons");
-    if (target.nextSibling.classList.contains("terminal")) return;
     while (target.firstChild) {
       target.removeChild(target.firstChild);
     }
