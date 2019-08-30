@@ -12,20 +12,6 @@ let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
-// for xterm
-const pty = require("node-pty");
-const xtshell = process.env["SHELL"];
-let ptyProcess = pty.spawn(xtshell, [], {
-  cwd: process.cwd(),
-  env: process.env
-});
-Terminal.applyAddon(fit);
-fontSize = 12;
-var xterm = new Terminal({
-  fontSize: `${fontSize}`
-});
-xterm.isOpen = false;
-
 initialize();
 
 var dragging_vertical = false;
@@ -258,9 +244,7 @@ function getAdditionalPaneInfo(url_options) {
 
 function getWebviews() {
   let webviews = Array.from(document.getElementsByTagName("webview"));
-  let xterm = Array.from(document.getElementsByClassName("terminal"));
-
-  return webviews.concat(xterm);
+  return webviews;
 }
 
 function initializeWebview(webview, additionalPage = "") {
@@ -449,26 +433,19 @@ function getPaneNum() {
 
 function loadAdditionalPage(additionalPage) {
   resetWindowSize();
-  if (additionalPage.href === "http://xterm/") {
-    if (xterm.isOpen) return;
-    var style = "xterm";
-    const size = "small";
-    createPane(size, style, "");
-  } else {
-    var style = "slack-only-body";
-    const size = "small";
-    createPane(size, style, "");
-    storeStyle(getPaneNum() - 1, style);
-    storeSize(getPaneNum() - 1, size);
-    storeUrl(getPaneNum() - 1, additionalPage);
 
-    const delta = xterm.isOpen ? 2 : 1;
-    const webview = getWebviews()[getPaneNum() - delta];
-    webview.addEventListener("dom-ready", function() {
-      initializeWebview(webview, additionalPage);
-    });
-    refreshButtons();
-  }
+  var style = "slack-only-body";
+  const size = "small";
+  createPane(size, style, "");
+  storeStyle(getPaneNum() - 1, style);
+  storeSize(getPaneNum() - 1, size);
+  storeUrl(getPaneNum() - 1, additionalPage);
+
+  const webview = getWebviews()[getPaneNum() - 1];
+  webview.addEventListener("dom-ready", function() {
+    initializeWebview(webview, additionalPage);
+  });
+  refreshButtons();
 }
 
 function storeStyle(index, style) {
@@ -489,39 +466,12 @@ function createPane(size, style, url = "", init = false) {
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  if (style === "xterm") {
-    createXtermPane();
-  } else {
-    const webview = createWebview(style, url);
-    divContainer.appendChild(webview);
-  }
+
+  const webview = createWebview(style, url);
+  divContainer.appendChild(webview);
+
   createDraggableBar(size);
   calcWindowSize(init);
-}
-
-function createXtermPane() {
-  ptyProcess = pty.spawn(xtshell, [], {
-    cwd: process.cwd(),
-    env: process.env
-  });
-  xterm = new Terminal({
-    fontSize: `${fontSize}`
-  });
-  xterm.open(document.getElementById(getPaneNum() - 1));
-  xterm.isOpen = true;
-  xterm.on("data", data => {
-    ptyProcess.write(data);
-    if (data === "") closeXtermPane(); // Ctrl+d
-  });
-  ptyProcess.on("data", function(data) {
-    xterm.write(data);
-  });
-}
-
-function closeXtermPane() {
-  const target = document.getElementsByClassName("terminal")[0];
-  remove(target.parentNode.id);
-  xterm.isOpen = false;
 }
 
 function createDraggableBar(size) {
@@ -665,7 +615,6 @@ function setWindowSizeByConfig() {
 }
 
 function calcWindowSize(init = false) {
-  if (xterm.isOpen === true) xterm.fit();
   const smallNum = document.getElementsByClassName("small").length;
   if (smallNum === 0) {
     setWindowSizeByConfig();
