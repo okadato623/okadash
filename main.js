@@ -5,7 +5,7 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
-const options = loadUserSettings();
+const options = loadUserSettings()["contents"];
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -249,6 +249,7 @@ function getAdditionalPaneInfo(contents) {
       alert(
         "[Error] invalid URL format found in settings.json.  Maybe [workspace] in settings?"
       );
+      store.clear();
     }
     return {
       name: content["name"],
@@ -506,20 +507,13 @@ function openExternalUrl(event) {
   }
 }
 
-function autoLoadSettingsInCurrentDir() {
-  try {
-    if (__dirname + "/settings.json") saveJson(__dirname + "/settings.json");
-  } catch (err) {
-    alert("[Error in loading settings] " + err.message);
-  }
-}
-
 function saveJson(jsonPath) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   if (!validateJson(settings)) {
     return null;
   }
 
+  store.set("options", settings);
   store.set(settings);
   remote.getCurrentWindow().reload();
 }
@@ -536,21 +530,43 @@ function validateJson(jsonObj) {
   return true;
 }
 
-function loadSettings() {
+function loadUserSettings() {
   if (store.size == 0) {
-    autoLoadSettingsInCurrentDir();
+    openFileAndSave();
     return;
   }
 
-  return buildJsonObjectFromStoredData();
+  return buildJsonObjectFromStoredData(store.get("options")["contents"]);
 }
 
-function loadUserSettings() {
-  var settings = JSON.parse(fs.readFileSync(__dirname + "/settings.json"));
-  if (!validateJson(settings)) {
-    return null;
+function loadSettings() {
+  if (store.size == 0) {
+    openFileAndSave();
+    return;
   }
-  return settings["contents"];
+
+  return buildJsonObjectFromStoredData(store.get("contents"));
+}
+
+function openFileAndSave() {
+  const win = remote.getCurrentWindow();
+  remote.dialog.showOpenDialog(
+    win,
+    {
+      properties: ["openFile"],
+      filters: [
+        {
+          name: "settings",
+          extensions: ["json"]
+        }
+      ]
+    },
+    filePath => {
+      if (filePath) {
+        saveJson(filePath[0]);
+      }
+    }
+  );
 }
 
 function saveNewContents() {
@@ -562,8 +578,7 @@ function saveNewContents() {
   store.set("contents", newContents);
 }
 
-function buildJsonObjectFromStoredData() {
-  const contents = store.get("contents");
+function buildJsonObjectFromStoredData(contents) {
   let newContents = [];
   contents.forEach(function(content) {
     if (content !== null) newContents.push(content);
