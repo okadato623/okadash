@@ -244,7 +244,6 @@ function getAdditionalPaneInfo(url_options) {
 
 function getWebviews() {
   let webviews = Array.from(document.getElementsByTagName("webview"));
-
   return webviews;
 }
 
@@ -397,7 +396,6 @@ function refreshButtons() {
   children.forEach(function(child) {
     if (!child.classList.contains("small")) return;
     const target = child.querySelector(".tool-buttons");
-    if (target.nextSibling.classList.contains("terminal")) return;
     while (target.firstChild) {
       target.removeChild(target.firstChild);
     }
@@ -441,7 +439,7 @@ function loadAdditionalPage(additionalPage) {
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, additionalPage);
 
-  const webview = getWebviews()[getPaneNum() - delta];
+  const webview = getWebviews()[getPaneNum() - 1];
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, additionalPage);
   });
@@ -466,8 +464,10 @@ function createPane(size, style, url = "", init = false) {
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
+
   const webview = createWebview(style, url);
   divContainer.appendChild(webview);
+
   createDraggableBar(size);
   calcWindowSize(init);
 }
