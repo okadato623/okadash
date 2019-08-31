@@ -1,10 +1,11 @@
-const builder = require('electron-builder');
+const builder = require("electron-builder");
 
 builder.build({
   config: {
-    'mac': {
-      'target': 'zip',
-      'files': ["!images/*"]
-    },
-  },
+    mac: {
+      icon: "build/icons/icon.icns",
+      target: "zip",
+      files: ["!images/*"]
+    }
+  }
 });
