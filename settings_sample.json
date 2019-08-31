@@ -1,34 +1,42 @@
 {
-  "url_options": [
-    "https://twitter.com",
-    "https://[workspace].slack.com",
-    "http://www.clocktab.com"
-  ],
   "contents": [
     {
-      "style": "normal",
+      "url": "https://[workspace].slack.com",
       "size": "large",
-      "url": "https://[workspace].slack.com"
+      "customCSS": [
+        ".p-channel_sidebar { width: 160px !important; }",
+        ".p-classic_nav__team_header { display: none !important; }",
+        ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
+      ]
     },
     {
-      "style": "trello-headerless",
+      "url": "https://trello.com/b/dwk73iz6/okadash",
       "size": "medium",
-      "url": "https://trello.com/b/dwk73iz6/okadash"
+      "customCSS": [
+        "#header { display: none !important; }",
+        ".board-header { display: none !important; }",
+        ".board-canvas { margin-top: 10px !important; }"
+      ]
     },
     {
-      "style": "slack-only-body",
-      "size": "small",
-      "url": "https://[workspace].slack.com"
+      "name": "Slack",
+      "url": "https://[workspace].slack.com",
+      "customCSS": [
+        ".p-workspace__sidebar { display: none !important; }",
+        ".p-classic_nav__team_header { display: none !important;}",
+        ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
+        ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
+        ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
+      ]
     },
     {
-      "style": "normal",
-      "size": "small",
-      "url": "https://twitter.com"
+      "name": "twitter",
+      "url": "https://twitter.com",
+      "customCSS": ["header { display: none !important; }"]
     },
     {
-      "style": "normal",
-      "size": "small",
-      "url": "http://www.clocktab.com"
+      "name": "clock",
+      "url": "http://www.clocktab.com/"
     }
   ]
 }

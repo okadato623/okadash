@@ -243,9 +243,16 @@ function openGoogleInOverlay() {
 
 function getAdditionalPaneInfo(contents) {
   const content = contents.map(function(content, index) {
+    try {
+      url = new URL(content["url"]);
+    } catch {
+      alert(
+        "[Error] invalid URL format found in settings.json.  Maybe [workspace] in settings?"
+      );
+    }
     return {
       name: content["name"],
-      url: new URL(content["url"]),
+      url: url,
       customCSS: content["customCSS"],
       index: index
     };
