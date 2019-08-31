@@ -636,7 +636,7 @@ var savedLargeWidth = document.getElementById("0").clientWidth;
 function foldLargePane() {
   const largeWidth = document.getElementById("0").clientWidth;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
-  let newWidth = 800;
+  let newWidth = 700;
   if (smallPanes.length !== 0) {
     var nextPaneLen = largeWidth;
     smallPanes.forEach(function(pane) {
@@ -647,7 +647,7 @@ function foldLargePane() {
   if (
     savedLargeWidth === 0 ||
     savedLargeWidth === nextPaneLen ||
-    savedLargeWidth === 800
+    savedLargeWidth === 700
   ) {
     savedLargeWidth = largeWidth;
     $("#0").css("width", 160);
@@ -655,7 +655,7 @@ function foldLargePane() {
     savedLargeWidth = 160;
     calcWindowSize();
   } else if (savedLargeWidth === 160) {
-    if (nextPaneLen <= 800) {
+    if (nextPaneLen <= 700) {
       newWidth = nextPaneLen;
     }
     $("#0").css("width", newWidth);
