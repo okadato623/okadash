@@ -1,10 +1,11 @@
 const { shell } = require("electron");
 var { remote } = require("electron");
-var { isMac, app, Menu, MenuItem } = remote;
+var { Menu, MenuItem } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
+const options = loadUserSettings();
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -131,12 +132,17 @@ function initialize() {
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
   contents.forEach(function(content) {
-    createPane(content["size"], content["style"], content["url"], true);
+    if (content["size"] === undefined) content["size"] = "small";
+    createPane(content["size"], content["url"], true);
   });
 
   getWebviews().forEach(function(webview, index) {
     webview.addEventListener("dom-ready", function() {
-      initializeWebview(webview);
+      initializeWebview(
+        webview,
+        json.contents[index]["url"],
+        json.contents[index]["customCSS"]
+      );
       if (
         webview.parentNode.classList.contains("small") &&
         !webview.previousSibling.hasChildNodes()
@@ -164,8 +170,9 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const nameAndUrls = getAdditionalPaneInfo(json.url_options);
-  const additionalPaneMenuItems = createAdditionalPaneMenuItems(nameAndUrls);
+  options.splice(0, 2);
+  const content = getAdditionalPaneInfo(options);
+  const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
 
   additionalPaneMenuItems.forEach(function(apMenuItem) {
     menuItem.submenu.append(apMenuItem);
@@ -193,13 +200,13 @@ function createSettingsMenu() {
   return menuItem;
 }
 
-function createAdditionalPaneMenuItems(nameAndUrls) {
-  const additionalPaneMenuItems = nameAndUrls.map(function(nameAndUrl) {
+function createAdditionalPaneMenuItems(contents) {
+  const additionalPaneMenuItems = contents.map(function(content) {
     return new MenuItem({
-      label: nameAndUrl["name"],
-      accelerator: `Command+${nameAndUrl["index"] + 1}`,
+      label: content["name"],
+      accelerator: `Command+${content["index"] + 1}`,
       click() {
-        loadAdditionalPage(nameAndUrl["url"]);
+        loadAdditionalPage(content["url"], content["customCSS"]);
       }
     });
   });
@@ -234,12 +241,16 @@ function openGoogleInOverlay() {
   div.appendChild(webview);
 }
 
-function getAdditionalPaneInfo(url_options) {
-  const nameAndUrls = url_options.map(function(url, index) {
-    let dispName = url.split("/").slice(-1)[0]; // 最後の / 以降を取得
-    return { name: dispName, url: new URL(url), index: index };
+function getAdditionalPaneInfo(contents) {
+  const content = contents.map(function(content, index) {
+    return {
+      name: content["name"],
+      url: new URL(content["url"]),
+      customCSS: content["customCSS"],
+      index: index
+    };
   });
-  return nameAndUrls;
+  return content;
 }
 
 function getWebviews() {
@@ -247,60 +258,18 @@ function getWebviews() {
   return webviews;
 }
 
-function initializeWebview(webview, additionalPage = "") {
-  renderByCustomCss(webview);
+function initializeWebview(webview, url, customCSS = []) {
   registerToOpenUrl(webview, shell);
+  webview.insertCSS(customCSS.join(" "));
   webview.autosize = "on";
 
   if (webview.src === "about:blank") {
-    if (additionalPage !== "") {
-      webview.loadURL(additionalPage.toString());
-    } else {
-      webview.loadURL(webview.url.toString());
-    }
+    webview.loadURL(url.toString());
   } else {
     addKeyEvents(webview);
     if (!webview.parentNode.classList.contains("overlay"))
       addMaximizeButton(webview.parentNode, webview.parentNode.id);
   }
-}
-
-function renderByCustomCss(webview) {
-  if (webview.id == "slack-only-body") {
-    webview.insertCSS(getSlackOnlyBodyCss());
-  } else if (webview.id == "slack-channel-and-body") {
-    webview.insertCSS(getSlackChannelAndBodyCss());
-  } else if (webview.id == "trello-headerless") {
-    webview.insertCSS(getTrelloHeaderlessCss());
-  } else if (webview.id == "twitter-nobanner") {
-    webview.insertCSS(getTwitterNobannerCss());
-  }
-}
-
-function getSlackOnlyBodyCss() {
-  return `.p-workspace__sidebar { display: none !important; }
-    .p-classic_nav__team_header { display: none !important; }
-    .p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important; }
-    .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
-    .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
-}
-
-function getSlackChannelAndBodyCss() {
-  return `.p-channel_sidebar { width: 160px !important; }
-    .p-classic_nav__team_header { display: none !important; }
-    .p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }
-    .p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important; }
-    .p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important; }`;
-}
-
-function getTrelloHeaderlessCss() {
-  return `#header { display: none !important; }
-    .board-header { display: none !important; }
-    .board-canvas { margin-top: 10px !important; }`;
-}
-
-function getTwitterNobannerCss() {
-  return "header { display: none !important; }";
 }
 
 function addKeyEvents(webview) {
@@ -318,11 +287,9 @@ function addKeyEvents(webview) {
         main.removeChild(document.getElementsByClassName("overlay")[0]);
       }
       if (input.meta && input.key === "[") {
-        console.log("back");
         webview.goBack();
       }
       if (input.meta && input.key === "]") {
-        console.log("forward");
         webview.goForward();
       }
     }
@@ -342,7 +309,10 @@ function remove(index) {
   saveNewContents();
 
   smallPanes.forEach(function(pane) {
-    if (pane.id > index) pane.id = pane.id - 1;
+    if (pane.id > index) {
+      pane.id = Number(pane.id) - 1;
+      pane.style.order = Number(pane.id) - 1;
+    }
   });
   bars.forEach(function(bar) {
     id = Number(bar.id.replace(/[^0-9]/g, ""));
@@ -358,17 +328,20 @@ function remove(index) {
 }
 
 function move(index, next) {
+  const json = loadSettings();
   const src = document.getElementById(index);
   const dst = document.getElementById(Number(index) + Number(next));
   const storeSrc = src.querySelector("webview");
   const storeDst = dst.querySelector("webview");
-  storeStyle(dst.id, storeSrc.id);
   storeUrl(dst.id, storeSrc.src);
-  storeStyle(src.id, storeDst.id);
   storeUrl(src.id, storeDst.src);
   const tmp = src.id;
+  const tmpCSS = json.contents[index]["customCSS"];
+  storeCustomCSS(src.id, json.contents[dst.id]["customCSS"]);
   src.id = src.style.order = dst.id;
+  storeCustomCSS(dst.id, tmpCSS);
   dst.id = dst.style.order = tmp;
+
   refreshButtons();
 }
 
@@ -404,7 +377,7 @@ function refreshButtons() {
     child.style.height = "100%";
 
     const maxBtn = child.querySelector(".max-button");
-    maxBtn.parentNode.removeChild(maxBtn);
+    if (maxBtn !== null) maxBtn.parentNode.removeChild(maxBtn);
     addMaximizeButton(child, target.parentNode.id);
   });
 }
@@ -412,7 +385,8 @@ function refreshButtons() {
 function addButtons(div, index) {
   if (index != 2)
     div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
-  div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
+  if (getPaneNum() !== 3)
+    div.innerHTML += `<button onclick=remove(${index}) style="font-size: 12px";>Close</button>`;
   if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
@@ -430,24 +404,19 @@ function getPaneNum() {
   return $(".large").length + $(".medium").length + $(".small").length;
 }
 
-function loadAdditionalPage(additionalPage) {
+function loadAdditionalPage(additionalPage, customCSS = []) {
   resetWindowSize();
-  var style = "slack-only-body";
   const size = "small";
-  createPane(size, style, "");
-  storeStyle(getPaneNum() - 1, style);
+  createPane(size, "");
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, additionalPage);
+  storeCustomCSS(getPaneNum() - 1, customCSS);
 
   const webview = getWebviews()[getPaneNum() - 1];
   webview.addEventListener("dom-ready", function() {
-    initializeWebview(webview, additionalPage);
+    initializeWebview(webview, additionalPage, customCSS);
   });
   refreshButtons();
-}
-
-function storeStyle(index, style) {
-  store.set(`contents.${index}.style`, style);
 }
 
 function storeSize(index, size) {
@@ -458,14 +427,18 @@ function storeUrl(index, url) {
   store.set(`contents.${index}.url`, url);
 }
 
-function createPane(size, style, url = "", init = false) {
+function storeCustomCSS(index, customCSS) {
+  store.set(`contents.${index}.customCSS`, customCSS);
+}
+
+function createPane(size, url = "", init = false) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
 
-  const webview = createWebview(style, url);
+  const webview = createWebview(url);
   divContainer.appendChild(webview);
 
   createDraggableBar(size);
@@ -502,16 +475,15 @@ function createButtonDiv() {
   return div;
 }
 
-function createWebview(style, url = "") {
+function createWebview(url = "") {
   let webview = document.createElement("webview");
   webview.src = "about:blank";
-  webview.id = style;
+  webview.id = "normal";
   webview.url = url;
   return webview;
 }
 
-function registerToOpenUrl(webview, shell) {
-  // Hack: remove EventListener if already added
+function registerToOpenUrl(webview) {
   webview.removeEventListener("new-window", openExternalUrl);
   webview.addEventListener("new-window", openExternalUrl);
 }
@@ -520,7 +492,8 @@ function openExternalUrl(event) {
   const url = event.url;
   if (
     url.startsWith("http://") ||
-    url.startsWith("https://" || url.startsWith("file://"))
+    url.startsWith("https://") ||
+    url.startsWith("file://")
   ) {
     shell.openExternal(url);
   }
@@ -545,14 +518,13 @@ function saveJson(jsonPath) {
 }
 
 function validateJson(jsonObj) {
-  if (!jsonObj.url_options) {
-    alert("Error in settings: url_options is invalid");
-    return false;
-  }
   if (!jsonObj.contents) {
     alert("Error in settings: contents is invalid");
     return false;
   }
+  jsonObj.contents.forEach(function(content) {
+    if (content["customCSS"] === undefined) content["customCSS"] = [];
+  });
 
   return true;
 }
@@ -564,6 +536,14 @@ function loadSettings() {
   }
 
   return buildJsonObjectFromStoredData();
+}
+
+function loadUserSettings() {
+  var settings = JSON.parse(fs.readFileSync(__dirname + "/settings.json"));
+  if (!validateJson(settings)) {
+    return null;
+  }
+  return settings["contents"];
 }
 
 function saveNewContents() {
@@ -583,7 +563,6 @@ function buildJsonObjectFromStoredData() {
   });
   store.set("contents", newContents);
   let jsonObj = {
-    url_options: store.get("url_options"),
     contents: newContents
   };
 
@@ -603,25 +582,12 @@ function resetWindowSize() {
   draggingId = "";
 }
 
-function setWindowSizeByConfig() {
-  const main = document.getElementById("main-content");
-  const columns = `grid-template-columns: ${configWidth}% 0% ${100 -
-    configWidth}% 0% !important ;`;
-  const rows = `grid-template-rows: ${configHeight}% 0% ${100 -
-    configHeight}% !important ;`;
-  main.style = columns + rows;
-}
-
 function calcWindowSize(init = false) {
   const smallNum = document.getElementsByClassName("small").length;
-  if (smallNum === 0) {
-    setWindowSizeByConfig();
-    return;
-  }
-
   const main = document.getElementById("main-content");
   const largeWidth = $(".large")[0].clientWidth;
-  const mediumHheight = $(".medium")[0].clientHeight;
+  if ($(".medium")[0] !== undefined)
+    var mediumHheight = $(".medium")[0].clientHeight;
   let columns = "";
   let rows = "";
   configWidth = (largeWidth / mainWidth) * 100;
@@ -666,10 +632,11 @@ function calcWindowSize(init = false) {
   }
 }
 
-var savedLargeWidth = 0;
+var savedLargeWidth = document.getElementById("0").clientWidth;
 function foldLargePane() {
   const largeWidth = document.getElementById("0").clientWidth;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
+  let newWidth = 800;
   if (smallPanes.length !== 0) {
     var nextPaneLen = largeWidth;
     smallPanes.forEach(function(pane) {
@@ -677,16 +644,24 @@ function foldLargePane() {
     });
   }
   draggingId = "0";
-  if (savedLargeWidth === 0) {
+  if (
+    savedLargeWidth === 0 ||
+    savedLargeWidth === nextPaneLen ||
+    savedLargeWidth === 800
+  ) {
     savedLargeWidth = largeWidth;
     $("#0").css("width", 160);
     $("#2").css("width", nextPaneLen - 160);
+    savedLargeWidth = 160;
     calcWindowSize();
   } else if (savedLargeWidth === 160) {
-    $("#0").css("width", 800);
-    $("#2").css("width", nextPaneLen - 800);
+    if (nextPaneLen <= 800) {
+      newWidth = nextPaneLen;
+    }
+    $("#0").css("width", newWidth);
+    $("#2").css("width", nextPaneLen - newWidth);
     calcWindowSize();
-    savedLargeWidth = 800;
+    savedLargeWidth = newWidth;
   } else {
     $("#0").css("width", savedLargeWidth);
     $("#2").css("width", nextPaneLen - savedLargeWidth);
