@@ -5,7 +5,7 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
-const options = loadUserSettings()["contents"];
+const options = store.get("options");
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -513,7 +513,7 @@ function saveJson(jsonPath) {
     return null;
   }
 
-  store.set("options", settings);
+  store.set("options", settings["contents"]);
   store.set(settings);
   remote.getCurrentWindow().reload();
 }
@@ -528,15 +528,6 @@ function validateJson(jsonObj) {
   });
 
   return true;
-}
-
-function loadUserSettings() {
-  if (store.size == 0) {
-    openFileAndSave();
-    return;
-  }
-
-  return buildJsonObjectFromStoredData(store.get("options")["contents"]);
 }
 
 function loadSettings() {
@@ -608,12 +599,13 @@ function calcWindowSize(init = false) {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   const largeWidth = $(".large")[0].clientWidth;
-  if ($(".medium")[0] !== undefined)
+  configWidth = (largeWidth / mainWidth) * 100;
+  if ($(".medium")[0] !== undefined) {
     var mediumHheight = $(".medium")[0].clientHeight;
+    configHeight = (mediumHheight / mainHeight) * 100;
+  }
   let columns = "";
   let rows = "";
-  configWidth = (largeWidth / mainWidth) * 100;
-  configHeight = (mediumHheight / mainHeight) * 100;
   if (draggingId !== undefined && draggingId !== "") {
     nextNum =
       draggingId === "0" ? Number(draggingId) + 2 : Number(draggingId) + 1;
