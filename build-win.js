@@ -6,7 +6,6 @@ builder.build({
   config: {
     win: {
       target: {
-        icon: "build/icons/icon.icns",
         target: "zip",
         arch: ["x64"]
       }
