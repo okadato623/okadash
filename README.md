@@ -9,7 +9,7 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 
 ## Download
 
-[okadash-1.3.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.3.0/okadash-1.3.0-mac.zip)
+[okadash-1.3.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.3.0/okadash-1.3.0-mac.zip)  
 [okadash-1.3.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.3.0/okadash-1.3.0-win.zip)
 
 ## Quick Start
