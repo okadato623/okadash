@@ -1,0 +1,113 @@
+{
+  "options": [
+    {
+      "name": "Default",
+      "contents": [
+        {
+          "url": "https://studist.slack.com",
+          "size": "large",
+          "customCSS": [
+            ".p-channel_sidebar { width: 160px !important; }",
+            ".p-classic_nav__team_header { display: none !important; }",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
+          ]
+        },
+        {
+          "url": "https://trello.com/b/dwk73iz6/okadash",
+          "size": "medium",
+          "customCSS": [
+            "#header { display: none !important; }",
+            ".board-header { display: none !important; }",
+            ".board-canvas { margin-top: 10px !important; }"
+          ]
+        },
+        {
+          "name": "Slack",
+          "url": "https://studist.slack.com",
+          "customCSS": [
+            ".p-workspace__sidebar { display: none !important; }",
+            ".p-classic_nav__team_header { display: none !important;}",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
+            ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
+            ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
+          ]
+        },
+        {
+          "name": "twitter",
+          "url": "https://twitter.com",
+          "customCSS": ["header { display: none !important; }"]
+        },
+        {
+          "name": "clock",
+          "url": "http://www.clocktab.com/",
+          "customCSS": []
+        }
+      ]
+    }
+  ],
+  "boards": [
+    {
+      "name": "hogehoge",
+      "contents": [
+        {
+          "url": "https://studist.slack.com",
+          "size": "large",
+          "customCSS": [
+            ".p-channel_sidebar { width: 160px !important; }",
+            ".p-classic_nav__team_header { display: none !important; }",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
+          ],
+          "width": 41.3290113452188,
+          "allWidth": "grid-template-columns: 41.391% 0% 21.539500337609724%  0% 25.050641458474004%  0% 12.0605% 0% !important ;"
+        }
+      ]
+    },
+    {
+      "name": "Default",
+      "contents": [
+        {
+          "url": "https://studist.slack.com",
+          "size": "large",
+          "customCSS": [
+            ".p-channel_sidebar { width: 160px !important; }",
+            ".p-classic_nav__team_header { display: none !important; }",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
+          ],
+          "width": 41.3290113452188,
+          "allWidth": "grid-template-columns: 41.391% 0% 21.539500337609724%  0% 25.050641458474004%  0% 12.0605% 0% !important ;"
+        },
+        {
+          "url": "https://trello.com/b/dwk73iz6/okadash",
+          "size": "medium",
+          "customCSS": [
+            "#header { display: none !important; }",
+            ".board-header { display: none !important; }",
+            ".board-canvas { margin-top: 10px !important; }"
+          ],
+          "height": 40.08097165991903
+        },
+        {
+          "name": "Slack",
+          "url": "https://studist.slack.com",
+          "customCSS": [
+            ".p-workspace__sidebar { display: none !important; }",
+            ".p-classic_nav__team_header { display: none !important;}",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
+            ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
+            ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
+          ]
+        },
+        {
+          "name": "twitter",
+          "url": "https://twitter.com",
+          "customCSS": ["header { display: none !important; }"]
+        },
+        {
+          "name": "clock",
+          "url": "http://www.clocktab.com/",
+          "customCSS": []
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const json = loadSettings();
-const options = store.get("options");
+const options = store.get("options.contents");
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -161,7 +161,39 @@ function initializeMenu(template) {
   const menuItemForSmallPane = createMenuItemForSmallPane();
   menu.append(menuItemForSmallPane);
 
+  const menuItemForBoard = createMenuItemForBoard();
+  menu.append(menuItemForBoard);
+
   Menu.setApplicationMenu(menu);
+}
+
+function createMenuItemForBoard() {
+  const menuItem = new MenuItem({
+    id: "board",
+    label: "Board",
+    submenu: []
+  });
+  // const content = getBoardInfo(option);
+  // const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
+
+  // additionalPaneMenuItems.forEach(function(apMenuItem) {
+  //   menuItem.submenu.append(apMenuItem);
+  // });
+  menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "Add",
+      accelerator: "Command+n",
+      click() {
+        addNewSpace();
+      }
+    })
+  );
+  return menuItem;
+}
+
+function addNewSpace() {
+  openFileAndSave();
 }
 
 function createMenuItemForSmallPane() {
@@ -507,14 +539,17 @@ function openExternalUrl(event) {
   }
 }
 
-function saveJson(jsonPath) {
+function saveJson(jsonPath, spaceName) {
+  console.log(spaceName);
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   if (!validateJson(settings)) {
     return null;
   }
 
-  store.set("options", settings["contents"]);
-  store.set(settings);
+  store.set("options.name", spaceName);
+  store.set("options.contents", settings["contents"]);
+  store.set("boards.name", spaceName);
+  store.set("boards.contents", settings["contents"]);
   remote.getCurrentWindow().reload();
 }
 
@@ -531,12 +566,43 @@ function validateJson(jsonObj) {
 }
 
 function loadSettings() {
+  // store.clear();
   if (store.size == 0) {
     openFileAndSave();
     return;
   }
 
-  return buildJsonObjectFromStoredData(store.get("contents"));
+  console.log(store.get("boards.contents"));
+
+  return buildJsonObjectFromStoredData(store.get("boards.contents"));
+}
+
+function showModalDialogElement(filePath) {
+  return new Promise((resolve, reject) => {
+    const dlg = document.querySelector("#input-dialog");
+    dlg.addEventListener("cancel", event => {
+      event.preventDefault();
+    });
+    dlg.showModal();
+    function onClose() {
+      if (dlg.returnValue === "ok") {
+        const inputValue = document.querySelector("#input").value;
+        resolve(saveJson(filePath, inputValue));
+      } else {
+        reject();
+      }
+    }
+    dlg.addEventListener("close", onClose, { once: true });
+  });
+}
+
+function createNewSpace(input) {
+  const spaceMenu = Menu.getApplicationMenu().getMenuItemById("space");
+  spaceMenu.submenu.append(
+    new MenuItem({
+      label: `${input}`
+    })
+  );
 }
 
 function openFileAndSave() {
@@ -554,7 +620,8 @@ function openFileAndSave() {
     },
     filePath => {
       if (filePath) {
-        saveJson(filePath[0]);
+        showModalDialogElement(filePath[0]);
+        // saveJson(filePath[0]);
       }
     }
   );
