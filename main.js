@@ -443,7 +443,7 @@ function remove(index) {
   const bars = Array.from(
     document.getElementsByClassName("dragbar-vertical-small")
   );
-  store.delete(`contents.${index}`);
+  store.delete(`boards.0.contents.${index}`);
   saveNewContents();
 
   smallPanes.forEach(function(pane) {
