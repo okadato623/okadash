@@ -18,8 +18,10 @@
       <form method="dialog">
         <input
           id="input"
-          style="width: 180px"
-          placeholder="ボードの名前を入れてください"
+          onfocus="this.setSelectionRange(0, this.value.length)"
+          style="width: 120px"
+          value="Enter Board Name"
+          autofocus
         /><br />
         <button type="submit" value="ok">OK</button>
         <button type="submit" value="cancel">Cancel</button>

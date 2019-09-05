@@ -4,8 +4,7 @@ var { Menu, MenuItem } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
-const json = loadSettings();
-const options = store.get("options.contents");
+let json = loadSettings();
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -155,8 +154,6 @@ function initialize() {
 
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  const settingsMenu = createSettingsMenu();
-  menu.append(settingsMenu);
 
   const menuItemForSmallPane = createMenuItemForSmallPane();
   menu.append(menuItemForSmallPane);
@@ -173,27 +170,39 @@ function createMenuItemForBoard() {
     label: "Board",
     submenu: []
   });
-  // const content = getBoardInfo(option);
-  // const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
-
-  // additionalPaneMenuItems.forEach(function(apMenuItem) {
-  //   menuItem.submenu.append(apMenuItem);
-  // });
+  const boardMenuItems = createBoardMenuItems();
+  boardMenuItems.forEach(function(boardMenuItem, i) {
+    menuItem.submenu.append(boardMenuItem);
+    if (i === 0) menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(
     new MenuItem({
-      label: "Add",
+      label: "Import New Board",
       accelerator: "Command+n",
       click() {
-        addNewSpace();
+        openFileAndSave();
       }
     })
   );
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "Expote Using Board",
+      click() {
+        exportUsingBoard();
+      }
+    })
+  );
+  if (getBoardNum() > 1)
+    menuItem.submenu.append(
+      new MenuItem({
+        label: "Delete Using Board",
+        click() {
+          deleteUsingBoard();
+        }
+      })
+    );
   return menuItem;
-}
-
-function addNewSpace() {
-  openFileAndSave();
 }
 
 function createMenuItemForSmallPane() {
@@ -202,6 +211,7 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
+  const options = store.get("options.0.contents");
   options.splice(0, 2);
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
@@ -214,22 +224,83 @@ function createMenuItemForSmallPane() {
   return menuItem;
 }
 
-function createSettingsMenu() {
-  const menuItem = new MenuItem({
-    id: "settings",
-    label: "Settings",
-    submenu: [
-      {
-        label: "Reload",
-        click() {
-          store.clear();
-          remote.getCurrentWindow().reload();
-        }
-      }
-    ]
-  });
+function getBoardNum() {
+  if (store.get("options") !== undefined) {
+    return Object.keys(store.get("options")).length;
+  }
+  return undefined;
+}
 
-  return menuItem;
+function exportUsingBoard() {
+  const usingBoard = store.get("boards")[0];
+  // jsonにしたものをファイルに吐き出す
+  // allWidthとかとってこれる？
+  delete usingBoard.name;
+  console.log(JSON.stringify(usingBoard));
+}
+
+function deleteUsingBoard() {
+  const allBoards = store.get("boards");
+  const allOptions = store.get("options");
+  if (!confirm(`Delete board name '${allBoards[0]["name"]}'. OK?`)) return;
+  for (i in allOptions) {
+    if (allOptions[Number(i) + 1] === undefined) break;
+    allOptions[i] = allOptions[Number(i) + 1];
+    allBoards[i] = allBoards[Number(i) + 1];
+  }
+  delete allOptions[Object.keys(allOptions).length - 1];
+  delete allBoards[Object.keys(allBoards).length - 1];
+  store.set("options", allOptions);
+  store.set("boards", allBoards);
+  remote.getCurrentWindow().reload();
+}
+
+function createBoardMenuItems() {
+  const allOptions = store.get("options");
+  const boardMenuItems = [];
+  for (i in allOptions) {
+    const clicked = i;
+    if (i == 0) {
+      boardMenuItems.push(
+        new MenuItem({
+          label: allOptions[i]["name"] + " [ in use ]",
+          index: i
+        })
+      );
+    } else {
+      boardMenuItems.push(
+        new MenuItem({
+          label: allOptions[i]["name"],
+          accelerator: `Command+Option+${i}`,
+          index: i,
+          click() {
+            moveClickedContentsToTop(clicked);
+          }
+        })
+      );
+    }
+  }
+
+  return boardMenuItems;
+}
+
+function moveClickedContentsToTop(clicked) {
+  const allBoards = store.get("boards");
+  const allOptions = store.get("options");
+  const tmpOpt = allOptions[clicked];
+  const tmpBrd = allBoards[clicked];
+  for (i in allOptions) {
+    const key = Object.keys(allOptions).length - i - 1;
+    if (key < clicked) {
+      allOptions[key + 1] = allOptions[key];
+      allBoards[key + 1] = allBoards[key];
+    }
+  }
+  allOptions[0] = tmpOpt;
+  allBoards[0] = tmpBrd;
+  store.set("options", allOptions);
+  store.set("boards", allBoards);
+  remote.getCurrentWindow().reload();
 }
 
 function createAdditionalPaneMenuItems(contents) {
@@ -460,15 +531,15 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
 }
 
 function storeSize(index, size) {
-  store.set(`contents.${index}.size`, size);
+  store.set(`boards.0.contents.${index}.size`, size);
 }
 
 function storeUrl(index, url) {
-  store.set(`contents.${index}.url`, url);
+  store.set(`boards.0.contents.${index}.url`, url);
 }
 
 function storeCustomCSS(index, customCSS) {
-  store.set(`contents.${index}.customCSS`, customCSS);
+  store.set(`boards.0.contents.${index}.customCSS`, customCSS);
 }
 
 function createPane(size, url = "", init = false) {
@@ -539,18 +610,23 @@ function openExternalUrl(event) {
   }
 }
 
-function saveJson(jsonPath, spaceName) {
-  console.log(spaceName);
+function saveJson(jsonPath, boardName) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   if (!validateJson(settings)) {
     return null;
   }
 
-  store.set("options.name", spaceName);
-  store.set("options.contents", settings["contents"]);
-  store.set("boards.name", spaceName);
-  store.set("boards.contents", settings["contents"]);
-  remote.getCurrentWindow().reload();
+  let index = getBoardNum();
+  if (index === undefined) index = 0;
+  store.set(`options.${index}.name`, boardName);
+  store.set(`options.${index}.contents`, settings["contents"]);
+  store.set(`boards.${index}.name`, boardName);
+  store.set(`boards.${index}.contents`, settings["contents"]);
+  if (index === 0) {
+    remote.getCurrentWindow().reload();
+  } else {
+    moveClickedContentsToTop(index);
+  }
 }
 
 function validateJson(jsonObj) {
@@ -566,15 +642,12 @@ function validateJson(jsonObj) {
 }
 
 function loadSettings() {
-  // store.clear();
   if (store.size == 0) {
     openFileAndSave();
     return;
   }
 
-  console.log(store.get("boards.contents"));
-
-  return buildJsonObjectFromStoredData(store.get("boards.contents"));
+  return buildJsonObjectFromStoredData(store.get("boards.0"));
 }
 
 function showModalDialogElement(filePath) {
@@ -596,15 +669,6 @@ function showModalDialogElement(filePath) {
   });
 }
 
-function createNewSpace(input) {
-  const spaceMenu = Menu.getApplicationMenu().getMenuItemById("space");
-  spaceMenu.submenu.append(
-    new MenuItem({
-      label: `${input}`
-    })
-  );
-}
-
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
   remote.dialog.showOpenDialog(
@@ -621,28 +685,28 @@ function openFileAndSave() {
     filePath => {
       if (filePath) {
         showModalDialogElement(filePath[0]);
-        // saveJson(filePath[0]);
       }
     }
   );
 }
 
 function saveNewContents() {
-  const contents = store.get("contents");
+  const contents = store.get("boards.0.contents");
   let newContents = [];
   contents.forEach(function(content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("contents", newContents);
+  store.set("boards.0.contents", newContents);
 }
 
-function buildJsonObjectFromStoredData(contents) {
+function buildJsonObjectFromStoredData(boards) {
   let newContents = [];
-  contents.forEach(function(content) {
+  boards["contents"].forEach(function(content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("contents", newContents);
+  store.set("boards.0.contents", newContents);
   let jsonObj = {
+    name: boards["name"],
     contents: newContents
   };
 
@@ -707,9 +771,9 @@ function calcWindowSize(init = false) {
     pane.style.height = "100%";
   });
   if (configHeight !== undefined) {
-    store.set("contents.0.width", configWidth);
-    store.set("contents.0.allWidth", columns);
-    store.set("contents.1.height", configHeight);
+    store.set("boards.0.contents.0.width", configWidth);
+    store.set("boards.0.contents.0.allWidth", columns);
+    store.set("boards.0.contents.1.height", configHeight);
   }
 }
 
