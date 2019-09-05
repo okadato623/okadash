@@ -1,6 +1,6 @@
 const { shell } = require("electron");
 var { remote } = require("electron");
-var { Menu, MenuItem } = remote;
+var { Menu, MenuItem, dialog } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
@@ -236,7 +236,34 @@ function exportUsingBoard() {
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
   delete usingBoard.name;
-  console.log(JSON.stringify(usingBoard));
+  const win = remote.getCurrentWindow();
+  dialog.showSaveDialog(
+    win,
+    {
+      properties: ["openFile"],
+      filters: [
+        {
+          name: "Documents",
+          extensions: ["json"]
+        }
+      ]
+    },
+    fileName => {
+      if (fileName) {
+        const data = JSON.stringify(usingBoard, null, 2);
+        writeFile(fileName, data);
+      }
+    }
+  );
+}
+
+function writeFile(path, data) {
+  fs.writeFile(path, data, error => {
+    if (error != null) {
+      alert("save error.");
+      return;
+    }
+  });
 }
 
 function deleteUsingBoard() {
