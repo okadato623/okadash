@@ -32,6 +32,20 @@ dialog {
 #normal {
   height: 100%;
 }
+.reload-button {
+  display: inline-block;
+  margin-top: 5px;
+  height: 2.3%;
+  position: absolute;
+  z-index: 2;
+  padding: 0;
+  background: none;
+  border: 0;
+  width: auto;
+  line-height: 0;
+  overflow: visible;
+  cursor: pointer;
+}
 .max-button {
   display: inline-block;
   margin-left: 10px;
@@ -43,7 +57,6 @@ dialog {
   padding: 0;
   background: none;
   border: 0;
-  font-size: 0;
   line-height: 0;
   overflow: visible;
   cursor: pointer;
