@@ -205,6 +205,13 @@ function createMenuItemForBoard() {
   return menuItem;
 }
 
+function createMenuItemForContextmenu(index) {
+  const options = store.get("options.0.contents");
+  const content = getAdditionalPaneInfo(options);
+
+  return createContextMenuItems(content, index);
+}
+
 function createMenuItemForSmallPane() {
   const menuItem = new MenuItem({
     id: "smallPane",
@@ -344,6 +351,19 @@ function createAdditionalPaneMenuItems(contents) {
   return additionalPaneMenuItems;
 }
 
+function createContextMenuItems(contents, index) {
+  const contextMenuItems = contents.map(function(content) {
+    return new MenuItem({
+      label: content["name"],
+      click() {
+        changeSelectedPaneURL(content["url"], content["customCSS"], index);
+      }
+    });
+  });
+
+  return contextMenuItems;
+}
+
 function createGoogleMenuItem() {
   return new MenuItem({
     label: "Search in Google",
@@ -405,8 +425,10 @@ function initializeWebview(webview, url, customCSS = []) {
     webview.loadURL(url.toString());
   } else {
     addKeyEvents(webview);
-    if (!webview.parentNode.classList.contains("overlay"))
+    if (!webview.parentNode.classList.contains("overlay")) {
       addMaximizeButton(webview.parentNode, webview.parentNode.id);
+      addReloadButton(webview.parentNode, webview.parentNode.id);
+    }
   }
 }
 
@@ -505,18 +527,24 @@ function refreshButtons() {
   const main = document.getElementById("main-content");
   const children = Array.from(main.children);
   children.forEach(function(child) {
-    if (!child.classList.contains("small")) return;
     const target = child.querySelector(".tool-buttons");
-    while (target.firstChild) {
-      target.removeChild(target.firstChild);
+    if (child.classList.contains("small")) {
+      while (target.firstChild) {
+        target.removeChild(target.firstChild);
+      }
+      addButtons(target, target.parentNode.id);
+      child.style.width = "100%";
+      child.style.height = "100%";
     }
-    addButtons(target, target.parentNode.id);
-    child.style.width = "100%";
-    child.style.height = "100%";
 
     const maxBtn = child.querySelector(".max-button");
-    if (maxBtn !== null) maxBtn.parentNode.removeChild(maxBtn);
-    addMaximizeButton(child, target.parentNode.id);
+    if (maxBtn !== null) $(".max-button").remove();
+    const reloadBtn = child.querySelector(".reload-button");
+    if (reloadBtn !== null) $(".reload-button").remove();
+    if (target !== null) {
+      addMaximizeButton(child, target.parentNode.id);
+      addReloadButton(child, target.parentNode.id);
+    }
   });
 }
 
@@ -529,6 +557,15 @@ function addButtons(div, index) {
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
 
+function addReloadButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "reload-button";
+  btn.setAttribute("onclick", `openContextMenu(${index})`);
+  btn.innerHTML = `<i class="fas fa-sync"></i>`;
+  btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
+  div.insertBefore(btn, div.firstChild);
+}
+
 function addMaximizeButton(div, index) {
   const btn = document.createElement("button");
   btn.className = "max-button";
@@ -536,6 +573,19 @@ function addMaximizeButton(div, index) {
   btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
   btn.style = "font-size: 14px;";
   div.insertBefore(btn, div.firstChild);
+}
+
+function openContextMenu(index) {
+  const remote = require("electron").remote;
+  const Menu = remote.Menu;
+
+  var menu = new Menu();
+  const contextMenuItems = createMenuItemForContextmenu(index);
+  contextMenuItems.forEach(function(contextMenuItem, i) {
+    menu.append(contextMenuItem);
+  });
+
+  menu.popup(remote.getCurrentWindow());
 }
 
 function getPaneNum() {
@@ -555,6 +605,21 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
     initializeWebview(webview, additionalPage, customCSS);
   });
   refreshButtons();
+}
+
+function changeSelectedPaneURL(url, customCSS, index) {
+  storeUrl(index, url);
+  storeCustomCSS(index, customCSS);
+
+  const webview = getWebviews()[index];
+  webview.autosize = "on";
+  webview.addEventListener("dom-ready", function() {
+    if (webview.src === "about:blank") {
+      webview.loadURL(url.toString());
+    }
+    webview.insertCSS(customCSS.join(" "));
+  });
+  webview.src = "about:blank";
 }
 
 function storeSize(index, size) {
@@ -792,6 +857,7 @@ function calcWindowSize(init = false) {
     configHeight}% !important ;`;
   if (init && allWidth !== undefined) columns = allWidth;
   main.style = columns + rows;
+  refreshButtons();
   const panes = Array.from(document.getElementsByClassName("small"));
   panes.forEach(function(pane) {
     pane.style.width = "100%";
