@@ -356,7 +356,7 @@ function createContextMenuItems(contents, index) {
     return new MenuItem({
       label: content["name"],
       click() {
-        changeSelectedPaneURL(content["url"], content["customCSS"], index);
+        recreateSelectedPane(content["url"], content["customCSS"], index);
       }
     });
   });
@@ -383,7 +383,7 @@ function openGoogleInOverlay() {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebview("normal", "https://google.com");
+  const webview = createWebview("https://google.com");
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, "https://google.com");
     webview.focus();
@@ -516,7 +516,7 @@ function maximize(index) {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebview("normal", url);
+  const webview = createWebview(url);
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, url);
   });
@@ -607,11 +607,14 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
   refreshButtons();
 }
 
-function changeSelectedPaneURL(url, customCSS, index) {
+function recreateSelectedPane(url, customCSS, index) {
+  const div = document.getElementById(`${index}`);
+  div.querySelector("webview").remove();
+
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
 
-  const webview = getWebviews()[index];
+  const webview = createWebview(url);
   webview.autosize = "on";
   webview.addEventListener("dom-ready", function() {
     if (webview.src === "about:blank") {
@@ -620,6 +623,7 @@ function changeSelectedPaneURL(url, customCSS, index) {
     webview.insertCSS(customCSS.join(" "));
   });
   webview.src = "about:blank";
+  div.appendChild(webview);
 }
 
 function storeSize(index, size) {
