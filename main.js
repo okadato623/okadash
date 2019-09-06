@@ -1,11 +1,10 @@
 const { shell } = require("electron");
 var { remote } = require("electron");
-var { Menu, MenuItem } = remote;
+var { Menu, MenuItem, dialog } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
-const json = loadSettings();
-const options = store.get("options");
+let json = loadSettings();
 const menu = require("./menu");
 const mainWidth = document.getElementById("main-content").clientWidth;
 const mainHeight = document.getElementById("main-content").clientHeight;
@@ -155,13 +154,62 @@ function initialize() {
 
 function initializeMenu(template) {
   let menu = Menu.buildFromTemplate(template);
-  const settingsMenu = createSettingsMenu();
-  menu.append(settingsMenu);
 
   const menuItemForSmallPane = createMenuItemForSmallPane();
   menu.append(menuItemForSmallPane);
 
+  const menuItemForBoard = createMenuItemForBoard();
+  menu.append(menuItemForBoard);
+
   Menu.setApplicationMenu(menu);
+}
+
+function createMenuItemForBoard() {
+  const menuItem = new MenuItem({
+    id: "board",
+    label: "Board",
+    submenu: []
+  });
+  const boardMenuItems = createBoardMenuItems();
+  boardMenuItems.forEach(function(boardMenuItem, i) {
+    menuItem.submenu.append(boardMenuItem);
+    if (i === 0) menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  });
+  menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "Import New Board",
+      accelerator: "Command+n",
+      click() {
+        openFileAndSave();
+      }
+    })
+  );
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "Expote Using Board",
+      click() {
+        exportUsingBoard();
+      }
+    })
+  );
+  if (getBoardNum() > 1)
+    menuItem.submenu.append(
+      new MenuItem({
+        label: "Delete Using Board",
+        click() {
+          deleteUsingBoard();
+        }
+      })
+    );
+  return menuItem;
+}
+
+function createMenuItemForContextmenu(index) {
+  const options = store.get("options.0.contents");
+  const content = getAdditionalPaneInfo(options);
+
+  return createContextMenuItems(content, index);
 }
 
 function createMenuItemForSmallPane() {
@@ -170,6 +218,7 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
+  const options = store.get("options.0.contents");
   options.splice(0, 2);
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
@@ -182,22 +231,110 @@ function createMenuItemForSmallPane() {
   return menuItem;
 }
 
-function createSettingsMenu() {
-  const menuItem = new MenuItem({
-    id: "settings",
-    label: "Settings",
-    submenu: [
-      {
-        label: "Reload",
-        click() {
-          store.clear();
-          remote.getCurrentWindow().reload();
-        }
-      }
-    ]
-  });
+function getBoardNum() {
+  if (store.get("options") !== undefined) {
+    return Object.keys(store.get("options")).length;
+  }
+  return undefined;
+}
 
-  return menuItem;
+function exportUsingBoard() {
+  const usingBoard = store.get("boards")[0];
+  // jsonにしたものをファイルに吐き出す
+  // allWidthとかとってこれる？
+  delete usingBoard.name;
+  const win = remote.getCurrentWindow();
+  dialog.showSaveDialog(
+    win,
+    {
+      properties: ["openFile"],
+      filters: [
+        {
+          name: "Documents",
+          extensions: ["json"]
+        }
+      ]
+    },
+    fileName => {
+      if (fileName) {
+        const data = JSON.stringify(usingBoard, null, 2);
+        writeFile(fileName, data);
+      }
+    }
+  );
+}
+
+function writeFile(path, data) {
+  fs.writeFile(path, data, error => {
+    if (error != null) {
+      alert("save error.");
+      return;
+    }
+  });
+}
+
+function deleteUsingBoard() {
+  const allBoards = store.get("boards");
+  const allOptions = store.get("options");
+  if (!confirm(`Delete board name '${allBoards[0]["name"]}'. OK?`)) return;
+  for (i in allOptions) {
+    if (allOptions[Number(i) + 1] === undefined) break;
+    allOptions[i] = allOptions[Number(i) + 1];
+    allBoards[i] = allBoards[Number(i) + 1];
+  }
+  delete allOptions[Object.keys(allOptions).length - 1];
+  delete allBoards[Object.keys(allBoards).length - 1];
+  store.set("options", allOptions);
+  store.set("boards", allBoards);
+  remote.getCurrentWindow().reload();
+}
+
+function createBoardMenuItems() {
+  const allOptions = store.get("options");
+  const boardMenuItems = [];
+  for (i in allOptions) {
+    const clicked = i;
+    if (i == 0) {
+      boardMenuItems.push(
+        new MenuItem({
+          label: allOptions[i]["name"] + " [ in use ]",
+          index: i
+        })
+      );
+    } else {
+      boardMenuItems.push(
+        new MenuItem({
+          label: allOptions[i]["name"],
+          accelerator: `Command+Option+${i}`,
+          index: i,
+          click() {
+            moveClickedContentsToTop(clicked);
+          }
+        })
+      );
+    }
+  }
+
+  return boardMenuItems;
+}
+
+function moveClickedContentsToTop(clicked) {
+  const allBoards = store.get("boards");
+  const allOptions = store.get("options");
+  const tmpOpt = allOptions[clicked];
+  const tmpBrd = allBoards[clicked];
+  for (i in allOptions) {
+    const key = Object.keys(allOptions).length - i - 1;
+    if (key < clicked) {
+      allOptions[key + 1] = allOptions[key];
+      allBoards[key + 1] = allBoards[key];
+    }
+  }
+  allOptions[0] = tmpOpt;
+  allBoards[0] = tmpBrd;
+  store.set("options", allOptions);
+  store.set("boards", allBoards);
+  remote.getCurrentWindow().reload();
 }
 
 function createAdditionalPaneMenuItems(contents) {
@@ -212,6 +349,19 @@ function createAdditionalPaneMenuItems(contents) {
   });
 
   return additionalPaneMenuItems;
+}
+
+function createContextMenuItems(contents, index) {
+  const contextMenuItems = contents.map(function(content) {
+    return new MenuItem({
+      label: content["name"],
+      click() {
+        recreateSelectedPane(content["url"], content["customCSS"], index);
+      }
+    });
+  });
+
+  return contextMenuItems;
 }
 
 function createGoogleMenuItem() {
@@ -233,7 +383,7 @@ function openGoogleInOverlay() {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebview("normal", "https://google.com");
+  const webview = createWebview("https://google.com");
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, "https://google.com");
     webview.focus();
@@ -275,8 +425,10 @@ function initializeWebview(webview, url, customCSS = []) {
     webview.loadURL(url.toString());
   } else {
     addKeyEvents(webview);
-    if (!webview.parentNode.classList.contains("overlay"))
+    if (!webview.parentNode.classList.contains("overlay")) {
       addMaximizeButton(webview.parentNode, webview.parentNode.id);
+      addReloadButton(webview.parentNode, webview.parentNode.id);
+    }
   }
 }
 
@@ -313,7 +465,7 @@ function remove(index) {
   const bars = Array.from(
     document.getElementsByClassName("dragbar-vertical-small")
   );
-  store.delete(`contents.${index}`);
+  store.delete(`boards.0.contents.${index}`);
   saveNewContents();
 
   smallPanes.forEach(function(pane) {
@@ -364,7 +516,7 @@ function maximize(index) {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebview("normal", url);
+  const webview = createWebview(url);
   webview.addEventListener("dom-ready", function() {
     initializeWebview(webview, url);
   });
@@ -375,18 +527,24 @@ function refreshButtons() {
   const main = document.getElementById("main-content");
   const children = Array.from(main.children);
   children.forEach(function(child) {
-    if (!child.classList.contains("small")) return;
     const target = child.querySelector(".tool-buttons");
-    while (target.firstChild) {
-      target.removeChild(target.firstChild);
+    if (child.classList.contains("small")) {
+      while (target.firstChild) {
+        target.removeChild(target.firstChild);
+      }
+      addButtons(target, target.parentNode.id);
+      child.style.width = "100%";
+      child.style.height = "100%";
     }
-    addButtons(target, target.parentNode.id);
-    child.style.width = "100%";
-    child.style.height = "100%";
 
     const maxBtn = child.querySelector(".max-button");
-    if (maxBtn !== null) maxBtn.parentNode.removeChild(maxBtn);
-    addMaximizeButton(child, target.parentNode.id);
+    if (maxBtn !== null) $(".max-button").remove();
+    const reloadBtn = child.querySelector(".reload-button");
+    if (reloadBtn !== null) $(".reload-button").remove();
+    if (target !== null) {
+      addMaximizeButton(child, target.parentNode.id);
+      addReloadButton(child, target.parentNode.id);
+    }
   });
 }
 
@@ -399,6 +557,15 @@ function addButtons(div, index) {
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
 
+function addReloadButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "reload-button";
+  btn.setAttribute("onclick", `openContextMenu(${index})`);
+  btn.innerHTML = `<i class="fas fa-exchange-alt"></i>`;
+  btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
+  div.insertBefore(btn, div.firstChild);
+}
+
 function addMaximizeButton(div, index) {
   const btn = document.createElement("button");
   btn.className = "max-button";
@@ -406,6 +573,19 @@ function addMaximizeButton(div, index) {
   btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
   btn.style = "font-size: 14px;";
   div.insertBefore(btn, div.firstChild);
+}
+
+function openContextMenu(index) {
+  const remote = require("electron").remote;
+  const Menu = remote.Menu;
+
+  var menu = new Menu();
+  const contextMenuItems = createMenuItemForContextmenu(index);
+  contextMenuItems.forEach(function(contextMenuItem, i) {
+    menu.append(contextMenuItem);
+  });
+
+  menu.popup(remote.getCurrentWindow());
 }
 
 function getPaneNum() {
@@ -427,16 +607,35 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
   refreshButtons();
 }
 
+function recreateSelectedPane(url, customCSS, index) {
+  const div = document.getElementById(`${index}`);
+  div.querySelector("webview").remove();
+
+  storeUrl(index, url);
+  storeCustomCSS(index, customCSS);
+
+  const webview = createWebview(url);
+  webview.autosize = "on";
+  webview.addEventListener("dom-ready", function() {
+    if (webview.src === "about:blank") {
+      webview.loadURL(url.toString());
+    }
+    webview.insertCSS(customCSS.join(" "));
+  });
+  webview.src = "about:blank";
+  div.appendChild(webview);
+}
+
 function storeSize(index, size) {
-  store.set(`contents.${index}.size`, size);
+  store.set(`boards.0.contents.${index}.size`, size);
 }
 
 function storeUrl(index, url) {
-  store.set(`contents.${index}.url`, url);
+  store.set(`boards.0.contents.${index}.url`, url);
 }
 
 function storeCustomCSS(index, customCSS) {
-  store.set(`contents.${index}.customCSS`, customCSS);
+  store.set(`boards.0.contents.${index}.customCSS`, customCSS);
 }
 
 function createPane(size, url = "", init = false) {
@@ -507,15 +706,23 @@ function openExternalUrl(event) {
   }
 }
 
-function saveJson(jsonPath) {
+function saveJson(jsonPath, boardName) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   if (!validateJson(settings)) {
     return null;
   }
 
-  store.set("options", settings["contents"]);
-  store.set(settings);
-  remote.getCurrentWindow().reload();
+  let index = getBoardNum();
+  if (index === undefined) index = 0;
+  store.set(`options.${index}.name`, boardName);
+  store.set(`options.${index}.contents`, settings["contents"]);
+  store.set(`boards.${index}.name`, boardName);
+  store.set(`boards.${index}.contents`, settings["contents"]);
+  if (index === 0) {
+    remote.getCurrentWindow().reload();
+  } else {
+    moveClickedContentsToTop(index);
+  }
 }
 
 function validateJson(jsonObj) {
@@ -536,7 +743,26 @@ function loadSettings() {
     return;
   }
 
-  return buildJsonObjectFromStoredData(store.get("contents"));
+  return buildJsonObjectFromStoredData(store.get("boards.0"));
+}
+
+function showModalDialogElement(filePath) {
+  return new Promise((resolve, reject) => {
+    const dlg = document.querySelector("#input-dialog");
+    dlg.addEventListener("cancel", event => {
+      event.preventDefault();
+    });
+    dlg.showModal();
+    function onClose() {
+      if (dlg.returnValue === "ok") {
+        const inputValue = document.querySelector("#input").value;
+        resolve(saveJson(filePath, inputValue));
+      } else {
+        reject();
+      }
+    }
+    dlg.addEventListener("close", onClose, { once: true });
+  });
 }
 
 function openFileAndSave() {
@@ -554,28 +780,29 @@ function openFileAndSave() {
     },
     filePath => {
       if (filePath) {
-        saveJson(filePath[0]);
+        showModalDialogElement(filePath[0]);
       }
     }
   );
 }
 
 function saveNewContents() {
-  const contents = store.get("contents");
+  const contents = store.get("boards.0.contents");
   let newContents = [];
   contents.forEach(function(content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("contents", newContents);
+  store.set("boards.0.contents", newContents);
 }
 
-function buildJsonObjectFromStoredData(contents) {
+function buildJsonObjectFromStoredData(boards) {
   let newContents = [];
-  contents.forEach(function(content) {
+  boards["contents"].forEach(function(content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("contents", newContents);
+  store.set("boards.0.contents", newContents);
   let jsonObj = {
+    name: boards["name"],
     contents: newContents
   };
 
@@ -634,15 +861,16 @@ function calcWindowSize(init = false) {
     configHeight}% !important ;`;
   if (init && allWidth !== undefined) columns = allWidth;
   main.style = columns + rows;
+  refreshButtons();
   const panes = Array.from(document.getElementsByClassName("small"));
   panes.forEach(function(pane) {
     pane.style.width = "100%";
     pane.style.height = "100%";
   });
   if (configHeight !== undefined) {
-    store.set("contents.0.width", configWidth);
-    store.set("contents.0.allWidth", columns);
-    store.set("contents.1.height", configHeight);
+    store.set("boards.0.contents.0.width", configWidth);
+    store.set("boards.0.contents.0.allWidth", columns);
+    store.set("boards.0.contents.1.height", configHeight);
   }
 }
 
