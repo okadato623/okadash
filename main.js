@@ -561,7 +561,7 @@ function addReloadButton(div, index) {
   const btn = document.createElement("button");
   btn.className = "reload-button";
   btn.setAttribute("onclick", `openContextMenu(${index})`);
-  btn.innerHTML = `<i class="fas fa-sync"></i>`;
+  btn.innerHTML = `<i class="fas fa-exchange-alt"></i>`;
   btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
   div.insertBefore(btn, div.firstChild);
 }
