@@ -14,6 +14,20 @@
     <label class="fold-large" onclick="foldLargePane()">◀</label>
     <div id="main-content"></div>
 
+    <dialog id="input-dialog">
+      <form method="dialog">
+        <input
+          id="input"
+          onfocus="this.setSelectionRange(0, this.value.length)"
+          style="width: 120px"
+          value="Enter Board Name"
+          autofocus
+        /><br />
+        <button type="submit" value="ok">OK</button>
+        <button type="submit" value="cancel">Cancel</button>
+      </form>
+    </dialog>
+
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script>
       window.$ = window.jQuery = require("jquery");

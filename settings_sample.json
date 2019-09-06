@@ -1,6 +1,7 @@
 {
   "contents": [
     {
+      "name": "Slack",
       "url": "https://[workspace].slack.com",
       "size": "large",
       "customCSS": [
@@ -10,6 +11,7 @@
       ]
     },
     {
+      "name": "trello",
       "url": "https://trello.com/b/dwk73iz6/okadash",
       "size": "medium",
       "customCSS": [
@@ -19,7 +21,7 @@
       ]
     },
     {
-      "name": "Slack",
+      "name": "Slack(body)",
       "url": "https://[workspace].slack.com",
       "customCSS": [
         ".p-workspace__sidebar { display: none !important; }",
