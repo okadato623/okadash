@@ -2,6 +2,7 @@
 
 const electron = require("electron");
 const app = electron.app;
+const ipcMain = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 let mainWindow;
 
@@ -29,4 +30,16 @@ app.on("ready", function() {
   mainWindow.on("closed", function() {
     mainWindow = null;
   });
+});
+
+ipcMain.on("window-open", () => {
+  const myWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+  myWindow.loadURL("file://" + __dirname + "/preference.html");
 });
