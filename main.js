@@ -1,5 +1,5 @@
 const { shell } = require("electron");
-var { remote } = require("electron");
+var { remote, ipcRenderer } = require("electron");
 var { Menu, MenuItem, dialog } = remote;
 const fs = require("fs");
 const Store = require("electron-store");
@@ -228,6 +228,15 @@ function createMenuItemForSmallPane() {
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(createGoogleMenuItem());
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "preferences",
+      accelerator: "Command+,",
+      click() {
+        ipcRenderer.send("window-open");
+      }
+    })
+  );
   return menuItem;
 }
 
