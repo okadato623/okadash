@@ -205,30 +205,12 @@ function createMenuItemForBoard() {
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(
     new MenuItem({
-      label: "Import New Board",
-      accelerator: "Command+n",
-      click() {
-        openFileAndSave();
-      }
-    })
-  );
-  menuItem.submenu.append(
-    new MenuItem({
       label: "Export Using Board",
       click() {
         exportUsingBoard();
       }
     })
   );
-  if (getBoardNum() > 1)
-    menuItem.submenu.append(
-      new MenuItem({
-        label: "Delete Using Board",
-        click() {
-          deleteUsingBoard();
-        }
-      })
-    );
   menuItem.submenu.append(
     new MenuItem({
       label: "Preferences",
