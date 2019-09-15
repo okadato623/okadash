@@ -34,7 +34,7 @@ app.on("ready", function() {
 
 ipcMain.on("window-open", () => {
   const myWindow = new BrowserWindow({
-    width: 800,
+    width: 1200,
     height: 600,
     frame: false,
     webPreferences: {
