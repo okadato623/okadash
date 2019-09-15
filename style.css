@@ -162,3 +162,14 @@ dialog {
   z-index: 1;
   color: black;
 }
+#alert-icon {
+  display: none;
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  font-size: 30px;
+  cursor: pointer;
+}
+#alert-icon > a {
+  color: orange;
+}

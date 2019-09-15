@@ -128,6 +128,7 @@ $(document).keydown(function(e) {
 
 function initialize() {
   if (store.size == 0) return;
+  getLatestVersion();
 
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
@@ -151,6 +152,31 @@ function initialize() {
       }
     });
   });
+}
+
+function getLatestVersion() {
+  const request = new XMLHttpRequest();
+  request.open(
+    "GET",
+    "https://api.github.com/repos/konoyono/okadash/releases/latest"
+  );
+  request.onreadystatechange = function() {
+    if (request.readyState != 4) {
+      // リクエスト中
+    } else if (request.status != 200) {
+      // 失敗
+    } else {
+      const res = JSON.parse(request.responseText);
+      checkLatestVersion(res["tag_name"]);
+    }
+  };
+  request.send(null);
+}
+
+function checkLatestVersion(latest) {
+  const now = process.env.npm_package_version;
+
+  if (now != latest) $("#alert-icon").css("display", "block");
 }
 
 function initializeMenu(template) {
