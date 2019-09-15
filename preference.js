@@ -82,6 +82,7 @@ function showBoardContents(board, self) {
     btnElem.className = "btn btn-outline-danger";
     btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
     btnElem.onclick = function() {
+      if (!confirm("Sure?")) return;
       btnElem.parentElement.remove();
     };
 
@@ -110,6 +111,7 @@ function createNewItem(self) {
   self.remove();
   const container = document.getElementById("items-container");
   const divElem = document.createElement("div");
+  divElem.className = "item-box";
 
   const nameElem = document.createElement("p");
   const nameTextElem = document.createElement("input");
