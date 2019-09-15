@@ -5,6 +5,8 @@ const app = electron.app;
 const ipcMain = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 let mainWindow;
+let subWindow;
+let isSubOpen = false;
 
 app.on("window-all-closed", function() {
   if (process.platform != "darwin") {
@@ -33,7 +35,8 @@ app.on("ready", function() {
 });
 
 ipcMain.on("window-open", function() {
-  const myWindow = new BrowserWindow({
+  if (isSubOpen) return;
+  subWindow = new BrowserWindow({
     width: 1200,
     height: 600,
     frame: false,
@@ -41,5 +44,11 @@ ipcMain.on("window-open", function() {
       nodeIntegration: true
     }
   });
-  myWindow.loadURL("file://" + __dirname + "/preference.html");
+  isSubOpen = true;
+  subWindow.loadURL("file://" + __dirname + "/preference.html");
+  subWindow.on("closed", function() {
+    subWindow = null;
+    isSubOpen = false;
+    mainWindow.reload();
+  });
 });

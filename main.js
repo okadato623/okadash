@@ -408,9 +408,9 @@ function getAdditionalPaneInfo(contents) {
       url = new URL(content["url"]);
     } catch {
       alert(
-        "[Error] invalid URL format found in settings.json.  Maybe [workspace] in settings?"
+        "[Error] invalid URL format found in settings.  Maybe [workspace] in settings?"
       );
-      store.clear();
+      ipcRenderer.send("window-open");
     }
     return {
       name: content["name"],
@@ -723,8 +723,6 @@ function saveJson(jsonPath, boardName) {
     return null;
   }
 
-  let index = getBoardNum();
-  if (index === undefined) index = 0;
   const newOption = { name: boardName, contents: settings["contents"] };
   let optList = store.get("options");
   let brdList = store.get("boards");
@@ -737,6 +735,8 @@ function saveJson(jsonPath, boardName) {
     store.set(`options`, [newOption]);
     store.set(`boards`, [newOption]);
   }
+  let index = getBoardNum();
+  if (index === undefined) index = 0;
   if (index === 0) {
     remote.getCurrentWindow().reload();
   } else {
@@ -758,7 +758,7 @@ function validateJson(jsonObj) {
 
 function loadSettings() {
   if (store.size == 0) {
-    openFileAndSave();
+    ipcRenderer.send("window-open");
     return;
   }
 
@@ -816,6 +816,7 @@ function saveNewContents() {
 
 function buildJsonObjectFromStoredData(boards) {
   let newContents = [];
+  if (boards === undefined) ipcRenderer.send("window-open");
   boards["contents"].forEach(function(content) {
     if (content !== null) newContents.push(content);
   });
