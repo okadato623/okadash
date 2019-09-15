@@ -187,7 +187,7 @@ function createMenuItemForBoard() {
   );
   menuItem.submenu.append(
     new MenuItem({
-      label: "Expote Using Board",
+      label: "Export Using Board",
       click() {
         exportUsingBoard();
       }
@@ -202,6 +202,15 @@ function createMenuItemForBoard() {
         }
       })
     );
+  menuItem.submenu.append(
+    new MenuItem({
+      label: "Preferences",
+      accelerator: "Command+,",
+      click() {
+        ipcRenderer.send("window-open");
+      }
+    })
+  );
   return menuItem;
 }
 
@@ -228,15 +237,7 @@ function createMenuItemForSmallPane() {
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(createGoogleMenuItem());
-  menuItem.submenu.append(
-    new MenuItem({
-      label: "preferences",
-      accelerator: "Command+,",
-      click() {
-        ipcRenderer.send("window-open");
-      }
-    })
-  );
+
   return menuItem;
 }
 

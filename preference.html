@@ -19,31 +19,47 @@
     <!-- Sidebar  -->
     <nav id="sidebar" style="position: fixed;">
       <ul class="list-unstyled components">
-        <p style="font-size: 24px;">◆ Board List</p>
+        <img src="images/okalogo.png" style="height: 40px; margin-left: 12px;" />
+        <p style="font-size: 24px;">Board List</p>
         <div id="boards-container"></div>
       </ul>
       <div style="text-align: center">
-        <button class="add-board-btn">+</button>
+        <button class="add-board-btn" onclick="openFileAndSave()">+</button>
       </div>
+
       <ul class="list-unstyled CTAs">
         <li>
-          <a href="a" class="download" onclick="window.close()">Close</a>
+          <a href="a" class="download" onclick="window.close()">Save Settings</a>
+        </li>
+        <li>
+          <a href="a" class="article" onclick="window.close()">Cancel</a>
         </li>
       </ul>
     </nav>
 
     <!-- Page Content  -->
     <div id="content">
-      <p>Edit Board Name</p>
-      <input type="text" class="content-textbox" id="board-name-textbox" />
+      <label style="font-size: 30px" id="board-name-textbox"></label>
       </br>
-      </br>
+      <button class="btn btn-outline-primary" onclick="exportBoard()">Export this board</button>
+      <button class="btn btn-outline-danger" onclick="deleteBoard()">Delete this board</button>
+      </br></br>
       <p>Item List</p>
       <ul>
         <div id="items-container"></div>
       </ul>
     </div>
   </div>
+
+  <dialog id="input-dialog">
+    <form method="dialog">
+      <input id="input" onfocus="this.setSelectionRange(0, this.value.length)" style="width: 180px"
+        value="Enter Board Name" autofocus /><br />
+      <button type="submit" value="ok">OK</button>
+      <button type="submit" value="cancel">Cancel</button>
+    </form>
+  </dialog>
+
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
     window.$ = window.jQuery = require("jquery");
