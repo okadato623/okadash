@@ -10,7 +10,7 @@ readFile();
 function readFile() {
   fs.readFile(app.getPath("userData") + "/config.json", (error, data) => {
     if (error != null) {
-      importNewBoard("./settings_sample.json", "Main", true);
+      importNewBoard("./settings_sample.json", "Default Board", true);
     }
 
     createBoardList(data);
@@ -32,7 +32,7 @@ function createBoardList(data) {
     container.appendChild(liElem);
   }
   if (container.firstChild === null)
-    importNewBoard("./settings_sample.json", "Main", true);
+    importNewBoard("./settings_sample.json", "Default Board", true);
   container.firstChild.querySelector("a").click();
 }
 
@@ -194,7 +194,7 @@ function showModalDialogElement(filePath) {
       if (dlg.returnValue === "ok") {
         const inputValue = document.querySelector("#input").value;
         if (checkDuplicateNameExists(inputValue)) {
-          alert(`Name '${inputValue}' is already in use`);
+          alert(`Board name '${inputValue}' is already in use`);
           remote.getCurrentWindow().reload();
         } else {
           resolve(importNewBoard(filePath, inputValue));
@@ -294,12 +294,20 @@ function deleteBoard() {
   remote.getCurrentWindow().reload();
 }
 
-function exportBoard() {
+function exportBoard(asIs = false) {
   const targetBoard = document.getElementById("board-name-textbox").innerText;
   let usingBoard = "";
-  for (i in store.get("boards")) {
-    if (store.get("boards")[i]["name"] == targetBoard) {
-      usingBoard = store.get("boards")[i];
+  if (asIs) {
+    for (i in store.get("boards")) {
+      if (store.get("boards")[i]["name"] == targetBoard) {
+        usingBoard = store.get("boards")[i];
+      }
+    }
+  } else {
+    for (i in store.get("options")) {
+      if (store.get("options")[i]["name"] == targetBoard) {
+        usingBoard = store.get("options")[i];
+      }
     }
   }
   delete usingBoard.name;
@@ -393,8 +401,10 @@ function saveBoardSetting() {
     setTimeout(reloadMessage, 2000);
   } else {
     document.getElementById("save-btn").innerText = "Save failed...";
+    document.getElementById("save-btn").className = "btn btn-danger";
     const reloadMessage = function() {
       document.getElementById("save-btn").innerText = "Save Board Setting";
+      document.getElementById("save-btn").className = "btn btn-primary";
     };
     setTimeout(reloadMessage, 2000);
   }
