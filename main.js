@@ -51,6 +51,7 @@ $("#dragbar-horizontal").mousedown(function(e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
 
+  draggingId = "0";
   dragging_horizontal = true;
   const main = $(".medium");
   const ghostbar = $("<div>", {
@@ -292,8 +293,8 @@ function deleteUsingBoard() {
     allOptions[i] = allOptions[Number(i) + 1];
     allBoards[i] = allBoards[Number(i) + 1];
   }
-  delete allOptions[Object.keys(allOptions).length - 1];
-  delete allBoards[Object.keys(allBoards).length - 1];
+  allOptions.pop();
+  allBoards.pop();
   store.set("options", allOptions);
   store.set("boards", allBoards);
   remote.getCurrentWindow().reload();
@@ -724,10 +725,18 @@ function saveJson(jsonPath, boardName) {
 
   let index = getBoardNum();
   if (index === undefined) index = 0;
-  store.set(`options.${index}.name`, boardName);
-  store.set(`options.${index}.contents`, settings["contents"]);
-  store.set(`boards.${index}.name`, boardName);
-  store.set(`boards.${index}.contents`, settings["contents"]);
+  const newOption = { name: boardName, contents: settings["contents"] };
+  let optList = store.get("options");
+  let brdList = store.get("boards");
+  if (optList) {
+    optList.push(newOption);
+    brdList.push(newOption);
+    store.set(`options`, optList);
+    store.set(`boards`, brdList);
+  } else {
+    store.set(`options`, [newOption]);
+    store.set(`boards`, [newOption]);
+  }
   if (index === 0) {
     remote.getCurrentWindow().reload();
   } else {
@@ -753,7 +762,7 @@ function loadSettings() {
     return;
   }
 
-  return buildJsonObjectFromStoredData(store.get("boards.0"));
+  return buildJsonObjectFromStoredData(store.get("boards")[0]);
 }
 
 function showModalDialogElement(filePath) {
