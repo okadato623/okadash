@@ -278,25 +278,15 @@ function deleteBoard() {
   )
     return;
 
-  // 対象のボードを削除し、それ以降のボードのナンバリングをひとつずつ上げる
   for (i in allOptions) {
     if (targetBoard == allOptions[i]["name"]) {
-      delete allOptions[i];
-      delete allBoards[i];
+      allOptions.splice(i, 1);
+      allBoards.splice(i, 1);
     }
   }
-  let newIndex = 0;
-  for (i in allOptions) {
-    i = newIndex;
-    newIndex++;
-  }
-  console.log(allOptions);
-
-  // delete allOptions[Object.keys(allOptions).length - 1];
-  // delete allBoards[Object.keys(allBoards).length - 1];
-  // store.set("options", allOptions);
-  // store.set("boards", allBoards);
-  // remote.getCurrentWindow().reload();
+  store.set("options", allOptions);
+  store.set("boards", allBoards);
+  remote.getCurrentWindow().reload();
 }
 
 function exportBoard() {

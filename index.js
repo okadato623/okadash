@@ -32,7 +32,7 @@ app.on("ready", function() {
   });
 });
 
-ipcMain.on("window-open", () => {
+ipcMain.on("window-open", function() {
   const myWindow = new BrowserWindow({
     width: 1200,
     height: 600,
