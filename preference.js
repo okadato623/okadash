@@ -4,15 +4,13 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
-const path = require("path");
 
 readFile();
 
 function readFile() {
   fs.readFile(app.getPath("userData") + "/config.json", (error, data) => {
     if (error != null) {
-      alert("file open error.");
-      return;
+      importNewBoard("./settings_sample.json", "Main", true);
     }
 
     createBoardList(data);
@@ -33,6 +31,8 @@ function createBoardList(data) {
     liElem.appendChild(aElem);
     container.appendChild(liElem);
   }
+  if (container.firstChild === null)
+    importNewBoard("./settings_sample.json", "Main", true);
   container.firstChild.querySelector("a").click();
 }
 
@@ -51,6 +51,7 @@ function showBoardContents(board, self) {
   for (i in board["contents"]) {
     const content = board["contents"][i];
     const divElem = document.createElement("div");
+    divElem.className = "item-box";
 
     const nameElem = document.createElement("p");
     const nameTextElem = document.createElement("input");
@@ -63,9 +64,10 @@ function showBoardContents(board, self) {
     const urlElem = document.createElement("p");
     const urlTextElem = document.createElement("input");
     urlElem.innerHTML = "URL";
-    urlTextElem.type = "textbox";
+    urlTextElem.type = "url";
     urlTextElem.className = "content-textbox";
     urlTextElem.value = content["url"];
+    if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
     urlElem.appendChild(urlTextElem);
 
     const cssElem = document.createElement("p");
@@ -149,10 +151,6 @@ function createNewItem(self) {
   container.appendChild(self);
 }
 
-function save() {
-  writeFile(data);
-}
-
 function writeAppConfigFile(data) {
   fs.writeFile(app.getPath("userData") + "/config.json", data, error => {
     if (error != null) {
@@ -187,6 +185,7 @@ function openFileAndSave() {
 function showModalDialogElement(filePath) {
   return new Promise((resolve, reject) => {
     const dlg = document.querySelector("#input-dialog");
+    dlg.style.display = "block";
     dlg.addEventListener("cancel", event => {
       event.preventDefault();
     });
@@ -209,18 +208,24 @@ function showModalDialogElement(filePath) {
   });
 }
 
-function importNewBoard(jsonPath, boardName) {
+function importNewBoard(jsonPath, boardName, init = false) {
   const settings = JSON.parse(fs.readFileSync(jsonPath));
   if (!validateJson(settings)) {
     return null;
   }
 
-  let index = getBoardNum();
-  if (index === undefined) index = 0;
-  store.set(`options.${index}.name`, boardName);
-  store.set(`options.${index}.contents`, settings["contents"]);
-  store.set(`boards.${index}.name`, boardName);
-  store.set(`boards.${index}.contents`, settings["contents"]);
+  const newOption = { name: boardName, contents: settings["contents"] };
+  let optList = store.get("options");
+  let brdList = store.get("boards");
+  if (optList) {
+    optList.push(newOption);
+    brdList.push(newOption);
+    store.set(`options`, optList);
+    store.set(`boards`, brdList);
+  } else {
+    store.set(`options`, [newOption]);
+    store.set(`boards`, [newOption]);
+  }
   remote.getCurrentWindow().reload();
 }
 
@@ -327,4 +332,107 @@ function writeFile(path, data) {
       return;
     }
   });
+}
+
+function saveBoardSetting() {
+  const targetBoard = document.getElementById("board-name-textbox").innerText;
+  const container = document.getElementById("items-container");
+  const items = [];
+  let error = false;
+  container.querySelectorAll(".item-box").forEach(function(node) {
+    let item = {};
+    node.querySelectorAll("p").forEach(function(elem) {
+      switch (elem.innerText) {
+        case "Name":
+          item.name = elem.querySelector("input").value;
+          if (items.length === 0) {
+            item.size = "large";
+          } else if (items.length === 1) {
+            item.size = "medium";
+          }
+          if (
+            !isValidName(
+              elem.querySelector("input").value,
+              elem.querySelector("input")
+            )
+          )
+            error = true;
+          break;
+        case "URL":
+          item.url = elem.querySelector("input").value;
+          if (
+            !isValidURL(
+              elem.querySelector("input").value,
+              elem.querySelector("input")
+            )
+          )
+            error = true;
+          break;
+        case "Custom CSS":
+          item.customCSS = elem.querySelector("textarea").value.split("\n");
+          items.push(item);
+          break;
+      }
+    });
+  });
+
+  if (!error) {
+    let options = store.get("options");
+    for (i in options) {
+      if (targetBoard == options[i]["name"]) {
+        options[i]["contents"] = items;
+        break;
+      }
+    }
+    store.set("options", options);
+    store.set("boards", options);
+    document.getElementById("save-btn").innerText = "Saved!";
+    const reloadMessage = function() {
+      document.getElementById("save-btn").innerText = "Save Board Setting";
+    };
+    setTimeout(reloadMessage, 2000);
+  } else {
+    document.getElementById("save-btn").innerText = "Save failed...";
+    const reloadMessage = function() {
+      document.getElementById("save-btn").innerText = "Save Board Setting";
+    };
+    setTimeout(reloadMessage, 2000);
+  }
+}
+
+function isValidName(name, elem) {
+  if (name == "") {
+    alert("Item Name Needed");
+    elem.style.background = "#fdd";
+    return false;
+  }
+  if (/\"/.test(name)) {
+    alert(`Cannot use " in Item (${name})`);
+    elem.style.background = "#fdd";
+    return false;
+  }
+  elem.style.background = "#fff";
+  return true;
+}
+
+function isValidURL(url, elem) {
+  if (url == "") {
+    alert("URL is Needed");
+    elem.style.background = "#fdd";
+    return false;
+  }
+  if (
+    !url.match(/^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/)
+  ) {
+    alert(`Invalid URL: (${url})`);
+    elem.style.background = "#fdd";
+    return false;
+  }
+  if (/\"/.test(url)) {
+    alert(`Cannot use " in Item (${url})`);
+    elem.style.background = "#fdd";
+    return false;
+  }
+  elem.style.background = "#fff";
+  return true;
 }

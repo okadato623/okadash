@@ -29,10 +29,10 @@
 
       <ul class="list-unstyled CTAs">
         <li>
-          <a href="a" class="download" onclick="window.close()">Save Settings</a>
+          <a href="#" id="save-btn" class="btn btn-primary" onclick="javascript:saveBoardSetting();return false;">Save Board Setting</a>
         </li>
         <li>
-          <a href="a" class="article" onclick="window.close()">Cancel</a>
+          <a href="#" class="article" onclick="window.close()">Close</a>
         </li>
       </ul>
     </nav>
@@ -51,12 +51,12 @@
     </div>
   </div>
 
-  <dialog id="input-dialog">
+  <dialog id="input-dialog" style="display: none;">
     <form method="dialog">
-      <input id="input" onfocus="this.setSelectionRange(0, this.value.length)" style="width: 180px"
+      <input id="input" onfocus="this.setSelectionRange(0, this.value.length)" style="width: 180px; margin-bottom: 20px;"
         value="Enter Board Name" autofocus /><br />
-      <button type="submit" value="ok">OK</button>
-      <button type="submit" value="cancel">Cancel</button>
+      <button type="submit" class="btn btn-outline-primary" value="ok">OK</button>
+      <button type="submit" class="btn btn-outline-secondary" value="cancel">Cancel</button>
     </form>
   </dialog>
 
