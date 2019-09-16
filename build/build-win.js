@@ -7,7 +7,8 @@ builder.build({
     win: {
       target: {
         target: "zip",
-        arch: ["x64"]
+        arch: ["x64"],
+        files: ["!images/*"]
       }
     }
   }
