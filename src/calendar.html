@@ -18,7 +18,7 @@
       }
       .today {
         color: #000 !important;
-        text-decoration: overline underline;
+        text-decoration: underline;
       }
       .sunday {
         color: #faa;
@@ -26,20 +26,27 @@
       .saturday {
         color: #aaf;
       }
+      div#clock_frame {
+        text-align: center;
+        width: 100%;
+      }
+      span {
+        display: block;
+        width: 100%;
+        font-family: "游ゴシック体", YuGothic, "YuGothic M", sans-serif;
+      }
+      span#clock_time {
+        font-size: 2em;
+      }
     </style>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="http://www.clocktab.com/sf/_.css"
-    />
   </head>
-  <body>
-    <table id="content">
+  <body style="overflow: hidden">
+    <div id="content">
       <tr>
         <td>
           <a
@@ -68,43 +75,12 @@
             <tbody id="js-calendar-body"></tbody>
           </table>
 
-          <table id="timeTable" style="margin-top: 30px">
-            <tr>
-              <td id="date"></td>
-            </tr>
-            <tr>
-              <td id="timeRow">
-                <table>
-                  <tr>
-                    <td id="time"></td>
-                    <td>
-                      <table>
-                        <tr>
-                          <td id="char1"></td>
-                        </tr>
-                        <tr>
-                          <td id="digit1"></td>
-                        </tr>
-                      </table>
-                    </td>
-                    <td>
-                      <table>
-                        <tr>
-                          <td id="char2"></td>
-                        </tr>
-                        <tr>
-                          <td id="digit2"></td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
+          <div id="clock_frame">
+            <span id="clock_time"></span>
+          </div>
         </td>
       </tr>
-    </table>
+    </div>
 
     <div id="options" style="opacity:1"></div>
 
@@ -169,11 +145,18 @@
         $year.text(year);
         $month.text(month + 1);
       }
-    </script>
-    <script defer src="http://www.clocktab.com/sf/_.js"></script>
-    <script>
-      if (window.navigator.product == "Gecko")
-        document.documentElement.removeAttribute("manifest");
+      function clock() {
+        var now = new Date();
+        var h = now.getHours();
+        var mi = now.getMinutes();
+
+        if (mi < 10) mi = "0" + mi;
+
+        document.getElementById("clock_time").innerHTML = h + ":" + mi;
+        document.getElementById("clock_frame").style.fontSize =
+          window.innerWidth / 6 + "px";
+      }
+      setInterval(clock, 1000);
     </script>
   </body>
 </html>

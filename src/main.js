@@ -237,7 +237,6 @@ function createMenuItemForSmallPane() {
     submenu: []
   });
   const options = store.get("options.0.contents");
-  options.splice(0, 2);
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
 
