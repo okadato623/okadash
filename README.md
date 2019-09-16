@@ -9,20 +9,18 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 
 ## Download
 
-[okadash-1.4.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.4.0/okadash-1.4.0-mac.zip)  
-[okadash-1.4.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.4.0/okadash-1.4.0-win.zip)
+[okadash-1.5.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.5.0/okadash-1.5.0-mac.zip)  
+[okadash-1.5.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.5.0/okadash-1.5.0-win.zip)
 
 ## Quick Start
 
 1. Download zip. 👆
-1. `cp settings_sample.json settings.json`
-1. change [workspace].slack.com in `settings.json`
 1. Launch App!
+1. Edit URLs for your environment. 
 
 ## Build and Run
 
 1. clone this repo.
-1. `cp settings_sample.json settings.json`
-1. change [workspace].slack.com in `settings.json`
 1. `npm install`
 1. `npm start`
+1. Edit URLs for your environment.
