@@ -45,8 +45,8 @@ const default_setting = JSON.parse(`
       "customCSS": ["header { display: none !important; }"]
     },
     {
-      "name": "clock",
-      "url": "http://www.clocktab.com/"
+      "name": "calendar",
+      "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
     }
   ]
 }
@@ -55,7 +55,12 @@ const default_setting = JSON.parse(`
 readFile();
 
 function readFile() {
-  fs.readFile(app.getPath("userData") + "/config.json", (error, data) => {
+  if (process.platform === "win32") {
+    var config = app.getPath("userData") + "¥config.json";
+  } else {
+    var config = app.getPath("userData") + "/config.json";
+  }
+  fs.readFile(config, (error, data) => {
     if (error != null) {
       importNewBoard("default", "Default Board", true);
     }
@@ -198,16 +203,6 @@ function createNewItem(self) {
 
   container.appendChild(divElem);
   container.appendChild(self);
-}
-
-function writeAppConfigFile(data) {
-  fs.writeFile(app.getPath("userData") + "/config.json", data, error => {
-    if (error != null) {
-      alert("save error.");
-      return;
-    }
-  });
-  console.log(data);
 }
 
 function openFileAndSave() {
