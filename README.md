@@ -16,11 +16,12 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 
 1. Download zip. 👆
 1. Launch App!
-1. Edit URLs for your environment. 
+1. Edit Slack URLs for your workspace. (2 items)
+![sample_image](https://github.com/konoyono/okadash/blob/master/images/preference.png)
 
 ## Build and Run
 
 1. clone this repo.
 1. `npm install`
 1. `npm start`
-1. Edit URLs for your environment.
+1. Edit Slack URLs for your workspace. (2 items)
