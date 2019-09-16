@@ -24,4 +24,4 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 1. clone this repo.
 1. `npm install`
 1. `npm start`
-1. Edit URLs for your environment.
+1. Edit Slack URLs for your workspace. (2 items)
