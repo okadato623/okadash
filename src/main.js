@@ -12,6 +12,8 @@ let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
+const version = "1.5.0";
+
 initialize();
 
 var dragging_vertical = false;
@@ -174,9 +176,7 @@ function getLatestVersion() {
 }
 
 function checkLatestVersion(latest) {
-  const now = process.env.npm_package_version;
-
-  if (now != latest) $("#alert-icon").css("display", "block");
+  if (version != latest) $("#alert-icon").css("display", "block");
 }
 
 function initializeMenu(template) {
