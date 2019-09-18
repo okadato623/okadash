@@ -214,7 +214,7 @@ function createMenuItemForBoard() {
   menuItem.submenu.append(
     new MenuItem({
       label: "Preferences",
-      accelerator: "Command+,",
+      accelerator: "CommandOrControl+,",
       click() {
         ipcRenderer.send("window-open");
       }
@@ -323,7 +323,7 @@ function createBoardMenuItems() {
       boardMenuItems.push(
         new MenuItem({
           label: allOptions[i]["name"],
-          accelerator: `Command+Option+${i}`,
+          accelerator: `CommandOrControl+Option+${i}`,
           index: i,
           click() {
             moveClickedContentsToTop(clicked);
@@ -359,7 +359,7 @@ function createAdditionalPaneMenuItems(contents) {
   const additionalPaneMenuItems = contents.map(function(content) {
     return new MenuItem({
       label: content["name"],
-      accelerator: `Command+${content["index"] + 1}`,
+      accelerator: `CommandOrControl+${content["index"] + 1}`,
       click() {
         loadAdditionalPage(content["url"], content["customCSS"]);
       }
@@ -385,7 +385,7 @@ function createContextMenuItems(contents, index) {
 function createGoogleMenuItem() {
   return new MenuItem({
     label: "Search in Google",
-    accelerator: "Command+l",
+    accelerator: "CommandOrControl+l",
     click() {
       openGoogleInOverlay();
     }
