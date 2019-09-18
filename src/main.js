@@ -12,7 +12,7 @@ let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
-const version = "1.5.0";
+const version = "1.5.1";
 
 initialize();
 
