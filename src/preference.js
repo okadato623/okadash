@@ -4,6 +4,7 @@ const fs = require("fs");
 const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
+const path = require("path");
 
 const default_setting = JSON.parse(`
 {
@@ -55,11 +56,7 @@ const default_setting = JSON.parse(`
 readFile();
 
 function readFile() {
-  if (process.platform === "win32") {
-    var config = app.getPath("userData") + "¥config.json";
-  } else {
-    var config = app.getPath("userData") + "/config.json";
-  }
+  var config = path.join(app.getPath("userData"), "config.json");
   fs.readFile(config, (error, data) => {
     if (error != null) {
       importNewBoard("default", "Default Board", true);
