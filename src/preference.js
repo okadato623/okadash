@@ -11,7 +11,7 @@ const default_setting = JSON.parse(`
   "contents": [
     {
       "name": "Slack",
-      "url": "https://slack.com/intl/ja-jp/signin",
+      "url": "https://[workspace].slack.com",
       "size": "large",
       "customCSS": [
         ".p-channel_sidebar { width: 160px !important; }",
@@ -31,7 +31,7 @@ const default_setting = JSON.parse(`
     },
     {
       "name": "Slack(body)",
-      "url": "https://slack.com/intl/ja-jp/signin",
+      "url": "https://[workspace].slack.com",
       "customCSS": [
         ".p-workspace__sidebar { display: none !important; }",
         ".p-classic_nav__team_header { display: none !important;}",
@@ -270,11 +270,7 @@ function importNewBoard(source, boardName) {
     store.set(`options`, [newOption]);
     store.set(`boards`, [newOption]);
   }
-  if (source === "default") {
-    remote.getCurrentWindow().close();
-  } else {
-    remote.getCurrentWindow().reload();
-  }
+  remote.getCurrentWindow().reload();
 }
 
 function checkDuplicateNameExists(boardName) {
