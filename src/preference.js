@@ -11,7 +11,7 @@ const default_setting = JSON.parse(`
   "contents": [
     {
       "name": "Slack",
-      "url": "https://[workspace].slack.com",
+      "url": "https://slack.com/intl/ja-jp/signin",
       "size": "large",
       "customCSS": [
         ".p-channel_sidebar { width: 160px !important; }",
@@ -31,7 +31,7 @@ const default_setting = JSON.parse(`
     },
     {
       "name": "Slack(body)",
-      "url": "https://[workspace].slack.com",
+      "url": "https://slack.com/intl/ja-jp/signin",
       "customCSS": [
         ".p-workspace__sidebar { display: none !important; }",
         ".p-classic_nav__team_header { display: none !important;}",
@@ -59,7 +59,7 @@ function readFile() {
   var config = path.join(app.getPath("userData"), "config.json");
   fs.readFile(config, (error, data) => {
     if (error != null) {
-      importNewBoard("default", "Default Board", true);
+      importNewBoard("default", "Default Board");
     }
 
     createBoardList(data);
@@ -80,8 +80,7 @@ function createBoardList(data) {
     liElem.appendChild(aElem);
     container.appendChild(liElem);
   }
-  if (container.firstChild === null)
-    importNewBoard("default", "Default Board", true);
+  if (container.firstChild === null) importNewBoard("default", "Default Board");
   container.firstChild.querySelector("a").click();
 }
 
@@ -249,7 +248,7 @@ function showModalDialogElement(filePath) {
   });
 }
 
-function importNewBoard(source, boardName, init = false) {
+function importNewBoard(source, boardName) {
   if (source === "default") {
     var settings = default_setting;
   } else {
@@ -271,7 +270,11 @@ function importNewBoard(source, boardName, init = false) {
     store.set(`options`, [newOption]);
     store.set(`boards`, [newOption]);
   }
-  remote.getCurrentWindow().reload();
+  if (source === "default") {
+    remote.getCurrentWindow().close();
+  } else {
+    remote.getCurrentWindow().reload();
+  }
 }
 
 function checkDuplicateNameExists(boardName) {
