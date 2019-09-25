@@ -6,7 +6,9 @@ const ipcMain = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 let mainWindow;
 let subWindow;
+let initWindow;
 let isSubOpen = false;
+let isInitOpen = false;
 
 app.on("window-all-closed", function() {
   if (process.platform != "darwin") {
@@ -49,6 +51,25 @@ ipcMain.on("window-open", function() {
   subWindow.on("closed", function() {
     subWindow = null;
     isSubOpen = false;
+    mainWindow.reload();
+  });
+});
+
+ipcMain.on("initial-open", function() {
+  if (isInitOpen) return;
+  initWindow = new BrowserWindow({
+    width: 1500,
+    height: 1050,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+  isInitOpen = true;
+  initWindow.loadURL("file://" + __dirname + "/initial_setting.html");
+  initWindow.on("closed", function() {
+    initWindow = null;
+    isInitOpen = false;
     mainWindow.reload();
   });
 });

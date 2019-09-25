@@ -765,7 +765,7 @@ function validateJson(jsonObj) {
 
 function loadSettings() {
   if (store.size == 0) {
-    ipcRenderer.send("window-open");
+    ipcRenderer.send("initial-open");
     return;
   }
 

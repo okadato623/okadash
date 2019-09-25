@@ -4,7 +4,8 @@
 
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W3", "メイリオ",
+    Meiryo, "ＭＳ Ｐゴシック", sans-serif;
   background: #fafafa;
 }
 
@@ -13,7 +14,8 @@ button:focus {
 }
 
 p {
-  font-family: "Poppins", sans-serif;
+  font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W3", "メイリオ",
+    Meiryo, "ＭＳ Ｐゴシック", sans-serif;
   font-size: 1.1em;
   font-weight: 300;
   line-height: 1.7em;
