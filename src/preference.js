@@ -20,13 +20,11 @@ const default_setting = JSON.parse(`
       ]
     },
     {
-      "name": "trello",
-      "url": "https://trello.com/b/dwk73iz6/okadash",
+      "name": "Yahoo News",
+      "url": "https://news.yahoo.co.jp/",
       "size": "medium",
       "customCSS": [
-        "#header { display: none !important; }",
-        ".board-header { display: none !important; }",
-        ".board-canvas { margin-top: 10px !important; }"
+        "#yjnEmg { display: none !important; }"
       ]
     },
     {
