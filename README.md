@@ -16,7 +16,7 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 
 1. Download zip. 👆
 1. Launch App!
-1. Edit Slack URLs for your workspace. (2 items)
+1. Enter your Slack workspace name.
    ![sample_image](https://github.com/konoyono/okadash/blob/master/images/initialize.gif)
 
 ## Build and Run
@@ -24,4 +24,4 @@ Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 1. clone this repo.
 1. `npm install`
 1. `npm start`
-1. Edit Slack URLs for your workspace. (2 items)
+1. Enter your Slack workspace name.
