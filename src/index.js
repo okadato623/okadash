@@ -23,10 +23,15 @@ function trackEvent(category, action) {
 }
 
 app.on("window-all-closed", function() {
+  trackEvent("main", "Close App");
   if (process.platform != "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", function() {
   trackEvent("main", "Close App");
+  mainWindow = null;
 });
 
 app.on("ready", function() {
