@@ -1,6 +1,18 @@
 var { remote } = require("electron");
 var { isMac, app } = remote;
 
+// for Google Analytics
+const ua = require("universal-analytics");
+const usr = ua("UA-148721366-1");
+function trackEvent(category, action) {
+  usr
+    .event({
+      ec: category,
+      ea: action
+    })
+    .send();
+}
+
 const menuTemplate = [
   // { role: 'appMenu' }
   ...(process.platform === "darwin"
@@ -16,7 +28,16 @@ const menuTemplate = [
             { role: "hideothers" },
             { role: "unhide" },
             { type: "separator" },
-            { role: "quit" }
+            {
+              label: "quit",
+              accelerator: "CommandOrControl+Q",
+              click() {
+                trackEvent("main", "Close App");
+                setTimeout(() => {
+                  app.quit();
+                }, 700);
+              }
+            }
           ]
         }
       ]
