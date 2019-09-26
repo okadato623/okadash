@@ -10,10 +10,23 @@ let initWindow;
 let isSubOpen = false;
 let isInitOpen = false;
 
+// for Google Analytics
+const ua = require("universal-analytics");
+const usr = ua("UA-143632945-1");
+function trackEvent(category, action) {
+  usr
+    .event({
+      ec: category,
+      ea: action
+    })
+    .send();
+}
+
 app.on("window-all-closed", function() {
   if (process.platform != "darwin") {
     app.quit();
   }
+  trackEvent("main", "CloseApp");
 });
 
 app.on("ready", function() {
@@ -28,6 +41,7 @@ app.on("ready", function() {
       webviewTag: true
     }
   });
+  trackEvent("main", "OpenApp");
   mainWindow.maximize();
   mainWindow.loadURL("file://" + __dirname + "/index.html");
 

@@ -1,6 +1,6 @@
 {
   "name": "okadash",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "electron-store": "^4.0.0",
-    "jquery": "^3.4.1"
+    "jquery": "^3.4.1",
+    "universal-analytics": "^0.4.20"
   }
 }

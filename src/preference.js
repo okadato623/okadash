@@ -6,60 +6,13 @@ const store = new Store();
 const app = remote.app;
 const path = require("path");
 
-const default_setting = JSON.parse(`
-{
-  "contents": [
-    {
-      "name": "Slack",
-      "url": "https://[workspace].slack.com",
-      "size": "large",
-      "customCSS": [
-        ".p-channel_sidebar { width: 160px !important; }",
-        ".p-classic_nav__team_header { display: none !important; }",
-        ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
-      ]
-    },
-    {
-      "name": "Yahoo News",
-      "url": "https://news.yahoo.co.jp/",
-      "size": "medium",
-      "customCSS": [
-        "#yjnEmg { display: none !important; }"
-      ]
-    },
-    {
-      "name": "Slack(body)",
-      "url": "https://[workspace].slack.com",
-      "customCSS": [
-        ".p-workspace__sidebar { display: none !important; }",
-        ".p-classic_nav__team_header { display: none !important;}",
-        ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
-        ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
-        ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
-      ]
-    },
-    {
-      "name": "twitter",
-      "url": "https://twitter.com",
-      "customCSS": ["header { display: none !important; }"]
-    },
-    {
-      "name": "calendar",
-      "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
-    }
-  ]
-}
-`);
+const VERSION = "1.6.0";
 
-readFile();
+initialize();
 
-function readFile() {
+function initialize() {
   var config = path.join(app.getPath("userData"), "config.json");
   fs.readFile(config, (error, data) => {
-    if (error != null) {
-      importNewBoard("default", "Default Board");
-    }
-
     createBoardList(data);
   });
 }
@@ -248,7 +201,51 @@ function showModalDialogElement(filePath) {
 
 function importNewBoard(source, boardName) {
   if (source === "default") {
-    var settings = default_setting;
+    const workspaceName = document.getElementById("workspace-name").value;
+    var settings = JSON.parse(`
+    {
+      "contents": [
+        {
+          "name": "Slack",
+          "url": "https://${workspaceName}.slack.com",
+          "size": "large",
+          "customCSS": [
+            ".p-channel_sidebar { width: 160px !important; }",
+            ".p-classic_nav__team_header { display: none !important; }",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
+          ]
+        },
+        {
+          "name": "Yahoo News",
+          "url": "https://news.yahoo.co.jp/",
+          "size": "medium",
+          "customCSS": [
+            "#yjnEmg { display: none !important; }"
+          ]
+        },
+        {
+          "name": "Slack(body)",
+          "url": "https://${workspaceName}.slack.com",
+          "customCSS": [
+            ".p-workspace__sidebar { display: none !important; }",
+            ".p-classic_nav__team_header { display: none !important;}",
+            ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
+            ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
+            ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
+          ]
+        },
+        {
+          "name": "twitter",
+          "url": "https://twitter.com",
+          "customCSS": ["header { display: none !important; }"]
+        },
+        {
+          "name": "calendar",
+          "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
+        }
+      ]
+    }
+  `);
   } else {
     var settings = JSON.parse(fs.readFileSync(source));
   }
@@ -262,13 +259,19 @@ function importNewBoard(source, boardName) {
   if (optList) {
     optList.push(newOption);
     brdList.push(newOption);
-    store.set(`options`, optList);
-    store.set(`boards`, brdList);
+    store.set("options", optList);
+    store.set("boards", brdList);
   } else {
-    store.set(`options`, [newOption]);
-    store.set(`boards`, [newOption]);
+    store.set("version", VERSION);
+    store.set("options", [newOption]);
+    store.set("boards", [newOption]);
   }
-  remote.getCurrentWindow().reload();
+  if (source === "default") {
+    const window = remote.getCurrentWindow();
+    window.close();
+  } else {
+    remote.getCurrentWindow().reload();
+  }
 }
 
 function checkDuplicateNameExists(boardName) {
