@@ -12,7 +12,7 @@ let isInitOpen = false;
 
 // for Google Analytics
 const ua = require("universal-analytics");
-const usr = ua("UA-143632945-1");
+const usr = ua("UA-148721366-1");
 function trackEvent(category, action) {
   usr
     .event({
@@ -62,9 +62,11 @@ ipcMain.on("window-open", function() {
   });
   isSubOpen = true;
   subWindow.loadURL("file://" + __dirname + "/preference.html");
+  trackEvent("main", "Preference Open");
   subWindow.on("closed", function() {
     subWindow = null;
     isSubOpen = false;
+    trackEvent("main", "Preference Close");
     mainWindow.reload();
   });
 });
@@ -81,9 +83,11 @@ ipcMain.on("initial-open", function() {
   });
   isInitOpen = true;
   initWindow.loadURL("file://" + __dirname + "/initial_setting.html");
+  trackEvent("main", "Initialize Start");
   initWindow.on("closed", function() {
     initWindow = null;
     isInitOpen = false;
+    trackEvent("main", "Initialize End");
     mainWindow.reload();
   });
 });
