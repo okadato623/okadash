@@ -1,7 +1,9 @@
 const { shell } = require("electron");
 var { remote, ipcRenderer } = require("electron");
 var { Menu, MenuItem, dialog } = remote;
+const app = remote.app;
 const fs = require("fs");
+const path = require("path");
 const Store = require("electron-store");
 const store = new Store();
 let json = loadSettings();
@@ -12,7 +14,7 @@ let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
-const version = "1.5.2";
+const VERSION = "1.6.0";
 
 initialize();
 
@@ -131,6 +133,7 @@ $(document).keydown(function(e) {
 function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
+  checkConfigVersion();
 
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
@@ -176,7 +179,7 @@ function getLatestVersion() {
 }
 
 function checkLatestVersion(latest) {
-  if (version != latest) $("#alert-icon").css("display", "block");
+  if (VERSION != latest) $("#alert-icon").css("display", "block");
 }
 
 function initializeMenu(template) {
@@ -770,6 +773,16 @@ function loadSettings() {
   }
 
   return buildJsonObjectFromStoredData(store.get("boards")[0]);
+}
+
+function checkConfigVersion() {
+  const version = store.get("version");
+  if (version !== VERSION) {
+    const config = path.join(app.getPath("userData"), "config.json");
+    fs.unlink(config, () => {
+      ipcRenderer.send("initial-open");
+    });
+  }
 }
 
 function showModalDialogElement(filePath) {

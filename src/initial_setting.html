@@ -40,12 +40,17 @@
     <h4>まずは使いたい Slack アカウントを教えてね。</h4>
     <h3>
       https://<input
+        id="workspace-name"
         type="textbox"
         style="width: 200px; text-align: center;"
+        autofocus
       />.slack.com
     </h3>
     <br />
-    <button class="btn btn-primary btn-lg box-shadow" onclick="window.close()">
+    <button
+      class="btn btn-primary btn-lg box-shadow"
+      onclick="javascript:importNewBoard('default', 'Default Board')"
+    >
       Let's okadash!!
     </button>
 
