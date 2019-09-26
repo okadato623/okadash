@@ -29,11 +29,6 @@ app.on("window-all-closed", function() {
   }
 });
 
-app.on("before-quit", function() {
-  trackEvent("main", "Close App");
-  mainWindow = null;
-});
-
 app.on("ready", function() {
   mainWindow = new BrowserWindow({
     webPreferences: {
