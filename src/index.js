@@ -26,7 +26,7 @@ app.on("window-all-closed", function() {
   if (process.platform != "darwin") {
     app.quit();
   }
-  trackEvent("main", "CloseApp");
+  trackEvent("main", "Close App");
 });
 
 app.on("ready", function() {
@@ -41,7 +41,7 @@ app.on("ready", function() {
       webviewTag: true
     }
   });
-  trackEvent("main", "OpenApp");
+  trackEvent("main", "Open App");
   mainWindow.maximize();
   mainWindow.loadURL("file://" + __dirname + "/index.html");
 
