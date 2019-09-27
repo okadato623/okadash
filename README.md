@@ -5,7 +5,6 @@
 ## Description
 
 Dashboard Tool made with Electron.  
-Detail is [here](https://trello.com/b/dwk73iz6/okadash)!
 
 ## Download
 
