@@ -5,6 +5,8 @@
 ## Description
 
 Dashboard Tool made with Electron.
+This is a tool to combine multiple sites on one screen.
+As a core concept, I'm aiming for a tool that is easy to use and highly customizable!
 
 ## Download
 
