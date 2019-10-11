@@ -14,7 +14,7 @@ let allWidth = json.contents[0].allWidth;
 let configWidth = json.contents[0].width;
 let configHeight = json.contents[1].height;
 
-const VERSION = "1.6.0";
+const VERSION = "1.6.1";
 
 initialize();
 
@@ -161,21 +161,34 @@ function initialize() {
 
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  request.open(
-    "GET",
-    "https://api.github.com/repos/konoyono/okadash/releases/latest"
+  const query = {
+    query: `{
+      repository(owner: "konoyono", name: "okadash") {
+        releases(last: 1) {
+          nodes {
+            tagName
+          }
+       }
+      }
+    }`
+  };
+  request.open("POST", "https://api.github.com/graphql");
+  request.setRequestHeader("Content-Type", "application/json");
+  request.setRequestHeader(
+    "Authorization",
+    "bearer fbae27fc9bbeb9f5fe396672eaf68ba22f492435"
   );
   request.onreadystatechange = function() {
     if (request.readyState != 4) {
-      // リクエスト中
+      // requesting
     } else if (request.status != 200) {
-      // 失敗
+      // request failed...
     } else {
       const res = JSON.parse(request.responseText);
-      checkLatestVersion(res["tag_name"]);
+      checkLatestVersion(res.data.repository.releases.nodes[0].tagName);
     }
   };
-  request.send(null);
+  request.send(JSON.stringify(query));
 }
 
 function checkLatestVersion(latest) {

@@ -6,7 +6,7 @@ const store = new Store();
 const app = remote.app;
 const path = require("path");
 
-const VERSION = "1.6.0";
+const VERSION = "1.6.1";
 
 initialize();
 
