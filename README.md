@@ -4,12 +4,12 @@
 
 ## Description
 
-Dashboard Tool made with Electron.  
+Dashboard Tool made with Electron.
 
 ## Download
 
-[okadash-1.6.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.6.0/okadash-1.6.0-mac.zip)  
-[okadash-1.6.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.6.0/okadash-1.6.0-win.zip)
+[okadash-1.6.1-mac.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-mac.zip)  
+[okadash-1.6.1-win.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-win.zip)
 
 ## Quick Start
 
