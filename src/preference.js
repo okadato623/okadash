@@ -216,12 +216,10 @@ function importNewBoard(source, boardName) {
           ]
         },
         {
-          "name": "Yahoo News",
-          "url": "https://news.yahoo.co.jp/",
+          "name": "Google News",
+          "url": "https://news.google.com/",
           "size": "medium",
-          "customCSS": [
-            "#yjnEmg { display: none !important; }"
-          ]
+          "customCSS": []
         },
         {
           "name": "Slack(body)",
