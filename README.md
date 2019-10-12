@@ -7,6 +7,7 @@
 Dashboard Tool made with Electron.  
 This is a tool to combine multiple sites on one screen.  
 As a core concept, I'm aiming for a tool that is easy to use and highly customizable!
+Detail is [here](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)!
 
 ## Download
 
