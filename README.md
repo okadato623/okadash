@@ -4,7 +4,7 @@
 
 ## How To Use
 
-[日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)
+[日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)  
 Made by Teachme Biz
 
 ## Description
