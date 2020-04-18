@@ -45,7 +45,7 @@
     />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
   </head>
-  <body style="overflow: hidden">
+  <body style="overflow: hidden;">
     <div id="content">
       <tr>
         <td>
@@ -56,11 +56,11 @@
             data-label_2="WEATHER"
             data-days="5"
             data-theme="pure"
-            style="margin-bottom: 30px"
+            style="margin-bottom: 30px;"
             >TOKYO WEATHER</a
           >
           <script>
-            !(function(d, s, id) {
+            !(function (d, s, id) {
               var js,
                 fjs = d.getElementsByTagName(s)[0];
               if (!d.getElementById(id)) {
@@ -71,7 +71,7 @@
               }
             })(document, "script", "weatherwidget-io-js");
           </script>
-          <table class="calendar-table" style="margin-top: 30px">
+          <table class="calendar-table" style="margin-top: 30px;">
             <tbody id="js-calendar-body"></tbody>
           </table>
 
@@ -82,7 +82,7 @@
       </tr>
     </div>
 
-    <div id="options" style="opacity:1"></div>
+    <div id="options" style="opacity: 1;"></div>
 
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script>
@@ -95,16 +95,14 @@
       var currentYear = today.getFullYear(),
         currentMonth = today.getMonth();
 
-      $window.on("load", function() {
+      $window.on("load", function () {
         calendarHeading(currentYear, currentMonth);
         calendarBody(currentYear, currentMonth, today);
       });
 
       function calendarBody(year, month, today) {
         var todayYMFlag =
-          today.getFullYear() === year && today.getMonth() === month
-            ? true
-            : false; // 本日の年と月が表示されるカレンダーと同じか判定
+          today.getFullYear() === year && today.getMonth() === month ? true : false; // 本日の年と月が表示されるカレンダーと同じか判定
         var startDate = new Date(year, month, 1); // その月の最初の日の情報
         var endDate = new Date(year, month + 1, 0); // その月の最後の日の情報
         var startDay = startDate.getDay(); // その月の最初の日の曜日を取得
@@ -123,8 +121,7 @@
             if (textDate > endDay) {
               textSkip = true;
             }
-            var addClass =
-              todayYMFlag && textDate === today.getDate() ? "today" : "";
+            var addClass = todayYMFlag && textDate === today.getDate() ? "today" : "";
             addClass += " cal-td";
             if (col === 0) {
               addClass += " sunday";
