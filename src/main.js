@@ -136,7 +136,13 @@ function initialize() {
   const contents = json.contents;
   contents.forEach(function (content) {
     if (content["size"] === undefined) content["size"] = "small";
-    createPane(content["size"], content["url"], true);
+    if (content["zoom"] === undefined) content["zoom"] = 1.0;
+    createPane({
+      size: content["size"],
+      url: content["url"],
+      zoom: content["zoom"],
+      init: true
+    });
   });
 
   getWebviews().forEach(function (webview, index) {
@@ -624,7 +630,7 @@ function getPaneNum() {
 function loadAdditionalPage(additionalPage, customCSS = []) {
   resetWindowSize();
   const size = "small";
-  createPane(size, "");
+  createPane({ size });
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, additionalPage);
   storeCustomCSS(getPaneNum() - 1, customCSS);
@@ -667,14 +673,14 @@ function storeCustomCSS(index, customCSS) {
   store.set(`boards.0.contents.${index}.customCSS`, customCSS);
 }
 
-function createPane(size, url = "", init = false) {
+function createPane({ size, url = "", zoom = 1.0, init = false }) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
 
-  const webview = createWebview(url);
+  const webview = createWebview(url, { zoom });
   divContainer.appendChild(webview);
 
   createDraggableBar(size);
@@ -690,7 +696,7 @@ function createDraggableBar(size) {
   } else {
     div.id = `dvs-${getPaneNum() - 1}`;
     div.className = "dragbar-vertical-small";
-    div.style = `grid-column: ${(getPaneNum() - 1) * 2} / 
+    div.style = `grid-column: ${(getPaneNum() - 1) * 2} /
       ${(getPaneNum() - 1) * 2 + 1}`;
   }
   document.getElementById("main-content").appendChild(div);
@@ -711,11 +717,14 @@ function createButtonDiv() {
   return div;
 }
 
-function createWebview(url = "") {
+function createWebview(url = "", options = {}) {
   let webview = document.createElement("webview");
   webview.src = "about:blank";
   webview.id = "normal";
   webview.url = url;
+  webview.addEventListener("dom-ready", () => {
+    webview.setZoomFactor(Number(options.zoom) || 1.0);
+  });
   return webview;
 }
 
