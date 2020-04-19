@@ -260,6 +260,7 @@ function importNewBoard(source, boardName) {
         },
         {
           "name": "calendar",
+          "zoom": 1.0,
           "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
         }
       ]
