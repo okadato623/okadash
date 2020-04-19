@@ -74,7 +74,7 @@ function showBoardContents(board, self) {
     zoomElem.innerHTML = "Zoom";
     zoomTextElem.type = "textbox";
     zoomTextElem.className = "content-textbox";
-    zoomTextElem.value = content["zoom"];
+    zoomTextElem.value = content["zoom"] || 1.0;
     zoomElem.appendChild(zoomTextElem);
 
     const cssElem = document.createElement("p");
