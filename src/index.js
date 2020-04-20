@@ -22,14 +22,14 @@ function trackEvent(category, action) {
     .send();
 }
 
-app.on("window-all-closed", function() {
+app.on("window-all-closed", function () {
   trackEvent("main", "Close App");
   if (process.platform != "darwin") {
     app.quit();
   }
 });
 
-app.on("ready", function() {
+app.on("ready", function () {
   mainWindow = new BrowserWindow({
     webPreferences: {
       transparent: false,
@@ -45,12 +45,12 @@ app.on("ready", function() {
   mainWindow.maximize();
   mainWindow.loadURL("file://" + __dirname + "/index.html");
 
-  mainWindow.on("closed", function() {
+  mainWindow.on("closed", function () {
     mainWindow = null;
   });
 });
 
-ipcMain.on("window-open", function() {
+ipcMain.on("window-open", function () {
   if (isSubOpen) return;
   subWindow = new BrowserWindow({
     width: 1200,
@@ -63,7 +63,7 @@ ipcMain.on("window-open", function() {
   isSubOpen = true;
   subWindow.loadURL("file://" + __dirname + "/preference.html");
   trackEvent("main", "Preference Open");
-  subWindow.on("closed", function() {
+  subWindow.on("closed", function () {
     subWindow = null;
     isSubOpen = false;
     trackEvent("main", "Preference Close");
@@ -71,7 +71,7 @@ ipcMain.on("window-open", function() {
   });
 });
 
-ipcMain.on("initial-open", function() {
+ipcMain.on("initial-open", function () {
   if (isInitOpen) return;
   initWindow = new BrowserWindow({
     width: 1500,
@@ -84,7 +84,7 @@ ipcMain.on("initial-open", function() {
   isInitOpen = true;
   initWindow.loadURL("file://" + __dirname + "/initial_setting.html");
   trackEvent("main", "Initialize Start");
-  initWindow.on("closed", function() {
+  initWindow.on("closed", function () {
     initWindow = null;
     isInitOpen = false;
     trackEvent("main", "Initialize End");

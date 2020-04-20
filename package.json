@@ -5,18 +5,25 @@
   "main": "src/index.js",
   "scripts": {
     "start": "cd src && electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write src/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "electron": "^5.0.11",
-    "electron-builder": "^21.2.0"
+    "electron-builder": "^21.2.0",
+    "prettier": "^2.0.4"
   },
   "dependencies": {
     "electron-store": "^4.0.0",
     "jquery": "^3.4.1",
     "universal-analytics": "^0.4.20"
+  },
+  "prettier": {
+    "trailingComma": "none",
+    "printWidth": 90,
+    "arrowParens": "avoid"
   }
 }

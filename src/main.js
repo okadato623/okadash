@@ -22,7 +22,7 @@ var dragging_vertical = false;
 var dragging_horizontal = false;
 var dragging_vertical_small = false;
 var draggingId = "";
-$("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
+$("#dragbar-vertical, .dragbar-vertical-small").mousedown(function (e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
   if (this.id === "dragbar-vertical") {
@@ -42,16 +42,16 @@ $("#dragbar-vertical, .dragbar-vertical-small").mousedown(function(e) {
     }
   }).appendTo("body");
 
-  $(document).mousemove(function(e) {
+  $(document).mousemove(function (e) {
     ghostbar.css("left", e.pageX + 2);
   });
 });
 
-window.onresize = function() {
+window.onresize = function () {
   remote.getCurrentWindow().reload();
 };
 
-$("#dragbar-horizontal").mousedown(function(e) {
+$("#dragbar-horizontal").mousedown(function (e) {
   e.preventDefault();
   $("#main-content").css("pointer-events", "none");
 
@@ -67,18 +67,18 @@ $("#dragbar-horizontal").mousedown(function(e) {
     }
   }).appendTo("body");
 
-  $(document).mousemove(function(e) {
+  $(document).mousemove(function (e) {
     ghostbar.css("top", e.pageY + 2);
   });
 });
 
-$(document).mouseup(function(e) {
+$(document).mouseup(function (e) {
   if (dragging_vertical) {
     const largeWidth = document.getElementById("0").clientWidth;
     const smallPanes = Array.from(document.getElementsByClassName("small"));
     if (smallPanes.length !== 0) {
       let nextPaneLen = largeWidth;
-      smallPanes.forEach(function(pane) {
+      smallPanes.forEach(function (pane) {
         if (pane.id <= 2) nextPaneLen += pane.clientWidth;
       });
       if (e.pageX >= nextPaneLen) return;
@@ -105,7 +105,7 @@ $(document).mouseup(function(e) {
     var nextPaneLen = largeWidth;
 
     // drop可能な範囲を限定
-    smallPanes.forEach(function(pane) {
+    smallPanes.forEach(function (pane) {
       if (pane.id < draggingId) otherPanesLen += pane.clientWidth;
       if (pane.id <= Number(draggingId) + 1) nextPaneLen += pane.clientWidth;
     });
@@ -120,11 +120,8 @@ $(document).mouseup(function(e) {
   }
 });
 
-$(document).keydown(function(e) {
-  if (
-    e.keyCode == 27 &&
-    document.getElementsByClassName("overlay").length !== 0
-  ) {
+$(document).keydown(function (e) {
+  if (e.keyCode == 27 && document.getElementsByClassName("overlay").length !== 0) {
     const main = document.getElementById("main-content");
     main.removeChild(document.getElementsByClassName("overlay")[0]);
   }
@@ -137,13 +134,13 @@ function initialize() {
 
   initializeMenu(menu.menuTemplate);
   const contents = json.contents;
-  contents.forEach(function(content) {
+  contents.forEach(function (content) {
     if (content["size"] === undefined) content["size"] = "small";
     createPane(content["size"], content["url"], true);
   });
 
-  getWebviews().forEach(function(webview, index) {
-    webview.addEventListener("dom-ready", function() {
+  getWebviews().forEach(function (webview, index) {
+    webview.addEventListener("dom-ready", function () {
       initializeWebview(
         webview,
         json.contents[index]["url"],
@@ -178,7 +175,7 @@ function getLatestVersion() {
     "Authorization",
     "bearer fbae27fc9bbeb9f5fe396672eaf68ba22f492435"
   );
-  request.onreadystatechange = function() {
+  request.onreadystatechange = function () {
     if (request.readyState != 4) {
       // requesting
     } else if (request.status != 200) {
@@ -214,7 +211,7 @@ function createMenuItemForBoard() {
     submenu: []
   });
   const boardMenuItems = createBoardMenuItems();
-  boardMenuItems.forEach(function(boardMenuItem, i) {
+  boardMenuItems.forEach(function (boardMenuItem, i) {
     menuItem.submenu.append(boardMenuItem);
     if (i === 0) menuItem.submenu.append(new MenuItem({ type: "separator" }));
   });
@@ -256,7 +253,7 @@ function createMenuItemForSmallPane() {
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
 
-  additionalPaneMenuItems.forEach(function(apMenuItem) {
+  additionalPaneMenuItems.forEach(function (apMenuItem) {
     menuItem.submenu.append(apMenuItem);
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
@@ -372,7 +369,7 @@ function moveClickedContentsToTop(clicked) {
 }
 
 function createAdditionalPaneMenuItems(contents) {
-  const additionalPaneMenuItems = contents.map(function(content) {
+  const additionalPaneMenuItems = contents.map(function (content) {
     return new MenuItem({
       label: content["name"],
       accelerator: `CommandOrControl+${content["index"] + 1}`,
@@ -386,7 +383,7 @@ function createAdditionalPaneMenuItems(contents) {
 }
 
 function createContextMenuItems(contents, index) {
-  const contextMenuItems = contents.map(function(content) {
+  const contextMenuItems = contents.map(function (content) {
     return new MenuItem({
       label: content["name"],
       click() {
@@ -418,7 +415,7 @@ function openGoogleInOverlay() {
   div.appendChild(label);
   main.appendChild(div);
   const webview = createWebview("https://google.com");
-  webview.addEventListener("dom-ready", function() {
+  webview.addEventListener("dom-ready", function () {
     initializeWebview(webview, "https://google.com");
     webview.focus();
   });
@@ -426,7 +423,7 @@ function openGoogleInOverlay() {
 }
 
 function getAdditionalPaneInfo(contents) {
-  const content = contents.map(function(content, index) {
+  const content = contents.map(function (content, index) {
     try {
       url = new URL(content["url"]);
     } catch {
@@ -496,19 +493,17 @@ function remove(index) {
   const targetBar = document.getElementById(`dvs-${index}`);
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
-  const bars = Array.from(
-    document.getElementsByClassName("dragbar-vertical-small")
-  );
+  const bars = Array.from(document.getElementsByClassName("dragbar-vertical-small"));
   store.delete(`boards.0.contents.${index}`);
   saveNewContents();
 
-  smallPanes.forEach(function(pane) {
+  smallPanes.forEach(function (pane) {
     if (pane.id > index) {
       pane.id = Number(pane.id) - 1;
       pane.style.order = Number(pane.id) - 1;
     }
   });
-  bars.forEach(function(bar) {
+  bars.forEach(function (bar) {
     id = Number(bar.id.replace(/[^0-9]/g, ""));
     if (id > index) {
       bar.id = `dvs-${id - 1}`;
@@ -551,7 +546,7 @@ function maximize(index) {
   div.appendChild(label);
   main.appendChild(div);
   const webview = createWebview(url);
-  webview.addEventListener("dom-ready", function() {
+  webview.addEventListener("dom-ready", function () {
     initializeWebview(webview, url);
   });
   div.appendChild(webview);
@@ -560,7 +555,7 @@ function maximize(index) {
 function refreshButtons() {
   const main = document.getElementById("main-content");
   const children = Array.from(main.children);
-  children.forEach(function(child) {
+  children.forEach(function (child) {
     const target = child.querySelector(".tool-buttons");
     if (child.classList.contains("small")) {
       while (target.firstChild) {
@@ -615,7 +610,7 @@ function openContextMenu(index) {
 
   var menu = new Menu();
   const contextMenuItems = createMenuItemForContextmenu(index);
-  contextMenuItems.forEach(function(contextMenuItem, i) {
+  contextMenuItems.forEach(function (contextMenuItem, i) {
     menu.append(contextMenuItem);
   });
 
@@ -635,7 +630,7 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
   storeCustomCSS(getPaneNum() - 1, customCSS);
 
   const webview = getWebviews()[getPaneNum() - 1];
-  webview.addEventListener("dom-ready", function() {
+  webview.addEventListener("dom-ready", function () {
     initializeWebview(webview, additionalPage, customCSS);
   });
   refreshButtons();
@@ -650,7 +645,7 @@ function recreateSelectedPane(url, customCSS, index) {
 
   const webview = createWebview(url);
   webview.autosize = "on";
-  webview.addEventListener("dom-ready", function() {
+  webview.addEventListener("dom-ready", function () {
     if (webview.src === "about:blank") {
       webview.loadURL(url.toString());
     }
@@ -772,7 +767,7 @@ function validateJson(jsonObj) {
     alert("Error in settings: contents is invalid");
     return false;
   }
-  jsonObj.contents.forEach(function(content) {
+  jsonObj.contents.forEach(function (content) {
     if (content["customCSS"] === undefined) content["customCSS"] = [];
   });
 
@@ -841,7 +836,7 @@ function openFileAndSave() {
 function saveNewContents() {
   const contents = store.get("boards.0.contents");
   let newContents = [];
-  contents.forEach(function(content) {
+  contents.forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
   store.set("boards.0.contents", newContents);
@@ -850,7 +845,7 @@ function saveNewContents() {
 function buildJsonObjectFromStoredData(boards) {
   let newContents = [];
   if (boards === undefined) ipcRenderer.send("window-open");
-  boards["contents"].forEach(function(content) {
+  boards["contents"].forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
   store.set("boards.0.contents", newContents);
@@ -866,11 +861,9 @@ function resetWindowSize() {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   ratio =
-    `${configWidth}% 0% ` +
-    `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+    `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
   columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 -
-    configHeight}% !important ;`;
+  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
   main.style = columns + rows;
   draggingId = "";
 }
@@ -887,8 +880,7 @@ function calcWindowSize(init = false) {
   let columns = "";
   let rows = "";
   if (draggingId !== undefined && draggingId !== "") {
-    nextNum =
-      draggingId === "0" ? Number(draggingId) + 2 : Number(draggingId) + 1;
+    nextNum = draggingId === "0" ? Number(draggingId) + 2 : Number(draggingId) + 1;
     const target = document.getElementById(`${draggingId}`);
     const next = document.getElementById(`${nextNum}`);
     let arColumns = main.style["grid-template-columns"].split(" ");
@@ -906,17 +898,15 @@ function calcWindowSize(init = false) {
   } else {
     // リセット時の処理なので等分するだけ
     ratio =
-      `${configWidth}% 0% ` +
-      `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+      `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
   columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 -
-    configHeight}% !important ;`;
+  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
   if (init && allWidth !== undefined) columns = allWidth;
   main.style = columns + rows;
   refreshButtons();
   const panes = Array.from(document.getElementsByClassName("small"));
-  panes.forEach(function(pane) {
+  panes.forEach(function (pane) {
     pane.style.width = "100%";
     pane.style.height = "100%";
   });
@@ -934,7 +924,7 @@ function foldLargePane() {
   let newWidth = 700;
   if (smallPanes.length !== 0) {
     var nextPaneLen = largeWidth;
-    smallPanes.forEach(function(pane) {
+    smallPanes.forEach(function (pane) {
       if (pane.id <= 2) nextPaneLen += pane.clientWidth;
     });
   }

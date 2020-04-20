@@ -24,7 +24,7 @@ function createBoardList(data) {
     const board = boards["options"][i];
     const liElem = document.createElement("li");
     const aElem = document.createElement("a");
-    aElem.onclick = function() {
+    aElem.onclick = function () {
       showBoardContents(board, aElem);
     };
     aElem.innerHTML = board["name"];
@@ -37,7 +37,7 @@ function createBoardList(data) {
 
 function showBoardContents(board, self) {
   const boardsContainer = document.getElementById("boards-container");
-  boardsContainer.childNodes.forEach(function(node) {
+  boardsContainer.childNodes.forEach(function (node) {
     node.classList.remove("active");
   });
   self.parentElement.classList.add("active");
@@ -80,7 +80,7 @@ function showBoardContents(board, self) {
     const btnElem = document.createElement("button");
     btnElem.className = "btn btn-outline-danger";
     btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
-    btnElem.onclick = function() {
+    btnElem.onclick = function () {
       if (!confirm("Sure?")) return;
       btnElem.parentElement.remove();
     };
@@ -100,7 +100,7 @@ function showBoardContents(board, self) {
   const addBtnElem = document.createElement("button");
   addBtnElem.className = "add-board-btn";
   addBtnElem.innerHTML = "+";
-  addBtnElem.onclick = function() {
+  addBtnElem.onclick = function () {
     createNewItem(addBtnElem);
   };
   container.appendChild(addBtnElem);
@@ -135,7 +135,7 @@ function createNewItem(self) {
   const btnElem = document.createElement("button");
   btnElem.className = "btn btn-outline-danger";
   btnElem.innerHTML = "Delete this item";
-  btnElem.onclick = function() {
+  btnElem.onclick = function () {
     btnElem.parentElement.remove();
   };
 
@@ -275,7 +275,7 @@ function importNewBoard(source, boardName) {
 function checkDuplicateNameExists(boardName) {
   var found = false;
   const container = document.getElementById("boards-container");
-  container.childNodes.forEach(function(node) {
+  container.childNodes.forEach(function (node) {
     if (boardName == node.querySelector("a").innerText) found = true;
   });
 
@@ -294,7 +294,7 @@ function validateJson(jsonObj) {
     alert("Error in settings: contents is invalid");
     return false;
   }
-  jsonObj.contents.forEach(function(content) {
+  jsonObj.contents.forEach(function (content) {
     if (content["customCSS"] === undefined) content["customCSS"] = [];
   });
 
@@ -303,13 +303,11 @@ function validateJson(jsonObj) {
 
 function getSelectingBoard() {
   var res = "";
-  document
-    .getElementById("boards-container")
-    .childNodes.forEach(function(node) {
-      if (node.classList.contains("active")) {
-        res = node.querySelector("a").innerText;
-      }
-    });
+  document.getElementById("boards-container").childNodes.forEach(function (node) {
+    if (node.classList.contains("active")) {
+      res = node.querySelector("a").innerText;
+    }
+  });
   return res;
 }
 
@@ -390,9 +388,9 @@ function saveBoardSetting() {
   const container = document.getElementById("items-container");
   const items = [];
   let error = false;
-  container.querySelectorAll(".item-box").forEach(function(node) {
+  container.querySelectorAll(".item-box").forEach(function (node) {
     let item = {};
-    node.querySelectorAll("p").forEach(function(elem) {
+    node.querySelectorAll("p").forEach(function (elem) {
       switch (elem.innerText) {
         case "Name":
           item.name = elem.querySelector("input").value;
@@ -402,21 +400,13 @@ function saveBoardSetting() {
             item.size = "medium";
           }
           if (
-            !isValidName(
-              elem.querySelector("input").value,
-              elem.querySelector("input")
-            )
+            !isValidName(elem.querySelector("input").value, elem.querySelector("input"))
           )
             error = true;
           break;
         case "URL":
           item.url = elem.querySelector("input").value;
-          if (
-            !isValidURL(
-              elem.querySelector("input").value,
-              elem.querySelector("input")
-            )
-          )
+          if (!isValidURL(elem.querySelector("input").value, elem.querySelector("input")))
             error = true;
           break;
         case "Custom CSS":
@@ -438,14 +428,14 @@ function saveBoardSetting() {
     store.set("options", options);
     store.set("boards", options);
     document.getElementById("save-btn").innerText = "Saved!";
-    const reloadMessage = function() {
+    const reloadMessage = function () {
       document.getElementById("save-btn").innerText = "Save Board Setting";
     };
     setTimeout(reloadMessage, 2000);
   } else {
     document.getElementById("save-btn").innerText = "Save failed...";
     document.getElementById("save-btn").className = "btn btn-danger";
-    const reloadMessage = function() {
+    const reloadMessage = function () {
       document.getElementById("save-btn").innerText = "Save Board Setting";
       document.getElementById("save-btn").className = "btn btn-primary";
     };
@@ -474,9 +464,7 @@ function isValidURL(url, elem) {
     elem.style.background = "#fdd";
     return false;
   }
-  if (
-    !url.match(/^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/)
-  ) {
+  if (!url.match(/^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/)) {
     alert(`Invalid URL: (${url})`);
     elem.style.background = "#fdd";
     return false;
