@@ -136,16 +136,18 @@ function initialize() {
   const contents = json.contents;
   contents.forEach(function (content) {
     if (content["size"] === undefined) content["size"] = "small";
+    if (content["zoom"] === undefined) content["zoom"] = 1.0;
     createPane(content["size"], content["url"], true);
   });
 
   getWebviews().forEach(function (webview, index) {
     webview.addEventListener("dom-ready", function () {
-      initializeWebview(
+      initializeWebview({
         webview,
-        json.contents[index]["url"],
-        json.contents[index]["customCSS"]
-      );
+        url: json.contents[index]["url"],
+        customCSS: json.contents[index]["customCSS"],
+        zoom: json.contents[index]["zoom"]
+      });
       if (
         webview.parentNode.classList.contains("small") &&
         !webview.previousSibling.hasChildNodes()
@@ -416,7 +418,7 @@ function openGoogleInOverlay() {
   main.appendChild(div);
   const webview = createWebview("https://google.com");
   webview.addEventListener("dom-ready", function () {
-    initializeWebview(webview, "https://google.com");
+    initializeWebview({ webview, url: "https://google.com" });
     webview.focus();
   });
   div.appendChild(webview);
@@ -447,9 +449,10 @@ function getWebviews() {
   return webviews;
 }
 
-function initializeWebview(webview, url, customCSS = []) {
+function initializeWebview({ webview, url, zoom = 1.0, customCSS = [] }) {
   registerToOpenUrl(webview, shell);
   webview.insertCSS(customCSS.join(" "));
+  webview.setZoomFactor(Number(zoom) || 1.0);
   webview.autosize = "on";
 
   if (webview.src === "about:blank") {
@@ -547,7 +550,7 @@ function maximize(index) {
   main.appendChild(div);
   const webview = createWebview(url);
   webview.addEventListener("dom-ready", function () {
-    initializeWebview(webview, url);
+    initializeWebview({ webview, url });
   });
   div.appendChild(webview);
 }
@@ -631,7 +634,7 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
 
   const webview = getWebviews()[getPaneNum() - 1];
   webview.addEventListener("dom-ready", function () {
-    initializeWebview(webview, additionalPage, customCSS);
+    initializeWebview({ webview, url: additionalPage, customCSS });
   });
   refreshButtons();
 }
@@ -690,7 +693,7 @@ function createDraggableBar(size) {
   } else {
     div.id = `dvs-${getPaneNum() - 1}`;
     div.className = "dragbar-vertical-small";
-    div.style = `grid-column: ${(getPaneNum() - 1) * 2} / 
+    div.style = `grid-column: ${(getPaneNum() - 1) * 2} /
       ${(getPaneNum() - 1) * 2 + 1}`;
   }
   document.getElementById("main-content").appendChild(div);

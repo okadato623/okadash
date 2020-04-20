@@ -69,6 +69,14 @@ function showBoardContents(board, self) {
     if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
     urlElem.appendChild(urlTextElem);
 
+    const zoomElem = document.createElement("p");
+    const zoomTextElem = document.createElement("input");
+    zoomElem.innerHTML = "Zoom";
+    zoomTextElem.type = "textbox";
+    zoomTextElem.className = "content-textbox";
+    zoomTextElem.value = content["zoom"] || 1.0;
+    zoomElem.appendChild(zoomTextElem);
+
     const cssElem = document.createElement("p");
     const tAreaElem = document.createElement("textarea");
     cssElem.innerHTML = "Custom CSS";
@@ -90,6 +98,7 @@ function showBoardContents(board, self) {
 
     divElem.appendChild(nameElem);
     divElem.appendChild(urlElem);
+    divElem.appendChild(zoomElem);
     divElem.appendChild(cssElem);
     divElem.appendChild(btnElem);
     divElem.appendChild(hrElem);
@@ -126,6 +135,13 @@ function createNewItem(self) {
   urlTextElem.className = "content-textbox";
   urlElem.appendChild(urlTextElem);
 
+  const zoomElem = document.createElement("p");
+  const zoomTextElem = document.createElement("input");
+  zoomElem.innerHTML = "Zoom";
+  zoomTextElem.type = "textbox";
+  zoomTextElem.className = "content-textbox";
+  zoomElem.appendChild(zoomTextElem);
+
   const cssElem = document.createElement("p");
   const tAreaElem = document.createElement("textarea");
   cssElem.innerHTML = "Custom CSS";
@@ -144,6 +160,7 @@ function createNewItem(self) {
 
   divElem.appendChild(nameElem);
   divElem.appendChild(urlElem);
+  divElem.appendChild(zoomElem);
   divElem.appendChild(cssElem);
   divElem.appendChild(btnElem);
   divElem.appendChild(hrElem);
@@ -209,6 +226,7 @@ function importNewBoard(source, boardName) {
           "name": "Slack",
           "url": "https://${workspaceName}.slack.com",
           "size": "large",
+          "zoom": 1.0,
           "customCSS": [
             ".p-channel_sidebar { width: 160px !important; }",
             ".p-classic_nav__team_header { display: none !important; }",
@@ -219,11 +237,13 @@ function importNewBoard(source, boardName) {
           "name": "Google News",
           "url": "https://news.google.com/",
           "size": "medium",
+          "zoom": 1.0,
           "customCSS": []
         },
         {
           "name": "Slack(body)",
           "url": "https://${workspaceName}.slack.com",
+          "zoom": 1.0,
           "customCSS": [
             ".p-workspace__sidebar { display: none !important; }",
             ".p-classic_nav__team_header { display: none !important;}",
@@ -235,10 +255,12 @@ function importNewBoard(source, boardName) {
         {
           "name": "twitter",
           "url": "https://twitter.com",
+          "zoom": 1.0,
           "customCSS": ["header { display: none !important; }"]
         },
         {
           "name": "calendar",
+          "zoom": 1.0,
           "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
         }
       ]
@@ -409,6 +431,12 @@ function saveBoardSetting() {
           if (!isValidURL(elem.querySelector("input").value, elem.querySelector("input")))
             error = true;
           break;
+        case "Zoom":
+          item.zoom = elem.querySelector("input").value;
+          if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
+            error = true;
+          }
+          break;
         case "Custom CSS":
           item.customCSS = elem.querySelector("textarea").value.split("\n");
           items.push(item);
@@ -475,5 +503,20 @@ function isValidURL(url, elem) {
     return false;
   }
   elem.style.background = "#fff";
+  return true;
+}
+
+function isValidZoom(zoom, elem) {
+  if (zoom == "") {
+    alert("Zoom is Needed");
+    elem.style.background = "#fdd";
+    return false;
+  }
+  zoomNum = Number(zoom);
+  if (isNaN(zoomNum) || zoomNum < 0.25 || zoomNum > 5.0) {
+    alert("Zoom must be a number between 0.25 and 5.0");
+    elem.style.background = "#fdd";
+    return false;
+  }
   return true;
 }
