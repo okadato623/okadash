@@ -10,6 +10,9 @@ const VERSION = "1.6.1";
 
 initialize();
 
+/**
+ * Preference画面の初期描画を行う
+ */
 function initialize() {
   var config = path.join(app.getPath("userData"), "config.json");
   fs.readFile(config, (error, data) => {
@@ -17,6 +20,10 @@ function initialize() {
   });
 }
 
+/**
+ * 定義ファイルの内容を元に、ボードの一覧を描画する
+ * @param {Buffer} data 定義ファイルの内容
+ */
 function createBoardList(data) {
   const boards = JSON.parse(data);
   const container = document.getElementById("boards-container");
@@ -35,6 +42,11 @@ function createBoardList(data) {
   container.firstChild.querySelector("a").click();
 }
 
+/**
+ * ボードの内容を描画する
+ * @param {any} board
+ * @param {Element} self 対象ボード名に対応するリスト要素
+ */
 function showBoardContents(board, self) {
   const boardsContainer = document.getElementById("boards-container");
   boardsContainer.childNodes.forEach(function (node) {
@@ -115,6 +127,10 @@ function showBoardContents(board, self) {
   container.appendChild(addBtnElem);
 }
 
+/**
+ * アイテム欄を新規生成する
+ * @param {Element} self 追加ボタン要素
+ */
 function createNewItem(self) {
   self.remove();
   const container = document.getElementById("items-container");
@@ -169,6 +185,9 @@ function createNewItem(self) {
   container.appendChild(self);
 }
 
+/**
+ * JSONファイルを選択して新規ボードを作成する
+ */
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
   remote.dialog.showOpenDialog(
@@ -190,6 +209,11 @@ function openFileAndSave() {
   );
 }
 
+/**
+ * 新規ボード名を入力するモーダルを表示する
+ * モーダルのOKボタンが押下されたらインポート処理を行う
+ * @param {string} filePath 選択されたファイルパス
+ */
 function showModalDialogElement(filePath) {
   return new Promise((resolve, reject) => {
     const dlg = document.querySelector("#input-dialog");
@@ -216,6 +240,11 @@ function showModalDialogElement(filePath) {
   });
 }
 
+/**
+ * 新規ボードを作成する
+ * @param {string} source ファイルパスまたは "default"
+ * @param {string} boardName
+ */
 function importNewBoard(source, boardName) {
   if (source === "default") {
     const workspaceName = document.getElementById("workspace-name").value;
@@ -294,8 +323,12 @@ function importNewBoard(source, boardName) {
   }
 }
 
+/**
+ * 指定したボード名が既に存在するかを戻す
+ * @param {string} boardName
+ */
 function checkDuplicateNameExists(boardName) {
-  var found = false;
+  let found = false;
   const container = document.getElementById("boards-container");
   container.childNodes.forEach(function (node) {
     if (boardName == node.querySelector("a").innerText) found = true;
@@ -304,6 +337,10 @@ function checkDuplicateNameExists(boardName) {
   return found;
 }
 
+/**
+ * 定義済みのボード数を戻す
+ * FIXME: どこからも参照されていなければ削除する
+ */
 function getBoardNum() {
   if (store.get("options") !== undefined) {
     return Object.keys(store.get("options")).length;
@@ -311,11 +348,15 @@ function getBoardNum() {
   return undefined;
 }
 
+/**
+ * @param {Object} jsonObj インポートした設定ファイル
+ */
 function validateJson(jsonObj) {
   if (!jsonObj.contents) {
     alert("Error in settings: contents is invalid");
     return false;
   }
+  // FIXME: validateといいつつ、内容の改変まで行っているので分離するべき
   jsonObj.contents.forEach(function (content) {
     if (content["customCSS"] === undefined) content["customCSS"] = [];
   });
@@ -323,8 +364,11 @@ function validateJson(jsonObj) {
   return true;
 }
 
+/**
+ * 現在選択中のボード名を取得する
+ */
 function getSelectingBoard() {
-  var res = "";
+  let res = "";
   document.getElementById("boards-container").childNodes.forEach(function (node) {
     if (node.classList.contains("active")) {
       res = node.querySelector("a").innerText;
@@ -333,18 +377,18 @@ function getSelectingBoard() {
   return res;
 }
 
+/**
+ * 現在開いているボードを削除する
+ */
 function deleteBoard() {
   const targetBoard = getSelectingBoard();
   const allBoards = store.get("boards");
   const allOptions = store.get("options");
-  if (
-    !confirm(
-      `Delete board name '${
-        document.getElementById("board-name-textbox").innerText
-      }'. OK?`
-    )
-  )
-    return;
+
+  // FIXME: targetBoardと常に同じ値ならどっちかあれば良さそう
+  const currentBoardName = document.getElementById("board-name-textbox").innerText;
+  const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
+  if (!confirm(confirmMessage)) return;
 
   for (i in allOptions) {
     if (targetBoard == allOptions[i]["name"]) {
@@ -357,20 +401,17 @@ function deleteBoard() {
   remote.getCurrentWindow().reload();
 }
 
+/**
+ * ボードの設定情報をJSON形式でエクスポートする
+ * @param {boolean} asIs 定義済みボードでなく、現在使用中のボードをエクスポートする
+ */
 function exportBoard(asIs = false) {
   const targetBoard = document.getElementById("board-name-textbox").innerText;
+  const baseKey = asIs ? "boards" : "options";
   let usingBoard = "";
-  if (asIs) {
-    for (i in store.get("boards")) {
-      if (store.get("boards")[i]["name"] == targetBoard) {
-        usingBoard = store.get("boards")[i];
-      }
-    }
-  } else {
-    for (i in store.get("options")) {
-      if (store.get("options")[i]["name"] == targetBoard) {
-        usingBoard = store.get("options")[i];
-      }
+  for (i in store.get(baseKey)) {
+    if (store.get(baseKey)[i]["name"] == targetBoard) {
+      usingBoard = store.get(baseKey)[i];
     }
   }
   delete usingBoard.name;
@@ -396,6 +437,11 @@ function exportBoard(asIs = false) {
   );
 }
 
+/**
+ * テキストをファイル出力する
+ * @param {string} path
+ * @param {string} data
+ */
 function writeFile(path, data) {
   fs.writeFile(path, data, error => {
     if (error != null) {
@@ -405,6 +451,9 @@ function writeFile(path, data) {
   });
 }
 
+/**
+ * ボードの設定をStoreに保存する
+ */
 function saveBoardSetting() {
   const targetBoard = document.getElementById("board-name-textbox").innerText;
   const container = document.getElementById("items-container");
@@ -471,6 +520,11 @@ function saveBoardSetting() {
   }
 }
 
+/**
+ * 入力されたアイテム名の値を検証する
+ * @param {string}  name
+ * @param {Element} elem
+ */
 function isValidName(name, elem) {
   if (name == "") {
     alert("Item Name Needed");
@@ -486,6 +540,11 @@ function isValidName(name, elem) {
   return true;
 }
 
+/**
+ * 入力されたURLの値を検証する
+ * @param {string}  url
+ * @param {Element} elem
+ */
 function isValidURL(url, elem) {
   if (url == "") {
     alert("URL is Needed");
@@ -506,13 +565,18 @@ function isValidURL(url, elem) {
   return true;
 }
 
+/**
+ * 入力された拡大率の値を検証する
+ * @param {string}  zoom
+ * @param {Element} elem
+ */
 function isValidZoom(zoom, elem) {
   if (zoom == "") {
     alert("Zoom is Needed");
     elem.style.background = "#fdd";
     return false;
   }
-  zoomNum = Number(zoom);
+  const zoomNum = Number(zoom);
   if (isNaN(zoomNum) || zoomNum < 0.25 || zoomNum > 5.0) {
     alert("Zoom must be a number between 0.25 and 5.0");
     elem.style.background = "#fdd";
