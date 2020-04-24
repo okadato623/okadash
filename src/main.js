@@ -329,16 +329,6 @@ function createMenuItemForSmallPane() {
 }
 
 /**
- * 現在定義しているボードの総数を戻す
- */
-function getBoardNum() {
-  if (store.get("options") !== undefined) {
-    return Object.keys(store.get("options")).length;
-  }
-  return undefined;
-}
-
-/**
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
@@ -379,26 +369,6 @@ function writeFile(path, data) {
       return;
     }
   });
-}
-
-/**
- * 現在使用中のボードを削除する
- * FIXME: 使われていないのであれば削除する
- */
-function deleteUsingBoard() {
-  const allBoards = store.get("boards");
-  const allOptions = store.get("options");
-  if (!confirm(`Delete board name '${allBoards[0]["name"]}'. OK?`)) return;
-  for (i in allOptions) {
-    if (allOptions[Number(i) + 1] === undefined) break;
-    allOptions[i] = allOptions[Number(i) + 1];
-    allBoards[i] = allBoards[Number(i) + 1];
-  }
-  allOptions.pop();
-  allBoards.pop();
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
-  remote.getCurrentWindow().reload();
 }
 
 /**
@@ -952,51 +922,6 @@ function openExternalUrl(event) {
 }
 
 /**
- * JSONファイルの内容を元に、ボードをインポートする
- * TODO: 使われていないのであれば削除する
- * @param {string} jsonPath
- * @param {string} boardName
- */
-function saveJson(jsonPath, boardName) {
-  const settings = JSON.parse(fs.readFileSync(jsonPath));
-  if (!validateJson(settings)) {
-    return null;
-  }
-
-  const newOption = { name: boardName, contents: settings["contents"] };
-  let optList = store.get("options");
-  let brdList = store.get("boards");
-  if (optList) {
-    optList.push(newOption);
-    brdList.push(newOption);
-    store.set(`options`, optList);
-    store.set(`boards`, brdList);
-  } else {
-    store.set(`options`, [newOption]);
-    store.set(`boards`, [newOption]);
-  }
-  let index = getBoardNum();
-  if (index === undefined) index = 0;
-  if (index === 0) {
-    remote.getCurrentWindow().reload();
-  } else {
-    moveClickedContentsToTop(index);
-  }
-}
-
-function validateJson(jsonObj) {
-  if (!jsonObj.contents) {
-    alert("Error in settings: contents is invalid");
-    return false;
-  }
-  jsonObj.contents.forEach(function (content) {
-    if (content["customCSS"] === undefined) content["customCSS"] = [];
-  });
-
-  return true;
-}
-
-/**
  * storeを元に初期描画するボードのオブジェクトを生成する
  */
 function loadSettings() {
@@ -1020,55 +945,6 @@ function checkConfigVersion() {
       ipcRenderer.send("initial-open");
     });
   }
-}
-
-/**
- * ファイルパスを元に、ボード名入力ダイアログを表示し、インポートする
- * TODO: 使われていないのであれば削除する
- * @param {string} filePath
- */
-function showModalDialogElement(filePath) {
-  return new Promise((resolve, reject) => {
-    const dlg = document.querySelector("#input-dialog");
-    dlg.addEventListener("cancel", event => {
-      event.preventDefault();
-    });
-    dlg.showModal();
-    function onClose() {
-      if (dlg.returnValue === "ok") {
-        const inputValue = document.querySelector("#input").value;
-        resolve(saveJson(filePath, inputValue));
-      } else {
-        reject();
-      }
-    }
-    dlg.addEventListener("close", onClose, { once: true });
-  });
-}
-
-/**
- * ファイル選択ダイアログを開き、選択されたファイルを元にボードを描画する
- * TODO: 使われていないのであれば削除する
- */
-function openFileAndSave() {
-  const win = remote.getCurrentWindow();
-  remote.dialog.showOpenDialog(
-    win,
-    {
-      properties: ["openFile"],
-      filters: [
-        {
-          name: "settings",
-          extensions: ["json"]
-        }
-      ]
-    },
-    filePath => {
-      if (filePath) {
-        showModalDialogElement(filePath[0]);
-      }
-    }
-  );
 }
 
 /**
@@ -1169,48 +1045,5 @@ function calcWindowSize(init = false) {
     store.set("boards.0.contents.0.width", configWidth);
     store.set("boards.0.contents.0.allWidth", columns);
     store.set("boards.0.contents.1.height", configHeight);
-  }
-}
-
-var savedLargeWidth = document.getElementById("0").clientWidth;
-
-/**
- * largeペインを折りたたむ
- * FIXME: 使われていないのであれば削除する
- */
-function foldLargePane() {
-  const largeWidth = document.getElementById("0").clientWidth;
-  const smallPanes = Array.from(document.getElementsByClassName("small"));
-  let newWidth = 700;
-  if (smallPanes.length !== 0) {
-    var nextPaneLen = largeWidth;
-    smallPanes.forEach(function (pane) {
-      if (pane.id <= 2) nextPaneLen += pane.clientWidth;
-    });
-  }
-  draggingBoarder.id = "0";
-  if (
-    savedLargeWidth === 0 ||
-    savedLargeWidth === nextPaneLen ||
-    savedLargeWidth === 700
-  ) {
-    savedLargeWidth = largeWidth;
-    $("#0").css("width", 160);
-    $("#2").css("width", nextPaneLen - 160);
-    savedLargeWidth = 160;
-    calcWindowSize();
-  } else if (savedLargeWidth === 160) {
-    if (nextPaneLen <= 700) {
-      newWidth = nextPaneLen;
-    }
-    $("#0").css("width", newWidth);
-    $("#2").css("width", nextPaneLen - newWidth);
-    calcWindowSize();
-    savedLargeWidth = newWidth;
-  } else {
-    $("#0").css("width", savedLargeWidth);
-    $("#2").css("width", nextPaneLen - savedLargeWidth);
-    calcWindowSize();
-    savedLargeWidth = 0;
   }
 }
