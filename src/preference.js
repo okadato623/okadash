@@ -338,17 +338,6 @@ function checkDuplicateNameExists(boardName) {
 }
 
 /**
- * 定義済みのボード数を戻す
- * FIXME: どこからも参照されていなければ削除する
- */
-function getBoardNum() {
-  if (store.get("options") !== undefined) {
-    return Object.keys(store.get("options")).length;
-  }
-  return undefined;
-}
-
-/**
  * @param {Object} jsonObj インポートした設定ファイル
  */
 function validateJson(jsonObj) {
