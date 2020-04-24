@@ -86,7 +86,11 @@ class WebView {
       box: boxSelector,
       visibleClass: visibleSelector
     });
-    this.addShortcutKey("meta+f", () => this.seacher.emit("toggle"));
+    this.seacher.on("did-press-escape", () => this.element.focus());
+    this.addShortcutKey("meta+f", () => {
+      this.seacher.emit("show");
+      this.seacher.findInPage();
+    });
   }
 }
 

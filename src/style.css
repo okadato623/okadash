@@ -61,21 +61,21 @@ dialog {
 
 .search-box {
   display: none;
+  margin-top: 5px;
+  height: 20px;
+  position: absolute;
+  z-index: 3;
+  font-size: 1em;
 }
 .search-box.visible {
-  display: block;
+  display: inline-block;
 }
 .search-box .search-input {
-  display: inline-block;
-  margin-top: 5px;
-  height: 15px;
-  position: absolute;
-  right: 5px;
-  z-index: 3;
-  width: 33%;
-  max-width: 200px;
+  width: 100%;
   border: 1px solid;
-  border-color: orange;
+}
+.search-box .search-count {
+  display: none;
 }
 
 .fa-rotate-135 {
@@ -95,17 +95,14 @@ dialog {
   z-index: 1;
 }
 .large {
-  position: relative;
   grid-row: 1 / 100; /* large enough */
   grid-column: 1 / 2;
 }
 .medium {
-  position: relative;
   grid-row: 1 / 2;
   grid-column: 3 / 100; /* large enough */
 }
 .small {
-  position: relative;
   grid-row: 3 / 100;
 }
 .overlay {
@@ -121,7 +118,7 @@ dialog {
   background: white;
   border-color: #666;
   border-style: solid;
-  z-index: 2;
+  z-index: 3;
   box-shadow: 0px 0px 6px 3px #888;
   border-radius: 5px;
 }

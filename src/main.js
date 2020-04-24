@@ -693,11 +693,11 @@ function addSearchbox(webView) {
   const parent = webView.element.parentNode;
   const $searchBox = $(`
     <div class="search-box pain${parent.id}">
-      <input type="text" class="search-input">
+      <input type="text" class="search-input" placeholder="search for text in page">
       <span class="search-count"></span>
     </div>
   `);
-  parent.prepend($searchBox[0]);
+  $searchBox.css({ width: parent.clientWidth - 30, "margin-left": 15 }).prependTo(parent);
   webView.initializeTextSeacher({
     boxSelector: `.search-box.pain${parent.id}`,
     inputSelector: `.search-box.pain${parent.id} .search-input`,
