@@ -29,9 +29,6 @@ dialog {
 #slack-channel-and-body,
 #trello-headerless,
 #twitter-nobanner,
-#normal {
-  height: 100%;
-}
 .reload-button {
   display: inline-block;
   margin-top: 5px;
@@ -61,6 +58,26 @@ dialog {
   overflow: visible;
   cursor: pointer;
 }
+
+.search-box {
+  display: none;
+}
+.search-box.visible {
+  display: block;
+}
+.search-box .search-input {
+  display: inline-block;
+  margin-top: 5px;
+  height: 15px;
+  position: absolute;
+  right: 5px;
+  z-index: 3;
+  width: 33%;
+  max-width: 200px;
+  border: 1px solid;
+  border-color: orange;
+}
+
 .fa-rotate-135 {
   -webkit-transform: rotate(135deg);
   -moz-transform: rotate(135deg);
@@ -78,14 +95,17 @@ dialog {
   z-index: 1;
 }
 .large {
+  position: relative;
   grid-row: 1 / 100; /* large enough */
   grid-column: 1 / 2;
 }
 .medium {
+  position: relative;
   grid-row: 1 / 2;
   grid-column: 3 / 100; /* large enough */
 }
 .small {
+  position: relative;
   grid-row: 3 / 100;
 }
 .overlay {

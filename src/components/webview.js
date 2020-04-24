@@ -1,3 +1,5 @@
+const ElectronSearchText = require("electron-search-text");
+
 /**
  * webview要素のラッパークラス
  * Web画面の設定、管理、操作を行う
@@ -20,6 +22,7 @@ class WebView {
       "meta+[": element => element.goBack(),
       "meta+]": element => element.goForward()
     };
+    this.seacher = null;
 
     this.initialize();
   }
@@ -65,6 +68,26 @@ class WebView {
   addShortcutKey(label, callback) {
     this.shortcutKeyMap[label] = callback;
   }
+
+  /**
+   * Webviewに検索機能を埋め込む
+   * @param {Object} params
+   * @param {string} inputSelector 検索ワード入力欄のセレクタ
+   * @param {string} countSelector 検索マッチ数欄のセレクタ
+   * @param {string} boxSelector   検索UIのラッパ要素のセレクタ
+   * @param {string} visibleClass  検索UI表示時に適用するセレクタ
+   */
+  initializeTextSeacher({ inputSelector, countSelector, boxSelector, visibleSelector }) {
+    this.seacher = new ElectronSearchText({
+      target: `#${this.element.id}`,
+      delay: 150,
+      input: inputSelector,
+      count: countSelector,
+      box: boxSelector,
+      visibleClass: visibleSelector
+    });
+    this.addShortcutKey("meta+f", () => this.seacher.emit("toggle"));
+  }
 }
 
 module.exports = WebView;
@@ -76,9 +99,10 @@ module.exports = WebView;
 function createWebViewElement(url) {
   const element = document.createElement("webview");
   element.src = "about:blank";
-  element.id = "normal";
+  element.id = `webview-${Math.random().toString(32).substring(2)}`;
   element.url = url;
   element.addEventListener("new-window", event => openExternal(event.url));
+  element.style.height = "100%";
   return element;
 }
 
