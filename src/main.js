@@ -880,7 +880,7 @@ function loadSettings() {
  * @param {boolean}  params.forOverlay   オーバレイ用途であるか
  * @param {boolean}  params.forSmallPane smallペイン用途であるか
  */
-function createWebView({ url, zoom, customCSS, forOverlay, forSmallPane }) {
+function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS });
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
