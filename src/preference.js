@@ -216,8 +216,10 @@ function openFileAndSave() {
  */
 function showModalDialogElement(filePath) {
   return new Promise((resolve, reject) => {
+    const filename = path.basename(filePath, ".json");
     const dlg = document.querySelector("#input-dialog");
     dlg.style.display = "block";
+    dlg.querySelector("input").value = filename;
     dlg.addEventListener("cancel", event => {
       event.preventDefault();
     });
