@@ -188,9 +188,9 @@ function initialize() {
   // 描画されたWebviewにショートカットキーと操作ボタンを追加する
   getWebviews().forEach(function (webview) {
     webview.addEventListener("dom-ready", function () {
-      const isSmallPain = webview.parentNode.classList.contains("small");
+      const isSmallPane = webview.parentNode.classList.contains("small");
       const hasButtons = webview.previousSibling.hasChildNodes();
-      if (isSmallPain && !hasButtons) {
+      if (isSmallPane && !hasButtons) {
         addButtons(webview.previousSibling, webview.parentNode.id);
       }
       addMaximizeButton(webview.parentNode, webview.parentNode.id);
@@ -564,7 +564,7 @@ function removeOverlay() {
  * smallペインを削除する
  * @param {number} index 対象ペインのインデックス
  */
-function removeSmallPain(index) {
+function removeSmallPane(index) {
   draggingBoarder.id = "";
   const target = document.getElementById(index);
   const targetBar = document.getElementById(`dvs-${index}`);
@@ -672,7 +672,7 @@ function addButtons(div, index) {
   if (index != 2)
     div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
   if (getPaneNum() !== 3)
-    div.innerHTML += `<button onclick=removeSmallPain(${index}) style="font-size: 12px";>Close</button>`;
+    div.innerHTML += `<button onclick=removeSmallPane(${index}) style="font-size: 12px";>Close</button>`;
   if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
@@ -809,8 +809,8 @@ function createPane({ size, url, zoom, customCSS }, init = false) {
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
 
-  const forSmallPain = size === "small";
-  const webview = createWebView({ url, zoom, customCSS, forSmallPain });
+  const forSmallPane = size === "small";
+  const webview = createWebView({ url, zoom, customCSS, forSmallPane });
   divContainer.appendChild(webview.element);
 
   createDraggableBar(size);
@@ -916,15 +916,15 @@ function loadSettings() {
  * @param {number}   params.zoom
  * @param {[string]} params.customCSS
  * @param {boolean}  params.forOverlay   オーバレイ用途であるか
- * @param {boolean}  params.forSmallPain smallペイン用途であるか
+ * @param {boolean}  params.forSmallPane smallペイン用途であるか
  */
-function createWebView({ url, zoom, customCSS, forOverlay, forSmallPain }) {
+function createWebView({ url, zoom, customCSS, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS });
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
-  } else if (forSmallPain) {
-    webview.addShortcutKey("meta+w", webview => removeSmallPain(webview.parentNode.id));
+  } else if (forSmallPane) {
+    webview.addShortcutKey("meta+w", webview => removeSmallPane(webview.parentNode.id));
   }
   return webview;
 }
