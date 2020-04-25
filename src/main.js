@@ -190,14 +190,13 @@ function initialize() {
     if (content["zoom"] === undefined) content["zoom"] = 1.0;
     createPane(content, true);
   });
-
   // 描画されたWebviewを操作するためのUIを追加する
   getWebviews().forEach(function (webviewElm) {
     const webView = convertToWebViewInstance(webviewElm);
     webviewElm.addEventListener("dom-ready", function () {
-      const isSmallPain = webviewElm.parentNode.classList.contains("small");
+      const isSmallPane = webviewElm.parentNode.classList.contains("small");
       const hasButtons = webviewElm.previousSibling.hasChildNodes();
-      if (isSmallPain && !hasButtons) {
+      if (isSmallPane && !hasButtons) {
         addButtons(webviewElm.previousSibling, webviewElm.parentNode.id);
       }
       addMaximizeButton(webviewElm.parentNode, webviewElm.parentNode.id);
@@ -336,16 +335,6 @@ function createMenuItemForSmallPane() {
 }
 
 /**
- * 現在定義しているボードの総数を戻す
- */
-function getBoardNum() {
-  if (store.get("options") !== undefined) {
-    return Object.keys(store.get("options")).length;
-  }
-  return undefined;
-}
-
-/**
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
@@ -386,26 +375,6 @@ function writeFile(path, data) {
       return;
     }
   });
-}
-
-/**
- * 現在使用中のボードを削除する
- * FIXME: 使われていないのであれば削除する
- */
-function deleteUsingBoard() {
-  const allBoards = store.get("boards");
-  const allOptions = store.get("options");
-  if (!confirm(`Delete board name '${allBoards[0]["name"]}'. OK?`)) return;
-  for (i in allOptions) {
-    if (allOptions[Number(i) + 1] === undefined) break;
-    allOptions[i] = allOptions[Number(i) + 1];
-    allBoards[i] = allBoards[Number(i) + 1];
-  }
-  allOptions.pop();
-  allBoards.pop();
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
-  remote.getCurrentWindow().reload();
 }
 
 /**
@@ -544,7 +513,7 @@ function getAdditionalPaneInfo(contents) {
     }
     return {
       name: content["name"],
-      url: url.href,
+      url: content["url"],
       customCSS: content["customCSS"],
       index: index
     };
@@ -572,7 +541,7 @@ function removeOverlay() {
  * smallペインを削除する
  * @param {number} index 対象ペインのインデックス
  */
-function removeSmallPain(index) {
+function removeSmallPane(index) {
   draggingBoarder.id = "";
   const target = document.getElementById(index);
   const targetBar = document.getElementById(`dvs-${index}`);
@@ -680,7 +649,7 @@ function addButtons(div, index) {
   if (index != 2)
     div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
   if (getPaneNum() !== 3)
-    div.innerHTML += `<button onclick=removeSmallPain(${index}) style="font-size: 12px";>Close</button>`;
+    div.innerHTML += `<button onclick=removeSmallPane(${index}) style="font-size: 12px";>Close</button>`;
   if (index != getPaneNum() - 1)
     div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
 }
@@ -840,9 +809,8 @@ function createPane({ size, url, zoom, customCSS }, init = false) {
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-
-  const forSmallPain = size === "small";
-  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPain });
+  const forSmallPane = size === "small";
+  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPane });
   divContainer.appendChild(webview.element);
 
   createDraggableBar(size);
@@ -890,45 +858,6 @@ function createButtonDiv() {
   return div;
 }
 
-function saveJson(jsonPath, boardName) {
-  const settings = JSON.parse(fs.readFileSync(jsonPath));
-  if (!validateJson(settings)) {
-    return null;
-  }
-
-  const newOption = { name: boardName, contents: settings["contents"] };
-  let optList = store.get("options");
-  let brdList = store.get("boards");
-  if (optList) {
-    optList.push(newOption);
-    brdList.push(newOption);
-    store.set(`options`, optList);
-    store.set(`boards`, brdList);
-  } else {
-    store.set(`options`, [newOption]);
-    store.set(`boards`, [newOption]);
-  }
-  let index = getBoardNum();
-  if (index === undefined) index = 0;
-  if (index === 0) {
-    remote.getCurrentWindow().reload();
-  } else {
-    moveClickedContentsToTop(index);
-  }
-}
-
-function validateJson(jsonObj) {
-  if (!jsonObj.contents) {
-    alert("Error in settings: contents is invalid");
-    return false;
-  }
-  jsonObj.contents.forEach(function (content) {
-    if (content["customCSS"] === undefined) content["customCSS"] = [];
-  });
-
-  return true;
-}
-
 /**
  * storeを元に初期描画するボードのオブジェクトを生成する
  */
@@ -949,15 +878,15 @@ function loadSettings() {
  * @param {number}   params.zoom
  * @param {[string]} params.customCSS
  * @param {boolean}  params.forOverlay   オーバレイ用途であるか
- * @param {boolean}  params.forSmallPain smallペイン用途であるか
+ * @param {boolean}  params.forSmallPane smallペイン用途であるか
  */
-function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPain }) {
+function createWebView({ url, zoom, customCSS, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS });
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
-  } else if (forSmallPain) {
-    webview.addShortcutKey("meta+w", webview => removeSmallPain(webview.parentNode.id));
+  } else if (forSmallPane) {
+    webview.addShortcutKey("meta+w", webview => removeSmallPane(webview.parentNode.id));
   }
   webViews[id] = webview;
   return webview;
@@ -986,55 +915,6 @@ function checkConfigVersion() {
       ipcRenderer.send("initial-open");
     });
   }
-}
-
-/**
- * ファイルパスを元に、ボード名入力ダイアログを表示し、インポートする
- * TODO: 使われていないのであれば削除する
- * @param {string} filePath
- */
-function showModalDialogElement(filePath) {
-  return new Promise((resolve, reject) => {
-    const dlg = document.querySelector("#input-dialog");
-    dlg.addEventListener("cancel", event => {
-      event.preventDefault();
-    });
-    dlg.showModal();
-    function onClose() {
-      if (dlg.returnValue === "ok") {
-        const inputValue = document.querySelector("#input").value;
-        resolve(saveJson(filePath, inputValue));
-      } else {
-        reject();
-      }
-    }
-    dlg.addEventListener("close", onClose, { once: true });
-  });
-}
-
-/**
- * ファイル選択ダイアログを開き、選択されたファイルを元にボードを描画する
- * TODO: 使われていないのであれば削除する
- */
-function openFileAndSave() {
-  const win = remote.getCurrentWindow();
-  remote.dialog.showOpenDialog(
-    win,
-    {
-      properties: ["openFile"],
-      filters: [
-        {
-          name: "settings",
-          extensions: ["json"]
-        }
-      ]
-    },
-    filePath => {
-      if (filePath) {
-        showModalDialogElement(filePath[0]);
-      }
-    }
-  );
 }
 
 /**
@@ -1147,47 +1027,4 @@ function calcWindowSize(init = false) {
  */
 function adjustSearchBox($searchBox) {
   $searchBox.css({ width: $searchBox.parent().width() - 50, "margin-left": 25 });
-}
-
-var savedLargeWidth = document.getElementById("0").clientWidth;
-
-/**
- * largeペインを折りたたむ
- * FIXME: 使われていないのであれば削除する
- */
-function foldLargePane() {
-  const largeWidth = document.getElementById("0").clientWidth;
-  const smallPanes = Array.from(document.getElementsByClassName("small"));
-  let newWidth = 700;
-  if (smallPanes.length !== 0) {
-    var nextPaneLen = largeWidth;
-    smallPanes.forEach(function (pane) {
-      if (pane.id <= 2) nextPaneLen += pane.clientWidth;
-    });
-  }
-  draggingBoarder.id = "0";
-  if (
-    savedLargeWidth === 0 ||
-    savedLargeWidth === nextPaneLen ||
-    savedLargeWidth === 700
-  ) {
-    savedLargeWidth = largeWidth;
-    $("#0").css("width", 160);
-    $("#2").css("width", nextPaneLen - 160);
-    savedLargeWidth = 160;
-    calcWindowSize();
-  } else if (savedLargeWidth === 160) {
-    if (nextPaneLen <= 700) {
-      newWidth = nextPaneLen;
-    }
-    $("#0").css("width", newWidth);
-    $("#2").css("width", nextPaneLen - newWidth);
-    calcWindowSize();
-    savedLargeWidth = newWidth;
-  } else {
-    $("#0").css("width", savedLargeWidth);
-    $("#2").css("width", nextPaneLen - savedLargeWidth);
-    calcWindowSize();
-    savedLargeWidth = 0;
-  }
 }
