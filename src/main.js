@@ -697,7 +697,8 @@ function addSearchbox(webView) {
       <span class="search-count"></span>
     </div>
   `);
-  $searchBox.css({ width: parent.clientWidth - 30, "margin-left": 15 }).prependTo(parent);
+  $searchBox.prependTo(parent);
+  adjustSearchBox($searchBox);
   webView.initializeTextSeacher({
     boxSelector: `.search-box.pain${parent.id}`,
     inputSelector: `.search-box.pain${parent.id} .search-input`,
@@ -1135,6 +1136,17 @@ function calcWindowSize(init = false) {
     store.set("boards.0.contents.0.allWidth", columns);
     store.set("boards.0.contents.1.height", configHeight);
   }
+
+  // 各ペインの検索ボックスもリサイズ
+  $(".search-box").each((_, searchBoxElm) => adjustSearchBox($(searchBoxElm)));
+}
+
+/**
+ *
+ * @param {JQuery<HTMLElement>} $searchBox
+ */
+function adjustSearchBox($searchBox) {
+  $searchBox.css({ width: $searchBox.parent().width() - 50, "margin-left": 25 });
 }
 
 var savedLargeWidth = document.getElementById("0").clientWidth;
