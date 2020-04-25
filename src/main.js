@@ -435,7 +435,7 @@ function createAdditionalPaneMenuItems(contents) {
       label: content["name"],
       accelerator: `CommandOrControl+${content["index"] + 1}`,
       click() {
-        loadAdditionalPage(content["url"], content["customCSS"]);
+        loadAdditionalPage(content);
       }
     });
   });
@@ -453,7 +453,7 @@ function createContextMenuItems(contents, index) {
     return new MenuItem({
       label: content["name"],
       click() {
-        recreateSelectedPane(content["url"], content["customCSS"], index);
+        recreateSelectedPane(index, content);
       }
     });
   });
@@ -507,6 +507,7 @@ function getAdditionalPaneInfo(contents) {
     return {
       name: content["name"],
       url: content["url"],
+      zoom: content["zoom"],
       customCSS: content["customCSS"],
       index: index
     };
@@ -564,25 +565,55 @@ function removeSmallPane(index) {
 }
 
 /**
- * smallペインを左右に移動する
- * @param {number} index 移動するペインのインデックス
- * @param {number} next 移動先(左: -1 右: 1)
+ * samllペインを左右入れ替えるボタンを生成する
+ * @param {string} index 対象のペイン要素のID
+ * @param {number} direction -1 or 1
  */
-function move(index, next) {
-  const json = loadSettings();
-  const src = document.getElementById(index);
-  const dst = document.getElementById(Number(index) + Number(next));
-  const storeSrc = src.querySelector("webview");
-  const storeDst = dst.querySelector("webview");
-  storeUrl(dst.id, storeSrc.src);
-  storeUrl(src.id, storeDst.src);
-  const tmp = src.id;
-  const tmpCSS = json.contents[index]["customCSS"];
-  storeCustomCSS(src.id, json.contents[dst.id]["customCSS"]);
-  src.id = src.style.order = dst.id;
-  storeCustomCSS(dst.id, tmpCSS);
-  dst.id = dst.style.order = tmp;
+function createSwapButton(index, direction) {
+  const swapTargetIndex = (Number(index) + direction).toString();
+  const label = direction === -1 ? "<" : ">";
 
+  return $(`<button style="font-size: 12px;">${label}</button>`).click(() =>
+    swapSmallPane(index, swapTargetIndex)
+  )[0];
+}
+
+/**
+ * smallペインを閉じるボタンを生成する
+ * @param {string} index 対象のペイン要素のID
+ */
+function createCloseButton(index) {
+  return $(`<button style="font-size: 12px";>Close</button>`).click(() => {
+    removeSmallPane(index);
+  })[0];
+}
+/**
+ * smallペインの内容を交換する
+ * @param {string} fromIndex 交換もとペイン要素のID
+ * @param {string} toIndex   交換さきペイン要素のID
+ */
+function swapSmallPane(fromIndex, toIndex) {
+  const settings = loadSettings();
+  const fromPane = document.getElementById(fromIndex);
+  const toPane = document.getElementById(toIndex);
+
+  // 両ペインの定義済み設定を交換
+  storeUrl(fromIndex, settings.contents[toIndex]["url"]);
+  storeUrl(toIndex, settings.contents[fromIndex]["url"]);
+  storeZoom(fromIndex, settings.contents[toIndex]["zoom"]);
+  storeZoom(toIndex, settings.contents[fromIndex]["zoom"]);
+  storeCustomCSS(fromIndex, settings.contents[toIndex]["customCSS"]);
+  storeCustomCSS(toIndex, settings.contents[fromIndex]["customCSS"]);
+
+  // ペインのIDと表示位置を交換
+  [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [
+    toPane.id,
+    toPane.id,
+    fromPane.id,
+    fromPane.id
+  ];
+
+  // ボタンの描画もし直す
   refreshButtons();
 }
 
@@ -636,15 +667,16 @@ function refreshButtons() {
 /**
  * smallペイン操作用のボタンを描画する
  * @param {HTMLDivElement} div 描画対象の親要素
- * @param {number} index ペインのID
+ * @param {string} index ペインのID
  */
 function addButtons(div, index) {
-  if (index != 2)
-    div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
-  if (getPaneNum() !== 3)
-    div.innerHTML += `<button onclick=removeSmallPane(${index}) style="font-size: 12px";>Close</button>`;
-  if (index != getPaneNum() - 1)
-    div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
+  const isFirstSmallPane = index == 2;
+  const isLastSmallPane = index == getPaneNum() - 1;
+  const isOnlySmallPane = getPaneNum() == 3;
+
+  if (!isFirstSmallPane) div.append(createSwapButton(index, -1));
+  if (!isOnlySmallPane) div.append(createCloseButton(index));
+  if (!isLastSmallPane) div.append(createSwapButton(index, 1));
 }
 
 /**
@@ -701,15 +733,18 @@ function getPaneNum() {
 
 /**
  * smallペインを追加する
- * @param {string} additionalPage 追加するペインのURL
- * @param {[string]} customCSS
+ * @param {object} params
+ * @param {string} params.url
+ * @param {string} params.zoom
+ * @param {[string]} params.customCSS
  */
-function loadAdditionalPage(additionalPage, customCSS = []) {
+function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
   resetWindowSize();
   const size = "small";
-  createPane({ size, url: additionalPage, customCSS });
+  createPane({ size, url, zoom, customCSS });
   storeSize(getPaneNum() - 1, size);
-  storeUrl(getPaneNum() - 1, additionalPage);
+  storeUrl(getPaneNum() - 1, url);
+  storeZoom(getPaneNum() - 1, zoom);
   storeCustomCSS(getPaneNum() - 1, customCSS);
 
   const webview = getWebviews()[getPaneNum() - 1];
@@ -722,18 +757,21 @@ function loadAdditionalPage(additionalPage, customCSS = []) {
 
 /**
  * 対象ペインを再生成する
- * @param {string}   url
- * @param {[string]} customCSS
- * @param {string}   index 対象ペイン要素のID
+ * @param {string} index 対象ペイン要素のID
+ * @param {object} params
+ * @param {string} params.url
+ * @param {string} params.zoom
+ * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(url, customCSS, index) {
+function recreateSelectedPane(index, { url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
   div.querySelector("webview").remove();
 
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
+  storeZoom(index, zoom);
 
-  const webview = createWebView({ url, customCSS });
+  const webview = createWebView({ url, zoom, customCSS });
   div.appendChild(webview.element);
 }
 
@@ -749,10 +787,19 @@ function storeSize(index, size) {
 /**
  * 現在表示しているペインのURLを保存する
  * @param {string} index 対象ペインのID
- * @param {string} size
+ * @param {string} url
  */
 function storeUrl(index, url) {
   store.set(`boards.0.contents.${index}.url`, url);
+}
+
+/**
+ * 現在表示しているペインの拡大率を保存する
+ * @param {string} index 対象ペインのID
+ * @param {string} zoom
+ */
+function storeZoom(index, zoom) {
+  store.set(`boards.0.contents.${index}.zoom`, zoom || 1.0);
 }
 
 /**
@@ -761,7 +808,7 @@ function storeUrl(index, url) {
  * @param {string} size
  */
 function storeCustomCSS(index, customCSS) {
-  store.set(`boards.0.contents.${index}.customCSS`, customCSS);
+  store.set(`boards.0.contents.${index}.customCSS`, customCSS || []);
 }
 
 /**
