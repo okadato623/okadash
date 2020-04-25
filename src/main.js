@@ -506,7 +506,7 @@ function getAdditionalPaneInfo(contents) {
     }
     return {
       name: content["name"],
-      url: url.href,
+      url: content["url"],
       customCSS: content["customCSS"],
       index: index
     };
