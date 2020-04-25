@@ -322,6 +322,7 @@ function createMenuItemForSmallPane() {
     menuItem.submenu.append(apMenuItem);
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
+  menuItem.submenu.append(createNewFromURLMenuItem());
   menuItem.submenu.append(createGoogleMenuItem());
 
   return menuItem;
@@ -462,6 +463,19 @@ function createContextMenuItems(contents, index) {
 }
 
 /**
+ * Create new from URL メニューを生成する
+ */
+function createNewFromURLMenuItem() {
+  return new MenuItem({
+    label: "Create new pane from url",
+    accelerator: "CommandOrControl+o",
+    click() {
+      openCreateNewFromUrlDialog()
+    }
+  });
+}
+
+/**
  * Search In Google メニューを生成する
  */
 function createGoogleMenuItem() {
@@ -472,6 +486,50 @@ function createGoogleMenuItem() {
       openGoogleInOverlay();
     }
   });
+}
+
+/**
+ * URLから新規ペインを作成するためのダイアログを開く
+ */
+function openCreateNewFromUrlDialog() {
+  const dlg = document.querySelector("#create-new-pane-dialog");
+  dlg.style.display = "block";
+  dlg.showModal();
+
+  function onClose() {
+    if (dlg.returnValue === "ok") {
+      alert("OK")
+    } else {
+      dlg.close()
+    }
+    dlg.style.display = "none";
+  }
+  dlg.addEventListener("close", onClose, { once: true });
+  // return new Promise((resolve, reject) => {
+  //   const filename = path.basename(filePath, ".json");
+  //   const dlg = document.querySelector("#input-dialog");
+  //   dlg.style.display = "block";
+  //   dlg.querySelector("input").value = filename;
+  //   dlg.addEventListener("cancel", event => {
+  //     event.preventDefault();
+  //   });
+  //   dlg.showModal();
+  //   function onClose() {
+  //     if (dlg.returnValue === "ok") {
+  //       const inputValue = document.querySelector("#input").value;
+  //       if (checkDuplicateNameExists(inputValue)) {
+  //         alert(`Board name '${inputValue}' is already in use`);
+  //         remote.getCurrentWindow().reload();
+  //       } else {
+  //         resolve(importNewBoard(filePath, inputValue));
+  //       }
+  //     } else {
+  //       reject();
+  //       remote.getCurrentWindow().reload();
+  //     }
+  //   }
+  //   dlg.addEventListener("close", onClose, { once: true });
+  // });
 }
 
 /**
