@@ -37,7 +37,9 @@ function createBoardList(data) {
     const liElem = document.createElement("li");
     const aElem = document.createElement("a");
     aElem.onclick = function () {
-      showBoardContents(definedBoard, aElem);
+      container.childNodes.forEach(node => node.classList.remove("active"));
+      liElem.classList.add("active");
+      showBoardContents(definedBoard);
     };
     aElem.innerHTML = definedBoard["name"];
     liElem.appendChild(aElem);
@@ -48,27 +50,27 @@ function createBoardList(data) {
 }
 
 /**
- * ボードの内容を描画する
- * @param {any} board
- * @param {Element} self 対象ボード名に対応するリスト要素
+ * 定義済みボードの内容を描画する
+ * @param {any} definedBoard
  */
-function showBoardContents(board, self) {
-  const boardsContainer = document.getElementById("boards-container");
-  boardsContainer.childNodes.forEach(function (node) {
-    node.classList.remove("active");
-  });
-  self.parentElement.classList.add("active");
-  window.scrollTo(0, 0);
-  document.getElementById("board-name-textbox").innerText = board["name"];
+function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
+
+  window.scrollTo(0, 0);
+  document.getElementById("board-name-textbox").innerText = definedBoard["name"];
+
+  // 既に描画済みの内容を履き
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
-  for (i in board["contents"]) {
-    const content = board["contents"][i];
+
+  // ボード内のコンテンツの数だけフォームを繰り返し描画する
+  //for (i in definedBoard["contents"]) {
+  definedBoard["contents"].forEach(content => {
     const divElem = document.createElement("div");
     divElem.className = "item-box";
 
+    // name属性用のUI生成
     const nameElem = document.createElement("p");
     const nameTextElem = document.createElement("input");
     nameElem.innerHTML = "Name";
@@ -77,6 +79,7 @@ function showBoardContents(board, self) {
     nameTextElem.value = content["name"];
     nameElem.appendChild(nameTextElem);
 
+    // URL属性用のUI生成
     const urlElem = document.createElement("p");
     const urlTextElem = document.createElement("input");
     urlElem.innerHTML = "URL";
@@ -86,6 +89,7 @@ function showBoardContents(board, self) {
     if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
     urlElem.appendChild(urlTextElem);
 
+    // Zoom属性用のUI生成
     const zoomElem = document.createElement("p");
     const zoomTextElem = document.createElement("input");
     zoomElem.innerHTML = "Zoom";
@@ -94,6 +98,7 @@ function showBoardContents(board, self) {
     zoomTextElem.value = content["zoom"] || 1.0;
     zoomElem.appendChild(zoomTextElem);
 
+    // CustomCSS属性用のUI生成
     const cssElem = document.createElement("p");
     const tAreaElem = document.createElement("textarea");
     cssElem.innerHTML = "Custom CSS";
@@ -102,6 +107,7 @@ function showBoardContents(board, self) {
     tAreaElem.value = content["customCSS"].join("\n");
     cssElem.appendChild(tAreaElem);
 
+    // コンテンツの削除ボタンの生成
     const btnElem = document.createElement("button");
     btnElem.className = "btn btn-outline-danger";
     btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
@@ -110,9 +116,11 @@ function showBoardContents(board, self) {
       btnElem.parentElement.remove();
     };
 
+    // コンテンツごとの境界線
     const hrElem = document.createElement("hr");
     hrElem.style = "margin: 30px;";
 
+    // 生成した各要素をコンテンツ情報を表示する領域にぶっこむ
     divElem.appendChild(nameElem);
     divElem.appendChild(urlElem);
     divElem.appendChild(zoomElem);
@@ -121,7 +129,7 @@ function showBoardContents(board, self) {
     divElem.appendChild(hrElem);
 
     container.appendChild(divElem);
-  }
+  });
 
   const addBtnElem = document.createElement("button");
   addBtnElem.className = "add-board-btn";
