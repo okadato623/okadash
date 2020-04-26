@@ -279,7 +279,6 @@ function importNewBoard(source, boardName) {
             ".p-workspace__sidebar { display: none !important; }",
             ".p-classic_nav__team_header { display: none !important;}",
             ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
-            ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
             ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
           ]
         },
