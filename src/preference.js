@@ -1,11 +1,15 @@
 var { remote } = require("electron");
 var { dialog } = remote;
 const fs = require("fs");
+const Content = require("./models/content");
 const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
 const path = require("path");
 
+/**
+ * アプリケーションのバージョン情報
+ */
 const VERSION = "1.6.1";
 
 initialize();
@@ -14,8 +18,8 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  var config = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(config, (error, data) => {
+  const configFile = path.join(app.getPath("userData"), "config.json");
+  fs.readFile(configFile, (_, data) => {
     createBoardList(data);
   });
 }
@@ -25,19 +29,20 @@ function initialize() {
  * @param {Buffer} data 定義ファイルの内容
  */
 function createBoardList(data) {
-  const boards = JSON.parse(data);
+  const settings = JSON.parse(data);
+  const definedBoardList = settings["options"];
   const container = document.getElementById("boards-container");
-  for (i in boards["options"]) {
-    const board = boards["options"][i];
+
+  definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
     const aElem = document.createElement("a");
     aElem.onclick = function () {
-      showBoardContents(board, aElem);
+      showBoardContents(definedBoard, aElem);
     };
-    aElem.innerHTML = board["name"];
+    aElem.innerHTML = definedBoard["name"];
     liElem.appendChild(aElem);
     container.appendChild(liElem);
-  }
+  });
   if (container.firstChild === null) importNewBoard("default", "Default Board");
   container.firstChild.querySelector("a").click();
 }
