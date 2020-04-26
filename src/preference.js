@@ -135,17 +135,17 @@ function showBoardContents(definedBoard) {
   addBtnElem.className = "add-board-btn";
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
-    createNewItem(addBtnElem);
+    addBtnElem.remove();
+    createNewContent();
+    container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
 }
 
 /**
  * アイテム欄を新規生成する
- * @param {Element} self 追加ボタン要素
  */
-function createNewItem(self) {
-  self.remove();
+function createNewContent() {
   const container = document.getElementById("items-container");
   const divElem = document.createElement("div");
   divElem.className = "item-box";
@@ -195,7 +195,6 @@ function createNewItem(self) {
   divElem.appendChild(hrElem);
 
   container.appendChild(divElem);
-  container.appendChild(self);
 }
 
 /**
