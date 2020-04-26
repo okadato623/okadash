@@ -661,7 +661,7 @@ function addButtons(div, index) {
 function addSearchbox(webView) {
   const parent = webView.element.parentNode;
   const $searchBox = $(`
-    <div class="search-box pain${parent.id}">
+    <div class="search-box pane${parent.id}">
       <input type="text" class="search-input" placeholder="search for text in page">
       <span class="search-count"></span>
     </div>
@@ -669,9 +669,9 @@ function addSearchbox(webView) {
   $searchBox.prependTo(parent);
   adjustSearchBox($searchBox);
   webView.initializeTextSeacher({
-    boxSelector: `.search-box.pain${parent.id}`,
-    inputSelector: `.search-box.pain${parent.id} .search-input`,
-    countSelector: `.search-box.pain${parent.id} .search-count`,
+    boxSelector: `.search-box.pane${parent.id}`,
+    inputSelector: `.search-box.pane${parent.id} .search-input`,
+    countSelector: `.search-box.pane${parent.id} .search-count`,
     visibleSelector: `.visible`
   });
 }
@@ -899,8 +899,8 @@ function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
  * @return {WebView}
  */
 function convertToWebViewInstance(webViewElement) {
-  const painElm = webViewElement.parentNode;
-  return painElm ? webViews[painElm.id] : undefined;
+  const paneElm = webViewElement.parentNode;
+  return paneElm ? webViews[paneElm.id] : undefined;
 }
 
 /**
