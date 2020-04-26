@@ -1,7 +1,6 @@
 var { remote } = require("electron");
 var { dialog } = remote;
 const fs = require("fs");
-const Content = require("./models/content");
 const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
