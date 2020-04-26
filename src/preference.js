@@ -367,39 +367,24 @@ function validateJson(jsonObj) {
 }
 
 /**
- * 現在選択中のボード名を取得する
- */
-function getSelectingBoard() {
-  let res = "";
-  document.getElementById("boards-container").childNodes.forEach(function (node) {
-    if (node.classList.contains("active")) {
-      res = node.querySelector("a").innerText;
-    }
-  });
-  return res;
-}
-
-/**
  * 現在開いているボードを削除する
  */
 function deleteBoard() {
-  const targetBoard = getSelectingBoard();
-  const allBoards = store.get("boards");
-  const allOptions = store.get("options");
+  const currentBoardName = $("#boards-container li.active").text();
+  const allUsingBoards = store.get("boards");
+  const allDefinedBoards = store.get("options");
 
-  // FIXME: targetBoardと常に同じ値ならどっちかあれば良さそう
-  const currentBoardName = document.getElementById("board-name-textbox").innerText;
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  for (i in allOptions) {
-    if (targetBoard == allOptions[i]["name"]) {
-      allOptions.splice(i, 1);
-      allBoards.splice(i, 1);
+  for (i in allDefinedBoards) {
+    if (currentBoardName == allDefinedBoards[i]["name"]) {
+      allDefinedBoards.splice(i, 1);
+      allUsingBoards.splice(i, 1);
     }
   }
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
+  store.set("options", allDefinedBoards);
+  store.set("boards", allUsingBoards);
   remote.getCurrentWindow().reload();
 }
 
