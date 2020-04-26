@@ -64,7 +64,6 @@ function showBoardContents(definedBoard) {
   }
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
-  //for (i in definedBoard["contents"]) {
   definedBoard["contents"].forEach(content => {
     const divElem = document.createElement("div");
     divElem.className = "item-box";
