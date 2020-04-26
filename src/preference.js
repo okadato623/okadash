@@ -17,8 +17,8 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  const configFile = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(configFile, (_, data) => {
+  const configFilePath = path.join(app.getPath("userData"), "config.json");
+  fs.readFile(configFilePath, (_, data) => {
     createBoardList(data);
   });
 }
