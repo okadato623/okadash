@@ -353,13 +353,7 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  let found = false;
-  const container = document.getElementById("boards-container");
-  container.childNodes.forEach(function (node) {
-    if (boardName == node.querySelector("a").innerText) found = true;
-  });
-
-  return found;
+  return definedBoardList.some(board => board.name === boardName);
 }
 
 /**
