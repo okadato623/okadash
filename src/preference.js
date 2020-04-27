@@ -5,11 +5,19 @@ const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
 const path = require("path");
+const Board = require("./models/board");
+const Content = require("./models/content");
 
 /**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.6.1";
+
+/**
+ * 定義済みボード一覧
+ * @type {[Board]}
+ */
+let definedBoardList = [];
 
 initialize();
 
@@ -29,8 +37,14 @@ function initialize() {
  */
 function createBoardList(data) {
   const settings = JSON.parse(data);
-  const definedBoardList = settings["options"];
   const container = document.getElementById("boards-container");
+
+  definedBoardList = settings["options"].map(option => {
+    return new Board({
+      name: option["name"],
+      contents: option["contents"].map(content => new Content(content))
+    });
+  });
 
   definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
@@ -40,7 +54,7 @@ function createBoardList(data) {
       liElem.classList.add("active");
       showBoardContents(definedBoard);
     };
-    aElem.innerHTML = definedBoard["name"];
+    aElem.innerHTML = definedBoard.name;
     liElem.appendChild(aElem);
     container.appendChild(liElem);
   });
@@ -50,7 +64,7 @@ function createBoardList(data) {
 
 /**
  * 定義済みボードの内容を描画する
- * @param {any} definedBoard
+ * @param {Board} definedBoard
  */
 function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
@@ -64,7 +78,7 @@ function showBoardContents(definedBoard) {
   }
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
-  definedBoard["contents"].forEach(content => {
+  definedBoard.contents.forEach(content => {
     const divElem = document.createElement("div");
     divElem.className = "item-box";
 
@@ -74,7 +88,7 @@ function showBoardContents(definedBoard) {
     nameElem.innerHTML = "Name";
     nameTextElem.type = "textbox";
     nameTextElem.className = "content-textbox";
-    nameTextElem.value = content["name"];
+    nameTextElem.value = content.name;
     nameElem.appendChild(nameTextElem);
 
     // URL属性用のUI生成
@@ -83,8 +97,8 @@ function showBoardContents(definedBoard) {
     urlElem.innerHTML = "URL";
     urlTextElem.type = "url";
     urlTextElem.className = "content-textbox";
-    urlTextElem.value = content["url"];
-    if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
+    urlTextElem.value = content.url;
+    if (content.isWorkspace()) urlTextElem.style.background = "#fdd";
     urlElem.appendChild(urlTextElem);
 
     // Zoom属性用のUI生成
@@ -93,22 +107,22 @@ function showBoardContents(definedBoard) {
     zoomElem.innerHTML = "Zoom";
     zoomTextElem.type = "textbox";
     zoomTextElem.className = "content-textbox";
-    zoomTextElem.value = content["zoom"] || 1.0;
+    zoomTextElem.value = content.zoom;
     zoomElem.appendChild(zoomTextElem);
 
     // CustomCSS属性用のUI生成
     const cssElem = document.createElement("p");
     const tAreaElem = document.createElement("textarea");
     cssElem.innerHTML = "Custom CSS";
-    tAreaElem.id = content["name"];
+    tAreaElem.id = content.name;
     tAreaElem.className = "textarea-ccss";
-    tAreaElem.value = content["customCSS"].join("\n");
+    tAreaElem.value = content.customCSS.join("\n");
     cssElem.appendChild(tAreaElem);
 
     // コンテンツの削除ボタンの生成
     const btnElem = document.createElement("button");
     btnElem.className = "btn btn-outline-danger";
-    btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
+    btnElem.innerHTML = "Delete item [ " + content.name + " ]";
     btnElem.onclick = function () {
       if (!confirm("Sure?")) return;
       btnElem.parentElement.remove();
