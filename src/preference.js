@@ -58,7 +58,7 @@ function showBoardContents(definedBoard) {
   window.scrollTo(0, 0);
   document.getElementById("board-name-textbox").innerText = definedBoard["name"];
 
-  // 既に描画済みの内容を履き
+  // 既に描画済みの内容を破棄
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
