@@ -978,17 +978,17 @@ function saveNewContents() {
 
 /**
  * Storeから取得したボードオブジェクトを元に描画用のボードオブジェクトを生成する
- * @param {Object} borad ボードオブジェクト
+ * @param {Object} board ボードオブジェクト
  */
-function buildJsonObjectFromStoredData(borad) {
+function buildJsonObjectFromStoredData(board) {
   let newContents = [];
-  if (borad === undefined) ipcRenderer.send("window-open");
-  borad["contents"].forEach(function (content) {
+  if (board === undefined) ipcRenderer.send("initial-open");
+  board["contents"].forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
   store.set("boards.0.contents", newContents);
   let jsonObj = {
-    name: borad["name"],
+    name: board["name"],
     contents: newContents
   };
 
