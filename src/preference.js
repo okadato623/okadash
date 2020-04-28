@@ -372,62 +372,20 @@ function writeFile(path, data) {
  * ボードの設定をStoreに保存する
  */
 function saveBoardSetting() {
-  const targetBoard = document.getElementById("board-name-textbox").innerText;
-  const container = document.getElementById("items-container");
-  const items = [];
-  let error = false;
-  contentFormList[0].syncToContent();
-  container.querySelectorAll(".item-box").forEach(function (node) {
-    let item = {};
-    node.querySelectorAll("p").forEach(function (elem) {
-      switch (elem.innerText.trim()) {
-        case "Name":
-          item.name = elem.querySelector("input").value;
-          if (items.length === 0) {
-            item.size = "large";
-          } else if (items.length === 1) {
-            item.size = "medium";
-          }
-          if (
-            !isValidName(elem.querySelector("input").value, elem.querySelector("input"))
-          )
-            error = true;
-          break;
-        case "URL":
-          item.url = elem.querySelector("input").value;
-          if (!isValidURL(elem.querySelector("input").value, elem.querySelector("input")))
-            error = true;
-          break;
-        case "Zoom":
-          item.zoom = elem.querySelector("input").value;
-          if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
-            error = true;
-          }
-          break;
-        case "Custom CSS":
-          item.customCSS = elem.querySelector("textarea").value.split("\n");
-          items.push(item);
-          break;
-      }
-    });
+  const targetBoardName = document.getElementById("board-name-textbox").innerText;
+  const newContents = [];
+  let errors = [];
+
+  // フォーム内容のバリデーションしつつ取得
+  contentFormList.forEach((contentForm, idx) => {
+    const size = ["large", "medium"][idx] || "small";
+    newContents.push(contentForm.toObject({ size }));
+    errors = errors.concat(contentForm.validate());
   });
 
-  if (!error) {
-    let options = store.get("options");
-    for (i in options) {
-      if (targetBoard == options[i]["name"]) {
-        options[i]["contents"] = items;
-        break;
-      }
-    }
-    store.set("options", options);
-    store.set("boards", options);
-    document.getElementById("save-btn").innerText = "Saved!";
-    const reloadMessage = function () {
-      document.getElementById("save-btn").innerText = "Save Board Setting";
-    };
-    setTimeout(reloadMessage, 2000);
-  } else {
+  // 1件以上エラーがあった場合、アラートし、保存は拒否する
+  if (errors.length > 0) {
+    errors.forEach(error => alert(error));
     document.getElementById("save-btn").innerText = "Save failed...";
     document.getElementById("save-btn").className = "btn btn-danger";
     const reloadMessage = function () {
@@ -435,70 +393,21 @@ function saveBoardSetting() {
       document.getElementById("save-btn").className = "btn btn-primary";
     };
     setTimeout(reloadMessage, 2000);
+    return;
   }
-}
 
-/**
- * 入力されたアイテム名の値を検証する
- * @param {string}  name
- * @param {Element} elem
- */
-function isValidName(name, elem) {
-  if (name == "") {
-    alert("Item Name Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (/\"/.test(name)) {
-    alert(`Cannot use " in Item (${name})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  elem.style.background = "#fff";
-  return true;
-}
-
-/**
- * 入力されたURLの値を検証する
- * @param {string}  url
- * @param {Element} elem
- */
-function isValidURL(url, elem) {
-  if (url == "") {
-    alert("URL is Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (!url.match(/^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/)) {
-    alert(`Invalid URL: (${url})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (/\"/.test(url)) {
-    alert(`Cannot use " in Item (${url})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  elem.style.background = "#fff";
-  return true;
-}
-
-/**
- * 入力された拡大率の値を検証する
- * @param {string}  zoom
- * @param {Element} elem
- */
-function isValidZoom(zoom, elem) {
-  if (zoom == "") {
-    alert("Zoom is Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  const zoomNum = Number(zoom);
-  if (isNaN(zoomNum) || zoomNum < 0.25 || zoomNum > 5.0) {
-    alert("Zoom must be a number between 0.25 and 5.0");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  return true;
+  // 保存処理
+  let options = store.get("options");
+  options.forEach(option => {
+    if (option["name"] === targetBoardName) {
+      option["contents"] = newContents;
+    }
+  });
+  store.set("options", options);
+  store.set("boards", options);
+  document.getElementById("save-btn").innerText = "Saved!";
+  const reloadMessage = function () {
+    document.getElementById("save-btn").innerText = "Save Board Setting";
+  };
+  setTimeout(reloadMessage, 2000);
 }

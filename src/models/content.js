@@ -31,35 +31,32 @@ class Content {
 
   /**
    * Name属性が保存可能な内容であるかチェックする
-   * @throws バリデーション違反の場合
    */
   validateName() {
-    if (this.name === "") throw "Item Name Needed";
-    if (/\"/.test(this.name)) throw `Cannot use " in Item (${this.name})`;
+    if (this.name === "") return "Item Name Needed";
+    if (/\"/.test(this.name)) return `Cannot use " in Item (${this.name})`;
     return true;
   }
 
   /**
    * URL属性が保存可能な内容であるかチェックする
-   * @throws バリデーション違反の場合
    */
   validateUrl() {
     const re = /^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/;
-    if (this.url == "") throw "URL is Needed";
-    if (!this.url.match(re)) throw `Invalid URL: (${this.url})`;
-    if (/\"/.test(this.url)) throw `Cannot use " in Item (${url})`;
+    if (this.url == "") return "URL is Needed";
+    if (!this.url.match(re)) return `Invalid URL: (${this.url})`;
+    if (/\"/.test(this.url)) return `Cannot use " in Item (${url})`;
     return true;
   }
 
   /**
    * Zoom属性が保存可能な内容であるかチェックする
-   * @throws バリデーション違反の場合
    */
   validateZoom() {
     const zoomNum = Number(this.zoom);
-    if (this.zoom == "") throw "Zoom is Needed";
+    if (this.zoom == "") return "Zoom is Needed";
     if (isNaN(zoomNum) || zoomNum < 0.25 || zoomNum > 5.0) {
-      throw "Zoom must be a number between 0.25 and 5.0";
+      return "Zoom must be a number between 0.25 and 5.0";
     }
     return true;
   }

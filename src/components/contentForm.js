@@ -2,10 +2,6 @@ const Content = require("../models/content");
 
 class ContentForm {
   /**
-   * @param {Content} content
-   */
-
-  /**
    *
    * @param {Content} content
    * @param {function(ContentForm):void} onClickDeleteButton
@@ -17,6 +13,9 @@ class ContentForm {
     this.$element = this.createElement();
   }
 
+  /**
+   * Contentの内容に応じたフォームUIを生成する
+   */
   createElement() {
     const { name, url, zoom, customCSS } = this.content.toObject();
     const $element = $(`
@@ -47,6 +46,39 @@ class ContentForm {
     return $element;
   }
 
+  /**
+   * フォームの内容をバリデーションする
+   * @return {[string]} エラーメッセージ一覧
+   */
+  validate() {
+    const errors = [];
+    this.$element.find("input,textarea").css("backgroundColor", "#fff");
+
+    const validationResult = {
+      name: this.content.validateName(),
+      url: this.content.validateUrl(),
+      zoom: this.content.validateZoom()
+    };
+
+    if (validationResult.name !== true) {
+      this.$element.find("input.name").css("backgroundColor", "#fdd");
+      errors.push(validationResult.name);
+    }
+    if (validationResult.url !== true) {
+      this.$element.find("input.url").css("backgroundColor", "#fdd");
+      errors.push(validationResult.url);
+    }
+    if (validationResult.zoom !== true) {
+      this.$element.find("input.zoom").css("backgroundColor", "#fdd");
+      errors.push(validationResult.zoom);
+    }
+
+    return errors;
+  }
+
+  /**
+   * フォームの入力内容をContentモデルに同期する
+   */
   syncToContent() {
     this.content.name = this.$element.find("input.name").val();
     this.content.url = this.$element.find("input.url").val();
@@ -54,10 +86,18 @@ class ContentForm {
     this.content.customCSS = this.$element.find("textarea.custom-css").val();
   }
 
-  removeElement() {
-    this.element.remove();
+  /**
+   * Contentモデルのうち、このフォームで扱ってる要素のみのオブジェクトを戻す
+   * @params {object} options マージするオブジェクト
+   */
+  toObject(options = {}) {
+    const { name, url, zoom, customCSS } = this.content.toObject();
+    return { name, url, zoom, customCSS, ...options };
   }
 
+  /**
+   * 削除ボタン用のラベルを取得する
+   */
   removeButtonLabel() {
     if (this.content.name) {
       return `Delete item [ ${this.content.name} ]`;
