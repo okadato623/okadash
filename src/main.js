@@ -322,8 +322,7 @@ function createMenuItemForSmallPane() {
     menuItem.submenu.append(apMenuItem);
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
-  menuItem.submenu.append(createNewFromURLMenuItem());
-  menuItem.submenu.append(createGoogleMenuItem());
+  menuItem.submenu.append(createNewPaneFromURLMenuItem());
 
   return menuItem;
 }
@@ -465,25 +464,11 @@ function createContextMenuItems(contents, index) {
 /**
  * Create new from URL メニューを生成する
  */
-function createNewFromURLMenuItem() {
+function createNewPaneFromURLMenuItem() {
   return new MenuItem({
-    label: "Create new pane from url",
-    accelerator: "CommandOrControl+o",
+    label: "Open new pane from URL",
     click() {
-      openCreateNewFromUrlDialog()
-    }
-  });
-}
-
-/**
- * Search In Google メニューを生成する
- */
-function createGoogleMenuItem() {
-  return new MenuItem({
-    label: "Search in Google",
-    accelerator: "CommandOrControl+l",
-    click() {
-      openGoogleInOverlay();
+      openNewPaneFromUrlDialog()
     }
   });
 }
@@ -491,7 +476,7 @@ function createGoogleMenuItem() {
 /**
  * URLから新規ペインを作成するためのダイアログを開く
  */
-function openCreateNewFromUrlDialog() {
+function openNewPaneFromUrlDialog() {
   const dlg = document.querySelector("#create-new-pane-dialog");
   dlg.style.display = "block";
   dlg.showModal();
@@ -530,22 +515,6 @@ function openCreateNewFromUrlDialog() {
   //   }
   //   dlg.addEventListener("close", onClose, { once: true });
   // });
-}
-
-/**
- * グーグル検索用のWebViewオーバレイを開く
- */
-function openGoogleInOverlay() {
-  const main = document.getElementById("main-content");
-  const div = document.createElement("div");
-  const label = document.createElement("label");
-  div.className = "overlay";
-  label.className = "overlay-message";
-  label.innerHTML = "Press Esc to Close";
-  div.appendChild(label);
-  main.appendChild(div);
-  const webview = createWebView({ url: "https://google.com", forOverlay: true });
-  div.appendChild(webview.element);
 }
 
 /**
@@ -746,6 +715,9 @@ function openContextMenu(index) {
   contextMenuItems.forEach(function (contextMenuItem, i) {
     menu.append(contextMenuItem);
   });
+
+  menu.append(new MenuItem({ type: "separator" }));
+  menu.append(createNewPaneFromURLMenuItem());
 
   menu.popup(remote.getCurrentWindow());
 }
