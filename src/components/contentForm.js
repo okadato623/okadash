@@ -41,7 +41,9 @@ class ContentForm {
         <hr style="margin: 30px" />
       </div>
     `);
+
     $element.children("button").click(() => this.onClickDeleteButton(this));
+    $element.find("input,textarea").on("blur", () => this.syncToContent());
     return $element;
   }
 
@@ -50,8 +52,6 @@ class ContentForm {
     this.content.url = this.$element.find("input.url").val();
     this.content.zoom = this.$element.find("input.zoom").val();
     this.content.customCSS = this.$element.find("textarea.custom-css").val();
-    console.log(this.content.name);
-    console.log(this.content.toObject());
   }
 
   removeElement() {
