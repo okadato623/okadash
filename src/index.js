@@ -16,7 +16,7 @@ let isInitOpen = false;
 const boundsFilePath = path.join(app.getPath('userData'), 'bounds.json');
 let bounds = {};
 try {
-  bounds = JSON.parse(fs.readFileSync(boundsFile, 'utf8'));
+  bounds = JSON.parse(fs.readFileSync(boundsFilePath, 'utf8'));
 } catch (e) {
   bounds = { "width": 1024, "height": 768 };
 }
@@ -62,7 +62,7 @@ app.on("ready", function () {
 });
 
 app.on("quit", function () {
-  fs.writeFileSync(boundsFile, JSON.stringify(mainWindow.getBounds()));
+  fs.writeFileSync(boundsFilePath, JSON.stringify(mainWindow.getBounds()));
 })
 
 ipcMain.on("window-open", function () {
