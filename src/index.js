@@ -13,7 +13,7 @@ let isSubOpen = false;
 let isInitOpen = false;
 
 // loading window size and position
-const boundsFile = path.join(app.getPath('userData'), 'bounds.json');
+const boundsFilePath = path.join(app.getPath('userData'), 'bounds.json');
 let bounds = {};
 try {
   bounds = JSON.parse(fs.readFileSync(boundsFile, 'utf8'));
