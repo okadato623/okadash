@@ -12,7 +12,7 @@ class Content {
    * @param {string}   params.height
    * @param {[string]} params.customCSS
    */
-  constructor({ name, url, zoom, size, width, height, customCSS }) {
+  constructor({ name, url, zoom, size, width, height, customCSS } = {}) {
     this.name = name || "";
     this.url = url || "";
     this.zoom = zoom || 1.0;

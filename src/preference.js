@@ -87,7 +87,7 @@ function showBoardContents(definedBoard) {
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    createNewContent();
+    container.appendChild(createContentForm(new Content())[0]);
     container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
@@ -98,6 +98,7 @@ function showBoardContents(definedBoard) {
  * @param {Content} content
  */
 function createContentForm(content) {
+  const btnLabel = content.name ? `Delete item [ ${content.name} ]` : "Delete this item";
   const $form = $(`
     <div class="item-box">
       <p>
@@ -116,7 +117,7 @@ function createContentForm(content) {
         Custom CSS
         <textarea class="textarea-ccss">${content.customCSS.join("\n")}</textarea>
       </p>
-      <button class="btn btn-outline-danger">Delete item [ ${content.name} ]</button>
+      <button class="btn btn-outline-danger">${btnLabel}</button>
       <hr style="margin: 30px" />
     </div>
   `);
@@ -126,61 +127,6 @@ function createContentForm(content) {
     }
   });
   return $form;
-}
-
-/**
- * アイテム欄を新規生成する
- */
-function createNewContent() {
-  const container = document.getElementById("items-container");
-  const divElem = document.createElement("div");
-  divElem.className = "item-box";
-
-  const nameElem = document.createElement("p");
-  const nameTextElem = document.createElement("input");
-  nameElem.innerHTML = "Name";
-  nameTextElem.type = "textbox";
-  nameTextElem.className = "content-textbox";
-  nameElem.appendChild(nameTextElem);
-
-  const urlElem = document.createElement("p");
-  const urlTextElem = document.createElement("input");
-  urlElem.innerHTML = "URL";
-  urlTextElem.type = "textbox";
-  urlTextElem.className = "content-textbox";
-  urlElem.appendChild(urlTextElem);
-
-  const zoomElem = document.createElement("p");
-  const zoomTextElem = document.createElement("input");
-  zoomElem.innerHTML = "Zoom";
-  zoomTextElem.type = "textbox";
-  zoomTextElem.className = "content-textbox";
-  zoomElem.appendChild(zoomTextElem);
-
-  const cssElem = document.createElement("p");
-  const tAreaElem = document.createElement("textarea");
-  cssElem.innerHTML = "Custom CSS";
-  tAreaElem.className = "textarea-ccss";
-  cssElem.appendChild(tAreaElem);
-
-  const btnElem = document.createElement("button");
-  btnElem.className = "btn btn-outline-danger";
-  btnElem.innerHTML = "Delete this item";
-  btnElem.onclick = function () {
-    btnElem.parentElement.remove();
-  };
-
-  const hrElem = document.createElement("hr");
-  hrElem.style = "margin: 30px;";
-
-  divElem.appendChild(nameElem);
-  divElem.appendChild(urlElem);
-  divElem.appendChild(zoomElem);
-  divElem.appendChild(cssElem);
-  divElem.appendChild(btnElem);
-  divElem.appendChild(hrElem);
-
-  container.appendChild(divElem);
 }
 
 /**
@@ -442,7 +388,7 @@ function saveBoardSetting() {
   container.querySelectorAll(".item-box").forEach(function (node) {
     let item = {};
     node.querySelectorAll("p").forEach(function (elem) {
-      switch (elem.innerText) {
+      switch (elem.innerText.trim()) {
         case "Name":
           item.name = elem.querySelector("input").value;
           if (items.length === 0) {
