@@ -170,15 +170,6 @@ dialog {
   position: absolute;
   cursor: row-resize;
 }
-.fold-large {
-  position: absolute;
-  top: 0%;
-  right: -4px;
-  height: 100%;
-  background: none;
-  z-index: 1;
-  color: black;
-}
 #alert-icon {
   display: none;
   position: absolute;
