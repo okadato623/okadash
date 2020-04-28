@@ -7,6 +7,7 @@ const app = remote.app;
 const path = require("path");
 const Board = require("./models/board");
 const Content = require("./models/content");
+const ContentForm = require("./components/contentForm");
 
 /**
  * アプリケーションのバージョン情報
@@ -14,10 +15,16 @@ const Content = require("./models/content");
 const VERSION = "1.6.1";
 
 /**
- * 定義済みボード一覧
+ * 読み込み済みの定義済みボード一覧
  * @type {[Board]}
  */
 let definedBoardList = [];
+
+/**
+ * 描画中のコンテントフォームコンポーネントのリスト
+ * @type {[ContentForm]}
+ */
+let contentFormList = [];
 
 initialize();
 
@@ -73,21 +80,27 @@ function showBoardContents(definedBoard) {
   document.getElementById("board-name-textbox").innerText = definedBoard["name"];
 
   // 既に描画済みの内容を破棄
+  contentFormList = [];
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
   definedBoard.contents.forEach(content => {
-    container.appendChild(createContentForm(content)[0]);
+    const contentForm = createContentForm(content);
+    contentFormList.push(contentForm);
+    container.appendChild(contentForm.element);
   });
 
+  // ボード追加ボタンの描画と、クリック時のボート追加処理を定義
   const addBtnElem = document.createElement("button");
   addBtnElem.className = "add-board-btn";
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    container.appendChild(createContentForm(new Content())[0]);
+    const contentForm = createContentForm();
+    contentFormList.push(contentForm);
+    container.appendChild(contentForm.element);
     container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
@@ -97,36 +110,12 @@ function showBoardContents(definedBoard) {
  * Contentオブジェクトに基づいてコンテントフォームを生成する
  * @param {Content} content
  */
-function createContentForm(content) {
-  const btnLabel = content.name ? `Delete item [ ${content.name} ]` : "Delete this item";
-  const $form = $(`
-    <div class="item-box">
-      <p>
-        Name
-        <input value="${content.name}" type="textbox" class="content-textbox" />
-      </p>
-      <p>
-        URL
-        <input value="${content.url}" type="url" class="content-textbox" />
-      </p>
-      <p>
-        Zoom
-        <input value="${content.zoom}" type="textbox" class="content-textbox" />
-      </p>
-      <p>
-        Custom CSS
-        <textarea class="textarea-ccss">${content.customCSS.join("\n")}</textarea>
-      </p>
-      <button class="btn btn-outline-danger">${btnLabel}</button>
-      <hr style="margin: 30px" />
-    </div>
-  `);
-  $form.children("button").click(function () {
+function createContentForm(content = new Content()) {
+  return new ContentForm(content, element => {
     if (confirm("Sure?")) {
-      this.parentElement.remove();
+      element.parentElement.remove();
     }
   });
-  return $form;
 }
 
 /**
