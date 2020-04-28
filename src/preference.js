@@ -89,7 +89,7 @@ function showBoardContents(definedBoard) {
   definedBoard.contents.forEach(content => {
     const contentForm = createContentForm(content);
     contentFormList.push(contentForm);
-    container.appendChild(contentForm.element);
+    container.appendChild(contentForm.$element[0]);
   });
 
   // ボード追加ボタンの描画と、クリック時のボート追加処理を定義
@@ -100,7 +100,7 @@ function showBoardContents(definedBoard) {
     addBtnElem.remove();
     const contentForm = createContentForm();
     contentFormList.push(contentForm);
-    container.appendChild(contentForm.element);
+    container.appendChild(contentForm.$element[0]);
     container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
@@ -111,9 +111,11 @@ function showBoardContents(definedBoard) {
  * @param {Content} content
  */
 function createContentForm(content = new Content()) {
-  return new ContentForm(content, element => {
+  return new ContentForm(content, contentForm => {
     if (confirm("Sure?")) {
-      element.parentElement.remove();
+      const targetIndex = contentFormList.findIndex(cf => cf.id === contentForm.id);
+      contentFormList.splice(targetIndex, 1);
+      contentForm.$element[0].remove();
     }
   });
 }
@@ -374,6 +376,7 @@ function saveBoardSetting() {
   const container = document.getElementById("items-container");
   const items = [];
   let error = false;
+  contentFormList[0].syncToContent();
   container.querySelectorAll(".item-box").forEach(function (node) {
     let item = {};
     node.querySelectorAll("p").forEach(function (elem) {

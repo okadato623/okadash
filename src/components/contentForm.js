@@ -8,39 +8,50 @@ class ContentForm {
   /**
    *
    * @param {Content} content
-   * @param {function(Element):void} onClickDeleteButton
+   * @param {function(ContentForm):void} onClickDeleteButton
    */
   constructor(content, onClickDeleteButton = null) {
+    this.id = Math.random();
     this.content = content;
     this.onClickDeleteButton = onClickDeleteButton;
-    this.element = this.createElement()[0];
+    this.$element = this.createElement();
   }
 
   createElement() {
+    const { name, url, zoom, customCSS } = this.content.toObject();
     const $element = $(`
       <div class="item-box">
         <p>
           Name
-          <input value="${this.content.name}" type="textbox" class="content-textbox" />
+          <input value="${name}" type="textbox" class="name content-textbox" />
         </p>
         <p>
           URL
-          <input value="${this.content.url}" type="url" class="content-textbox" />
+          <input value="${url}" type="url" class="url content-textbox" />
         </p>
         <p>
           Zoom
-          <input value="${this.content.zoom}" type="textbox" class="content-textbox" />
+          <input value="${zoom}" type="textbox" class="zoom content-textbox" />
         </p>
         <p>
           Custom CSS
-          <textarea class="textarea-ccss">${this.content.customCSS.join("\n")}</textarea>
+          <textarea class="custom-css textarea-ccss">${customCSS.join("\n")}</textarea>
         </p>
         <button class="btn btn-outline-danger">${this.removeButtonLabel()}</button>
         <hr style="margin: 30px" />
       </div>
     `);
-    $element.children("button").click(() => this.onClickDeleteButton(this.element));
+    $element.children("button").click(() => this.onClickDeleteButton(this));
     return $element;
+  }
+
+  syncToContent() {
+    this.content.name = this.$element.children("input.name").val();
+    this.content.url = this.$element.children("input.url").val();
+    this.content.zoom = this.$element.children("input.zoom").val();
+    this.content.customCSS = this.$element.children("textarea.custom-css").text();
+    console.log(this.content.name);
+    console.log(this.content.toObject());
   }
 
   removeElement() {
