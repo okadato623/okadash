@@ -46,10 +46,10 @@ class ContentForm {
   }
 
   syncToContent() {
-    this.content.name = this.$element.children("input.name").val();
-    this.content.url = this.$element.children("input.url").val();
-    this.content.zoom = this.$element.children("input.zoom").val();
-    this.content.customCSS = this.$element.children("textarea.custom-css").text();
+    this.content.name = this.$element.find("input.name").val();
+    this.content.url = this.$element.find("input.url").val();
+    this.content.zoom = this.$element.find("input.zoom").val();
+    this.content.customCSS = this.$element.find("textarea.custom-css").val();
     console.log(this.content.name);
     console.log(this.content.toObject());
   }
