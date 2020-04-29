@@ -222,7 +222,6 @@ const vm = new Vue({
 /**
  * 定義済みボードの内容を描画する
  * TODO: InvalidURLの移植がまだ
- * 削除ダイアログの移植がまだ
  * @param {any} definedBoard
  */
 function showBoardContents(definedBoard) {
