@@ -471,80 +471,38 @@ function createContextMenuItems(contents, index) {
 /**
  * Create new from URL メニューを生成する
  */
-function createNewPaneFromURLMenuItem() {
+function createNewPaneFromURLMenuItem(index) {
   return new MenuItem({
     label: "Open new pane from URL",
     click() {
-      openNewPaneFromUrlDialog()
-    }
-  });
-}
-
-/**
- * Reload pane from URL メニューを生成する
- */
-function reloadPaneFromURLMenuItem(index) {
-  return new MenuItem({
-    label: "Reload pane from URL",
-    click() {
-      reloadPaneFromUrlDialog(index)
+      openNewPaneFromUrlDialog(index)
     }
   });
 }
 
 /**
  * URLから新規ペインを作成するためのダイアログを開く
+ * @param {string} 挿入するペイン(省略した場合新規smallペインを生成)
  */
-function openNewPaneFromUrlDialog() {
+function openNewPaneFromUrlDialog(index = null) {
   const dlg = document.querySelector("#create-new-pane-dialog");
   dlg.style.display = "block";
   dlg.showModal();
 
   function onClose() {
     if (dlg.returnValue === "ok") {
-      const newContent = {}
-      newContent["name"] = dlg.querySelector(".name").value
-      newContent["url"] = dlg.querySelector(".url").value
-      newContent["zoom"] = 1
-      newContent["customCSS"] = []
+      const newContent = {
+        name: dlg.querySelector(".name").value,
+        url: dlg.querySelector(".url").value,
+        zoom: 1,
+        customCSS: []
+      }
 
-      const allBoards = store.get("boards.0.contents");
-      const allOptions = store.get("options.0.contents");
-      allBoards.push(newContent)
-      allOptions.push(newContent)
-      store.set("boards.0.contents", allBoards)
-      store.set("options.0.contents", allOptions)
-      loadAdditionalPage(newContent["url"], [])
-      initializeMenu(menu.menuTemplate);
-    } else {
-      dlg.close()
-    }
-    dlg.style.display = "none";
-  }
-  dlg.addEventListener("close", onClose, { once: true });
-}
-
-/**
- * URLからペインをリロードするためのダイアログを開く
- */
-function reloadPaneFromUrlDialog(index) {
-  const dlg = document.querySelector("#create-new-pane-dialog");
-  dlg.style.display = "block";
-  dlg.showModal();
-
-  function onClose() {
-    if (dlg.returnValue === "ok") {
-      const newContent = {}
-      newContent["name"] = dlg.querySelector(".name").value
-      newContent["url"] = dlg.querySelector(".url").value
-      newContent["zoom"] = 1
-      newContent["customCSS"] = []
-
-      const allOptions = store.get("options.0.contents");
-      allOptions.push(newContent)
-      store.set("options.0.contents", allOptions)
-      recreateSelectedPane(newContent["url"], [], index)
-      initializeMenu(menu.menuTemplate);
+      if (index !== null) {
+        recreateSelectedPane(index, newContent)
+      } else {
+        loadAdditionalPage(newContent)
+      }
     } else {
       dlg.close()
     }
@@ -807,7 +765,7 @@ function openContextMenu(index) {
   });
 
   menu.append(new MenuItem({ type: "separator" }));
-  menu.append(reloadPaneFromURLMenuItem(index));
+  menu.append(createNewPaneFromURLMenuItem(index));
 }
 
 /**
@@ -875,7 +833,7 @@ function openContextMenu(index) {
   });
 
   menu.append(new MenuItem({ type: "separator" }));
-  menu.append(reloadPaneFromURLMenuItem(index));
+  menu.append(createNewPaneFromURLMenuItem(index));
 
   menu.popup(remote.getCurrentWindow());
 }
@@ -890,14 +848,16 @@ function getPaneNum() {
 /**
  * smallペインを追加する
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
+function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
   resetWindowSize();
   const size = "small";
   createPane({ size, url, zoom, customCSS });
+  storeName(getPaneNum() - 1, name);
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, url);
   storeZoom(getPaneNum() - 1, zoom);
@@ -917,20 +877,31 @@ function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
  * 対象ペインを再生成する
  * @param {string} index 対象ペイン要素のID
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, { url, zoom, customCSS }) {
+function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
   div.querySelector("webview").remove();
 
+  storeName(index, name);
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
   storeZoom(index, zoom);
 
   const webview = createWebView(div.id, { url, zoom, customCSS });
   div.appendChild(webview.element);
+}
+
+/**
+ * 現在表示しているペインの名前を保存する
+ * @param {string} index 対象ペインのID
+ * @param {string} name
+ */
+function storeName(index, name) {
+  store.set(`boards.0.contents.${index}.name`, name);
 }
 
 /**
