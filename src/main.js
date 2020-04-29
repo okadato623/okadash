@@ -594,7 +594,7 @@ function createSwapButton(index, direction) {
   const swapTargetIndex = (Number(index) + direction).toString();
   const label = direction === -1 ? "<" : ">";
 
-  return $(`<button style="font-size: 12px;">${label}</button>`).click(() =>
+  return $(`<button style="font-size: 10px;">${label}</button>`).click(() =>
     swapSmallPane(index, swapTargetIndex)
   )[0];
 }
@@ -604,7 +604,7 @@ function createSwapButton(index, direction) {
  * @param {string} index 対象のペイン要素のID
  */
 function createCloseButton(index) {
-  return $(`<button style="font-size: 12px";>Close</button>`).click(() => {
+  return $(`<button style="font-size: 10px";>Close</button>`).click(() => {
     removeSmallPane(index);
   })[0];
 }
