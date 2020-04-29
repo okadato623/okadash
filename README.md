@@ -1,18 +1,22 @@
 # okadash
 
+![making](https://github.com/konoyono/okadash/blob/master/images/making.gif)
+
+
+## Description
+
+okadash is a Dashboard Tool made with Electron.  
+You can combine multiple websites in one window.  
+I aim to make my tool easy to use and highly customizable!  
+### More detail is [here](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)!
+
 ![demo](https://github.com/konoyono/okadash/blob/master/images/forREADME.gif)
+
 
 ## How To Use
 
 [日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)  
 Made by Teachme Biz
-
-## Description
-
-Dashboard Tool made with Electron.  
-This is a tool to combine multiple sites on one screen.  
-As a core concept, I'm aiming for a tool that is easy to use and highly customizable!  
-### More detail is [here](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)!
 
 ## Download
 
