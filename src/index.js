@@ -33,15 +33,8 @@ function trackEvent(category, action) {
     .send();
 }
 
-app.on("window-all-closed", function () {
-  trackEvent("main", "Close App");
-  if (process.platform != "darwin") {
-    app.quit();
-  }
-});
-
-app.on("ready", function () {
-  mainWindow = new BrowserWindow({
+function createBrowserWindow() {
+  const browserWindow = new BrowserWindow({
     webPreferences: {
       transparent: false,
       frame: true,
@@ -52,13 +45,25 @@ app.on("ready", function () {
       webviewTag: true
     }
   });
-  trackEvent("main", "Open App");
-  mainWindow.setBounds(bounds);
-  mainWindow.loadURL("file://" + __dirname + "/index.html");
+  browserWindow.setBounds(bounds);
+  browserWindow.loadURL("file://" + __dirname + "/index.html");
 
-  mainWindow.on("closed", function () {
-    mainWindow = null;
-  });
+  return browserWindow
+}
+
+app.on("window-all-closed", function () {
+  trackEvent("main", "Close App");
+  app.quit();
+});
+
+app.on("ready", function () {
+  mainWindow = createBrowserWindow();
+  trackEvent("main", "Open App");
+});
+
+ipcMain.on("subwindow-open", function (event, name) {
+  const newWindow = createBrowserWindow();
+  newWindow.boardName = name
 });
 
 app.on("quit", function () {
@@ -82,7 +87,9 @@ ipcMain.on("window-open", function () {
     subWindow = null;
     isSubOpen = false;
     trackEvent("main", "Preference Close");
-    mainWindow.reload();
+    BrowserWindow.getAllWindows().forEach(win => {
+      win.reload();
+    })
   });
 });
 

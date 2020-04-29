@@ -10,6 +10,11 @@ const menu = require("./menu");
 const WebView = require("./components/webView");
 
 /**
+ * このウィンドウが表示しているボードのインデックス
+ */
+let currentBoardIndex = 0
+
+/**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.6.1";
@@ -53,6 +58,22 @@ const draggingBoarder = {
  * TODO: ペインクラスをちゃんと作ってオブジェクト指向で管理するようにする
  */
 const webViews = {};
+
+function boardNameToIndex() {
+  const currentBoardName = remote.getCurrentWindow().boardName
+  if (currentBoardName) {
+    const res = store.get("boards").findIndex((board) => {
+      if (board["name"] === currentBoardName) {
+        return true
+      }
+    })
+
+    // 存在しないボードを参照したときには 0 番目を返す
+    return res === -1 ? 0 : res
+  } else {
+    return 0
+  }
+}
 
 /**
  * 初期化
@@ -180,6 +201,9 @@ function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
 
+  remote.getCurrentWindow().on('focus', () => {
+    initializeMenu(menu.menuTemplate);
+  })
   initializeMenu(menu.menuTemplate);
 
   // 使用中のボードをStoreから参照し、ペインの初期描画を行う
@@ -292,7 +316,7 @@ function createMenuItemForBoard() {
  * @param {string} index 対象ペイン要素のID
  */
 function createMenuItemForContextmenu(index) {
-  const options = store.get("options.0.contents");
+  const options = store.get(`options.${currentBoardIndex}.contents`);
   const content = getAdditionalPaneInfo(options);
 
   return createContextMenuItems(content, index);
@@ -307,7 +331,7 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const options = store.get("options.0.contents");
+  const options = store.get(`options.${currentBoardIndex}.contents`);
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
 
@@ -324,7 +348,7 @@ function createMenuItemForSmallPane() {
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
-  const usingBoard = store.get("boards")[0];
+  const usingBoard = store.get("boards")[currentBoardIndex];
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
   delete usingBoard.name;
@@ -370,7 +394,7 @@ function createBoardMenuItems() {
   const allOptions = store.get("options");
   const boardMenuItems = [];
   for (i in allOptions) {
-    const clicked = i;
+    const index = i;
     if (i == 0) {
       boardMenuItems.push(
         new MenuItem({
@@ -385,7 +409,7 @@ function createBoardMenuItems() {
           accelerator: `CommandOrControl+Option+${i}`,
           index: i,
           click() {
-            moveClickedContentsToTop(clicked);
+            openNewWindow(index);
           }
         })
       );
@@ -397,25 +421,12 @@ function createBoardMenuItems() {
 
 /**
  * 選択したボードを使用中ボードに切り替える
- * @param {number} clicked 選択されたボードのインデックス
+ * @param {number} index 選択されたボードのインデックス
  */
-function moveClickedContentsToTop(clicked) {
-  const allBoards = store.get("boards");
+function openNewWindow(index) {
   const allOptions = store.get("options");
-  const tmpOpt = allOptions[clicked];
-  const tmpBrd = allBoards[clicked];
-  for (i in allOptions) {
-    const key = Object.keys(allOptions).length - i - 1;
-    if (key < clicked) {
-      allOptions[key + 1] = allOptions[key];
-      allBoards[key + 1] = allBoards[key];
-    }
-  }
-  allOptions[0] = tmpOpt;
-  allBoards[0] = tmpBrd;
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
-  remote.getCurrentWindow().reload();
+  const boardName = allOptions[index]["name"]
+  ipcRenderer.send("subwindow-open", boardName)
 }
 
 /**
@@ -549,7 +560,7 @@ function removeSmallPane(index) {
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
   const bars = Array.from(document.getElementsByClassName("dragbar-vertical-small"));
-  store.delete(`boards.0.contents.${index}`);
+  store.delete(`boards.${currentBoardIndex}.contents.${index}`);
   saveNewContents();
 
   smallPanes.forEach(function (pane) {
@@ -887,7 +898,7 @@ function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
  * @param {string} name
  */
 function storeName(index, name) {
-  store.set(`boards.0.contents.${index}.name`, name);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.name`, name);
 }
 
 /**
@@ -896,7 +907,7 @@ function storeName(index, name) {
  * @param {string} size
  */
 function storeSize(index, size) {
-  store.set(`boards.0.contents.${index}.size`, size);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.size`, size);
 }
 
 /**
@@ -905,7 +916,7 @@ function storeSize(index, size) {
  * @param {string} url
  */
 function storeUrl(index, url) {
-  store.set(`boards.0.contents.${index}.url`, url);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.url`, url);
 }
 
 /**
@@ -914,7 +925,7 @@ function storeUrl(index, url) {
  * @param {string} zoom
  */
 function storeZoom(index, zoom) {
-  store.set(`boards.0.contents.${index}.zoom`, zoom || 1.0);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.zoom`, zoom || 1.0);
 }
 
 /**
@@ -923,7 +934,7 @@ function storeZoom(index, zoom) {
  * @param {string} size
  */
 function storeCustomCSS(index, customCSS) {
-  store.set(`boards.0.contents.${index}.customCSS`, customCSS || []);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.customCSS`, customCSS || []);
 }
 
 /**
@@ -997,8 +1008,8 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-
-  return buildJsonObjectFromStoredData(store.get("boards")[0]);
+  const currentBoardIndex = boardNameToIndex()
+  return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 
 /**
@@ -1038,12 +1049,12 @@ function convertToWebViewInstance(webViewElement) {
  * ボード内の破棄されたペインをボードの定義から除外する
  */
 function saveNewContents() {
-  const contents = store.get("boards.0.contents");
+  const contents = store.get(`boards.${currentBoardIndex}.contents`);
   let newContents = [];
   contents.forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("boards.0.contents", newContents);
+  store.set(`boards.${currentBoardIndex}.contents`, newContents);
 }
 
 /**
@@ -1056,7 +1067,7 @@ function buildJsonObjectFromStoredData(board) {
   board["contents"].forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("boards.0.contents", newContents);
+  store.set(`boards.${currentBoardIndex}.contents`, newContents);
   let jsonObj = {
     name: board["name"],
     contents: newContents
@@ -1129,9 +1140,9 @@ function calcWindowSize(init = false) {
     pane.style.height = "100%";
   });
   if (configHeight !== undefined) {
-    store.set("boards.0.contents.0.width", configWidth);
-    store.set("boards.0.contents.0.allWidth", columns);
-    store.set("boards.0.contents.1.height", configHeight);
+    store.set(`boards.${currentBoardIndex}.contents.0.width`, configWidth);
+    store.set(`boards.${currentBoardIndex}.contents.0.allWidth`, columns);
+    store.set(`boards.${currentBoardIndex}.contents.1.height`, configHeight);
   }
 
   // 各ペインの検索ボックスもリサイズ
