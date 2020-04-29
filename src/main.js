@@ -217,9 +217,9 @@ function getLatestVersion() {
   );
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
-      // リクエスト中
+      // requesting
     } else if (request.status != 200) {
-      // 失敗
+      // request failed...
     } else {
       const res = JSON.parse(request.responseText);
       checkLatestVersion(res["tag_name"]);
