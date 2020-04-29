@@ -90,18 +90,18 @@ a:focus {
   padding: 10px;
 }
 
-#sidebar ul li a {
+#sidebar ul li.board-list{
   padding: 10px;
   font-size: 1.1em;
   display: block;
 }
 
-#sidebar ul li a:hover {
+#sidebar ul li.board-list:hover {
   color: #aaa;
   background: #fff;
 }
 
-#sidebar ul li.active > a,
+#sidebar ul li.board-list.active,
 a[aria-expanded="true"] {
   color: #fff;
   background: #666;

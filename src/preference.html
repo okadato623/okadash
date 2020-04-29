@@ -50,17 +50,15 @@
 
         <!-- Sidebar  -->
         <nav id="sidebar" style="position: fixed;">
+          <p style="font-size: 24px;">Board List</p>
           <ul class="list-unstyled components">
-            <p style="font-size: 24px;">Board List</p>
-            <ul id="boards-container">
-              <li
-              v-for="(board, i) in definedBoardList"
-              :class="selectBoardIndex === i ? 'active': ''"
-              @click="selectBoardIndex = i"
-              >
-              {{board.name}}
+            <li
+            v-for="(board, i) in definedBoardList"
+            class="list-unstyled board-list"
+            :class="selectBoardIndex === i ? 'active': ''"
+            @click="changeBoard(i)">
+            {{board.name}}
             </li>
-            </ul>
           </ul>
           <div style="text-align: center">
             <button class="add-board-btn" @click="openFileAndSave">+</button>
@@ -87,8 +85,7 @@
 
       <p>Item List</p>
           <div v-if="tmpBoard">
-
-            <ul id="items-container">
+            <ul id="items-container" class="list-unstyled">
               <li v-for="(content, inedx) in tmpBoard.contents">
                 <div class="item-box">
                   <p>Name</p>
@@ -98,13 +95,13 @@
                   <p>Zoom</p>
                   <input type="text" class="content-textbox" v-model="content.zoom" placeholder="1.0">
                   <p>Custom CSS</p>
-                  <textarea 
+                  <textarea
                    class="textarea-ccss"
                    style="display:block;"
-                   :value="content.customCSS.join('\n')" 
+                   :value="content.customCSS.join('\n')"
                    @input="content.customCSS = event.target.value.split('\n')"
                    />
-                   
+
                   <button class="btn btn-outline-danger" @click="removeItem(indx)">
                     Delete item [ {{ content.name }} ]
                   </button>

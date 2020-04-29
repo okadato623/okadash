@@ -27,6 +27,7 @@ Vue.component("preference", {
       selectBoardIndex: 0,
       definedBoardList: null,
       tmpBoard: null,
+      isEdited: false,
       items: []
     };
   },
@@ -37,16 +38,38 @@ Vue.component("preference", {
     });
   },
   watch: {
-    definedBoardList() {
-      console.log(this.definedBoardList);
-    },
-    tmpDefinedBoardList() {
-      console.log(this.tmpDefinedBoardList);
+    tmpBoard: {
+      deep: true,
+      handler() {
+        this.isEdited = true;
+      }
     }
   },
   methods: {
+    changeBoard(index){
+      if (this.isEdited) {
+        this.emitChangeBoardConfirmDialog(index);
+      } else {
+        this.selectBoardIndex = index;
+        this.loadBoard();
+      }
+    },
     windowClose() {
       window.close();
+    },
+    // 参照を切ってオブジェクトをコピー
+    async loadBoard() {
+      this.tmpBoard = deepCopy(this.definedBoardList[this.selectBoardIndex]);
+      
+      await this.$nextTick();
+      this.isEdited = false;
+
+    },
+    emitChangeBoardConfirmDialog(index) {
+      if (confirm("ボードを変更しますか？\n（変更は破棄されます）")) {
+        this.selectBoardIndex = index;
+        this.loadBoard();
+      }
     },
     /**
      * 定義ファイルの内容を元に、ボードの一覧を描画する
@@ -55,8 +78,8 @@ Vue.component("preference", {
     createBoardList(data) {
       this.settings = JSON.parse(data);
       this.definedBoardList = this.settings["options"];
-      // 参照を切ってオブジェクトをコピー
-      this.tmpBoard = deepCopy(this.definedBoardList[this.selectBoardIndex])
+
+      this.loadBoard();
 
       // 一旦コメントアウト
       // if (container.firstChild === null) importNewBoard("default", "Default Board");
@@ -174,6 +197,8 @@ const vm = new Vue({
 
 /**
  * 定義済みボードの内容を描画する
+ * TODO: InvalidURLの移植がまだ
+ * 削除ダイアログの移植がまだ
  * @param {any} definedBoard
  */
 function showBoardContents(definedBoard) {
