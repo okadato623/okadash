@@ -212,34 +212,21 @@ function initialize() {
  */
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  const query = {
-    query: `{
-      repository(owner: "konoyono", name: "okadash") {
-        releases(last: 1) {
-          nodes {
-            tagName
-          }
-       }
-      }
-    }`
-  };
-  request.open("POST", "https://api.github.com/graphql");
-  request.setRequestHeader("Content-Type", "application/json");
-  request.setRequestHeader(
-    "Authorization",
-    "bearer fbae27fc9bbeb9f5fe396672eaf68ba22f492435"
+  request.open(
+    "GET",
+    "https://api.github.com/repos/konoyono/okadash/releases/latest"
   );
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
-      // requesting
+      // リクエスト中
     } else if (request.status != 200) {
-      // request failed...
+      // 失敗
     } else {
       const res = JSON.parse(request.responseText);
-      checkLatestVersion(res.data.repository.releases.nodes[0].tagName);
+      checkLatestVersion(res["tag_name"]);
     }
   };
-  request.send(JSON.stringify(query));
+  request.send(null);
 }
 
 /**
