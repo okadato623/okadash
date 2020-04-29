@@ -1008,7 +1008,7 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-  const currentBoardIndex = boardNameToIndex()
+  currentBoardIndex = boardNameToIndex()
   return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 
