@@ -179,7 +179,6 @@ $(document).keydown(function (e) {
 function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
-  checkConfigVersion();
 
   initializeMenu(menu.menuTemplate);
 
@@ -212,22 +211,9 @@ function initialize() {
  */
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  const query = {
-    query: `{
-      repository(owner: "konoyono", name: "okadash") {
-        releases(last: 1) {
-          nodes {
-            tagName
-          }
-       }
-      }
-    }`
-  };
-  request.open("POST", "https://api.github.com/graphql");
-  request.setRequestHeader("Content-Type", "application/json");
-  request.setRequestHeader(
-    "Authorization",
-    "bearer fbae27fc9bbeb9f5fe396672eaf68ba22f492435"
+  request.open(
+    "GET",
+    "https://api.github.com/repos/konoyono/okadash/releases/latest"
   );
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
@@ -236,10 +222,10 @@ function getLatestVersion() {
       // request failed...
     } else {
       const res = JSON.parse(request.responseText);
-      checkLatestVersion(res.data.repository.releases.nodes[0].tagName);
+      checkLatestVersion(res["tag_name"]);
     }
   };
-  request.send(JSON.stringify(query));
+  request.send(null);
 }
 
 /**
@@ -948,20 +934,6 @@ function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
 function convertToWebViewInstance(webViewElement) {
   const paneElm = webViewElement.parentNode;
   return paneElm ? webViews[paneElm.id] : undefined;
-}
-
-/**
- * アプリケーションのバージョンと設定ファイルのバージョンが合致しない場合、
- * 設定ファイルを削除して初期設定に誘導する
- */
-function checkConfigVersion() {
-  const version = store.get("version");
-  if (version !== VERSION) {
-    const config = path.join(app.getPath("userData"), "config.json");
-    fs.unlink(config, () => {
-      ipcRenderer.send("initial-open");
-    });
-  }
 }
 
 /**
