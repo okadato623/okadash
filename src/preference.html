@@ -54,7 +54,7 @@
             <p style="font-size: 24px;">Board List</p>
             <ul id="boards-container">
               <li
-              v-for="(board, i) in definedBoardList" 
+              v-for="(board, i) in definedBoardList"
               :class="selectBoardIndex === i ? 'active': ''"
               @click="selectBoardIndex = i"
               >
@@ -77,37 +77,42 @@
         </nav>
 
         <!-- Page Content  -->
-        <div id="content">
+        <div id="content" v-if="tmpBoard">
           <label id="board-name-textbox">{{tmpBoard.name}}</label>
+          <br />
+        <button class="btn btn-outline-primary" onclick="exportDefinedBoard()">Export this board (definition)</button>
+        <button class="btn btn-outline-primary" onclick="exportUsingBoard()">Export this board (as you use)</button>
+        <button class="btn btn-outline-danger" onclick="deleteBoard()">Delete this board</button>
+        <br /><br />
+
+      <p>Item List</p>
           <div v-if="tmpBoard">
-            <ul>
+
+            <ul id="items-container">
               <li v-for="(content, inedx) in tmpBoard.contents">
                 <div class="item-box">
                   <p>Name</p>
-                  <input type="text" v-model="content.name">
+                  <input type="text" class="content-textbox" v-model="content.name">
                   <p>URL</p>
-                  <input type="text" v-model="content.url">
+                  <input type="text" class="content-textbox" v-model="content.url">
                   <p>Zoom</p>
-                  <input type="text" v-model="content.zoom" placeholder="1.0">
+                  <input type="text" class="content-textbox" v-model="content.zoom" placeholder="1.0">
                   <p>Custom CSS</p>
-                  <textarea name="" id="" cols="30" rows="10" v-model="content.customCSS" />
+                  <textarea 
+                   class="textarea-ccss"
+                   style="display:block;"
+                   :value="content.customCSS.join('\n')" 
+                   @input="content.customCSS = event.target.value.split('\n')"
+                   />
+                   
                   <button class="btn btn-outline-danger" @click="removeItem(indx)">
-                    Delete item [{{ contents.name }]}
+                    Delete item [ {{ content.name }} ]
                   </button>
                 </div>
               </li>
             </ul>
           </div>
 
-          </br>
-          <button class="btn btn-outline-primary" onclick="exportDefinedBoard()">Export this board (definition)</button>
-          <button class="btn btn-outline-primary" onclick="exportUsingBoard()">Export this board (as you use)</button>
-          <button class="btn btn-outline-danger" onclick="deleteBoard()">Delete this board</button>
-          </br></br>
-          <p>Item List</p>
-          <ul>
-            <div id="items-container"></div>
-          </ul>
         </div>
       </div>
     </script>

@@ -58,8 +58,8 @@ Vue.component("preference", {
       // 参照を切ってオブジェクトをコピー
       this.tmpBoard = deepCopy(this.definedBoardList[this.selectBoardIndex])
 
-      if (container.firstChild === null) importNewBoard("default", "Default Board");
-      container.firstChild.querySelector("a").click();
+      // 一旦コメントアウト
+      // if (container.firstChild === null) importNewBoard("default", "Default Board");
     },
     /**
      * JSONファイルを選択して新規ボードを作成する
