@@ -67,6 +67,8 @@ function boardNameToIndex() {
         return true
       }
     })
+
+    // 存在しないボードを参照したときには 0 番目を返す
     return res === -1 ? 0 : res
   } else {
     return 0
@@ -392,7 +394,7 @@ function createBoardMenuItems() {
   const allOptions = store.get("options");
   const boardMenuItems = [];
   for (i in allOptions) {
-    const clicked = i;
+    const index = i;
     if (i == 0) {
       boardMenuItems.push(
         new MenuItem({
@@ -407,7 +409,7 @@ function createBoardMenuItems() {
           accelerator: `CommandOrControl+Option+${i}`,
           index: i,
           click() {
-            moveClickedContentsToTop(clicked);
+            openNewWindow(index);
           }
         })
       );
@@ -419,27 +421,11 @@ function createBoardMenuItems() {
 
 /**
  * 選択したボードを使用中ボードに切り替える
- * @param {number} clicked 選択されたボードのインデックス
+ * @param {number} index 選択されたボードのインデックス
  */
-function moveClickedContentsToTop(clicked) {
-  // const allBoards = store.get("boards");
+function openNewWindow(index) {
   const allOptions = store.get("options");
-  const boardName = allOptions[clicked]["name"]
-  console.log(boardName)
-  // const tmpOpt = allOptions[clicked];
-  // const tmpBrd = allBoards[clicked];
-  // for (i in allOptions) {
-  //   const key = Object.keys(allOptions).length - i - 1;
-  //   if (key < clicked) {
-  //     allOptions[key + 1] = allOptions[key];
-  //     allBoards[key + 1] = allBoards[key];
-  //   }
-  // }
-  // allOptions[0] = tmpOpt;
-  // allBoards[0] = tmpBrd;
-  // store.set("options", allOptions);
-  // store.set("boards", allBoards);
-  // remote.getCurrentWindow().reload();
+  const boardName = allOptions[index]["name"]
   ipcRenderer.send("subwindow-open", boardName)
 }
 
@@ -1022,7 +1008,7 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-  currentBoardIndex = boardNameToIndex()
+  const currentBoardIndex = boardNameToIndex()
   return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 

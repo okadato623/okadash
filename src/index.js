@@ -12,8 +12,6 @@ let initWindow;
 let isSubOpen = false;
 let isInitOpen = false;
 
-let boardWindowList = []
-
 // loading window size and position
 const boundsFilePath = path.join(app.getPath('userData'), 'bounds.json');
 let bounds = {};
@@ -35,56 +33,37 @@ function trackEvent(category, action) {
     .send();
 }
 
+function createBrowserWindow() {
+  const browserWindow = new BrowserWindow({
+    webPreferences: {
+      transparent: false,
+      frame: true,
+      resizable: true,
+      hasShadow: false,
+      alwaysOnTop: false,
+      nodeIntegration: true,
+      webviewTag: true
+    }
+  });
+  browserWindow.setBounds(bounds);
+  browserWindow.loadURL("file://" + __dirname + "/index.html");
+
+  return browserWindow
+}
+
 app.on("window-all-closed", function () {
   trackEvent("main", "Close App");
-  if (process.platform != "darwin") {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on("ready", function () {
-  mainWindow = new BrowserWindow({
-    webPreferences: {
-      transparent: false,
-      frame: true,
-      resizable: true,
-      hasShadow: false,
-      alwaysOnTop: false,
-      nodeIntegration: true,
-      webviewTag: true
-    }
-  });
+  mainWindow = createBrowserWindow();
   trackEvent("main", "Open App");
-  mainWindow.setBounds(bounds);
-  mainWindow.loadURL("file://" + __dirname + "/index.html");
-
-  mainWindow.on("closed", function () {
-    mainWindow = null;
-  });
 });
 
 ipcMain.on("subwindow-open", function (event, name) {
-  let newWindow = new BrowserWindow({
-    webPreferences: {
-      transparent: false,
-      frame: true,
-      resizable: true,
-      hasShadow: false,
-      alwaysOnTop: false,
-      nodeIntegration: true,
-      webviewTag: true
-    }
-  });
+  const newWindow = createBrowserWindow();
   newWindow.boardName = name
-  trackEvent("main", "Open App");
-  newWindow.setBounds(bounds);
-  newWindow.loadURL("file://" + __dirname + "/index.html");
-
-  newWindow.on("closed", function () {
-    newWindow = null;
-  });
-
-  boardWindowList.push(newWindow)
 });
 
 app.on("quit", function () {
