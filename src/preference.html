@@ -86,7 +86,7 @@
       <p>Item List</p>
           <div v-if="tmpBoard">
             <ul id="items-container" class="list-unstyled">
-              <li v-for="(content, inedx) in tmpBoard.contents">
+              <li v-for="(content, index) in tmpBoard.contents">
                 <div class="item-box">
                   <p>Name</p>
                   <input type="text" class="content-textbox" v-model="content.name">
@@ -102,12 +102,14 @@
                    @input="content.customCSS = event.target.value.split('\n')"
                    />
 
-                  <button class="btn btn-outline-danger" @click="removeItem(indx)">
+                  <button class="btn btn-outline-danger" @click="removeItem(index)">
                     Delete item [ {{ content.name }} ]
                   </button>
+                  <hr>
                 </div>
               </li>
             </ul>
+            <button class="add-board-btn" @click="addItem">+</button>
           </div>
 
         </div>

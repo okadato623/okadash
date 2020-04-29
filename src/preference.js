@@ -19,6 +19,13 @@ function deepCopy(from) {
   return JSON.parse(JSON.stringify(from));
 }
 
+const item = {
+  name: "",
+  url: "",
+  zoom: 1.0,
+  customCSS: []
+}
+
 Vue.component("preference", {
   template: "#preference",
   data() {
@@ -66,7 +73,7 @@ Vue.component("preference", {
 
     },
     emitChangeBoardConfirmDialog(index) {
-      if (confirm("ボードを変更しますか？\n（変更は破棄されます）")) {
+      if (confirm("Realy change board?(Unsave changed contents will be cleard)")) {
         this.selectBoardIndex = index;
         this.loadBoard();
       }
@@ -83,6 +90,21 @@ Vue.component("preference", {
 
       // 一旦コメントアウト
       // if (container.firstChild === null) importNewBoard("default", "Default Board");
+    },
+    /**
+     * アイテムを追加する
+     */
+    addItem(){
+      this.tmpBoard.contents.push(item)
+    },
+    /**
+     * 指定のアイテムをボードから削除する
+     * @param {number} i 
+     */
+    removeItem(i){
+      if(confirm("Sure?")){
+        this.tmpBoard.contents.splice(i, 1)
+      }
     },
     /**
      * JSONファイルを選択して新規ボードを作成する
@@ -111,76 +133,78 @@ Vue.component("preference", {
      * ボードの設定をStoreに保存する
      */
     saveBoardSetting() {
-      const targetBoard = document.getElementById("board-name-textbox").innerText;
-      const container = document.getElementById("items-container");
-      const items = [];
+      // FIXME:ボードのエラー判定をおサボり
+      // const items = [];
       let error = false;
-      container.querySelectorAll(".item-box").forEach(function (node) {
-        let item = {};
-        node.querySelectorAll("p").forEach(function (elem) {
-          switch (elem.innerText) {
-            case "Name":
-              item.name = elem.querySelector("input").value;
-              if (items.length === 0) {
-                item.size = "large";
-              } else if (items.length === 1) {
-                item.size = "medium";
-              }
-              if (
-                !isValidName(
-                  elem.querySelector("input").value,
-                  elem.querySelector("input")
-                )
-              )
-                error = true;
-              break;
-            case "URL":
-              item.url = elem.querySelector("input").value;
-              if (
-                !isValidURL(
-                  elem.querySelector("input").value,
-                  elem.querySelector("input")
-                )
-              )
-                error = true;
-              break;
-            case "Zoom":
-              item.zoom = elem.querySelector("input").value;
-              if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
-                error = true;
-              }
-              break;
-            case "Custom CSS":
-              item.customCSS = elem.querySelector("textarea").value.split("\n");
-              items.push(item);
-              break;
-          }
-        });
-      });
+      // container.querySelectorAll(".item-box").forEach(function (node) {
+      //   let item = {};
+      //   node.querySelectorAll("p").forEach(function (elem) {
+      //     switch (elem.innerText) {
+      //       case "Name":
+      //         item.name = elem.querySelector("input").value;
+      //         if (items.length === 0) {
+      //           item.size = "large";
+      //         } else if (items.length === 1) {
+      //           item.size = "medium";
+      //         }
+      //         if (
+      //           !isValidName(
+      //             elem.querySelector("input").value,
+      //             elem.querySelector("input")
+      //           )
+      //         )
+      //           error = true;
+      //         break;
+      //       case "URL":
+      //         item.url = elem.querySelector("input").value;
+      //         if (
+      //           !isValidURL(
+      //             elem.querySelector("input").value,
+      //             elem.querySelector("input")
+      //           )
+      //         )
+      //           error = true;
+      //         break;
+      //       case "Zoom":
+      //         item.zoom = elem.querySelector("input").value;
+      //         if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
+      //           error = true;
+      //         }
+      //         break;
+      //       case "Custom CSS":
+      //         item.customCSS = elem.querySelector("textarea").value.split("\n");
+      //         items.push(item);
+      //         break;
+      //     }
+      //   });
+      // });
 
       if (!error) {
         let options = store.get("options");
+        // FIXME: 名前で比較してるのでつらみがある
         for (i in options) {
-          if (targetBoard == options[i]["name"]) {
-            options[i]["contents"] = items;
+          if (this.tmpBoard.name == options[i]["name"]) {
+            options[i] = this.tmpBoard;
             break;
           }
         }
         store.set("options", options);
         store.set("boards", options);
-        document.getElementById("save-btn").innerText = "Saved!";
-        const reloadMessage = function () {
-          document.getElementById("save-btn").innerText = "Save Board Setting";
-        };
-        setTimeout(reloadMessage, 2000);
+        // FIXME: Saveボタンの変遷飽きた
+        // document.getElementById("save-btn").innerText = "Saved!";
+        // const reloadMessage = function () {
+        //   document.getElementById("save-btn").innerText = "Save Board Setting";
+        // };
+        // setTimeout(reloadMessage, 2000);
       } else {
-        document.getElementById("save-btn").innerText = "Save failed...";
-        document.getElementById("save-btn").className = "btn btn-danger";
-        const reloadMessage = function () {
-          document.getElementById("save-btn").innerText = "Save Board Setting";
-          document.getElementById("save-btn").className = "btn btn-primary";
-        };
-        setTimeout(reloadMessage, 2000);
+        // FIXME: Saveボタンの変遷飽きた
+        // document.getElementById("save-btn").innerText = "Save failed...";
+        // document.getElementById("save-btn").className = "btn btn-danger";
+        // const reloadMessage = function () {
+        //   document.getElementById("save-btn").innerText = "Save Board Setting";
+        //   document.getElementById("save-btn").className = "btn btn-primary";
+        // };
+        // setTimeout(reloadMessage, 2000);
       }
     }
   }
