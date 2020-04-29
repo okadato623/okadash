@@ -5,10 +5,10 @@
 
 ## Description
 
-okadash is a Dashboard Tool made with Electron.  
+okadash is Simple and Highly Customizable Dashboard Tool made with Electron.  
 You can combine multiple websites in one window.  
-I aim to make my tool easy to use and highly customizable!  
 ### More detail is [here](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)!
+
 
 ![demo](https://github.com/konoyono/okadash/blob/master/images/forREADME.gif)
 
