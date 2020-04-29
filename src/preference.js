@@ -6,6 +6,9 @@ const store = new Store();
 const app = remote.app;
 const path = require("path");
 
+/**
+ * アプリケーションのバージョン情報
+ */
 const VERSION = "1.6.1";
 
 initialize();
@@ -14,8 +17,8 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  var config = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(config, (error, data) => {
+  const configFilePath = path.join(app.getPath("userData"), "config.json");
+  fs.readFile(configFilePath, (_, data) => {
     createBoardList(data);
   });
 }
@@ -25,45 +28,47 @@ function initialize() {
  * @param {Buffer} data 定義ファイルの内容
  */
 function createBoardList(data) {
-  const boards = JSON.parse(data);
+  const settings = JSON.parse(data);
+  const definedBoardList = settings["options"];
   const container = document.getElementById("boards-container");
-  for (i in boards["options"]) {
-    const board = boards["options"][i];
+
+  definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
     const aElem = document.createElement("a");
     aElem.onclick = function () {
-      showBoardContents(board, aElem);
+      container.childNodes.forEach(node => node.classList.remove("active"));
+      liElem.classList.add("active");
+      showBoardContents(definedBoard);
     };
-    aElem.innerHTML = board["name"];
+    aElem.innerHTML = definedBoard["name"];
     liElem.appendChild(aElem);
     container.appendChild(liElem);
-  }
+  });
   if (container.firstChild === null) importNewBoard("default", "Default Board");
   container.firstChild.querySelector("a").click();
 }
 
 /**
- * ボードの内容を描画する
- * @param {any} board
- * @param {Element} self 対象ボード名に対応するリスト要素
+ * 定義済みボードの内容を描画する
+ * @param {any} definedBoard
  */
-function showBoardContents(board, self) {
-  const boardsContainer = document.getElementById("boards-container");
-  boardsContainer.childNodes.forEach(function (node) {
-    node.classList.remove("active");
-  });
-  self.parentElement.classList.add("active");
-  window.scrollTo(0, 0);
-  document.getElementById("board-name-textbox").innerText = board["name"];
+function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
+
+  window.scrollTo(0, 0);
+  document.getElementById("board-name-textbox").innerText = definedBoard["name"];
+
+  // 既に描画済みの内容を破棄
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
-  for (i in board["contents"]) {
-    const content = board["contents"][i];
+
+  // ボード内のコンテンツの数だけフォームを繰り返し描画する
+  definedBoard["contents"].forEach(content => {
     const divElem = document.createElement("div");
     divElem.className = "item-box";
 
+    // name属性用のUI生成
     const nameElem = document.createElement("p");
     const nameTextElem = document.createElement("input");
     nameElem.innerHTML = "Name";
@@ -72,6 +77,7 @@ function showBoardContents(board, self) {
     nameTextElem.value = content["name"];
     nameElem.appendChild(nameTextElem);
 
+    // URL属性用のUI生成
     const urlElem = document.createElement("p");
     const urlTextElem = document.createElement("input");
     urlElem.innerHTML = "URL";
@@ -81,6 +87,7 @@ function showBoardContents(board, self) {
     if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
     urlElem.appendChild(urlTextElem);
 
+    // Zoom属性用のUI生成
     const zoomElem = document.createElement("p");
     const zoomTextElem = document.createElement("input");
     zoomElem.innerHTML = "Zoom";
@@ -89,6 +96,7 @@ function showBoardContents(board, self) {
     zoomTextElem.value = content["zoom"] || 1.0;
     zoomElem.appendChild(zoomTextElem);
 
+    // CustomCSS属性用のUI生成
     const cssElem = document.createElement("p");
     const tAreaElem = document.createElement("textarea");
     cssElem.innerHTML = "Custom CSS";
@@ -97,6 +105,7 @@ function showBoardContents(board, self) {
     tAreaElem.value = content["customCSS"].join("\n");
     cssElem.appendChild(tAreaElem);
 
+    // コンテンツの削除ボタンの生成
     const btnElem = document.createElement("button");
     btnElem.className = "btn btn-outline-danger";
     btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
@@ -105,9 +114,11 @@ function showBoardContents(board, self) {
       btnElem.parentElement.remove();
     };
 
+    // コンテンツごとの境界線
     const hrElem = document.createElement("hr");
     hrElem.style = "margin: 30px;";
 
+    // 生成した各要素をコンテンツ情報を表示する領域にぶっこむ
     divElem.appendChild(nameElem);
     divElem.appendChild(urlElem);
     divElem.appendChild(zoomElem);
@@ -116,23 +127,23 @@ function showBoardContents(board, self) {
     divElem.appendChild(hrElem);
 
     container.appendChild(divElem);
-  }
+  });
 
   const addBtnElem = document.createElement("button");
   addBtnElem.className = "add-board-btn";
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
-    createNewItem(addBtnElem);
+    addBtnElem.remove();
+    createNewContent();
+    container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
 }
 
 /**
  * アイテム欄を新規生成する
- * @param {Element} self 追加ボタン要素
  */
-function createNewItem(self) {
-  self.remove();
+function createNewContent() {
   const container = document.getElementById("items-container");
   const divElem = document.createElement("div");
   divElem.className = "item-box";
@@ -182,7 +193,6 @@ function createNewItem(self) {
   divElem.appendChild(hrElem);
 
   container.appendChild(divElem);
-  container.appendChild(self);
 }
 
 /**
@@ -279,7 +289,6 @@ function importNewBoard(source, boardName) {
             ".p-workspace__sidebar { display: none !important; }",
             ".p-classic_nav__team_header { display: none !important;}",
             ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
-            ".p-workspace--classic-nav { grid-template-rows: min-content 60px auto !important;}",
             ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
           ]
         },
@@ -356,56 +365,54 @@ function validateJson(jsonObj) {
 }
 
 /**
- * 現在選択中のボード名を取得する
- */
-function getSelectingBoard() {
-  let res = "";
-  document.getElementById("boards-container").childNodes.forEach(function (node) {
-    if (node.classList.contains("active")) {
-      res = node.querySelector("a").innerText;
-    }
-  });
-  return res;
-}
-
-/**
  * 現在開いているボードを削除する
  */
 function deleteBoard() {
-  const targetBoard = getSelectingBoard();
-  const allBoards = store.get("boards");
-  const allOptions = store.get("options");
+  const currentBoardName = $("#boards-container li.active").text();
+  const allUsingBoards = store.get("boards");
+  const allDefinedBoards = store.get("options");
 
-  // FIXME: targetBoardと常に同じ値ならどっちかあれば良さそう
-  const currentBoardName = document.getElementById("board-name-textbox").innerText;
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  for (i in allOptions) {
-    if (targetBoard == allOptions[i]["name"]) {
-      allOptions.splice(i, 1);
-      allBoards.splice(i, 1);
+  for (i in allDefinedBoards) {
+    if (currentBoardName == allDefinedBoards[i]["name"]) {
+      allDefinedBoards.splice(i, 1);
+      allUsingBoards.splice(i, 1);
     }
   }
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
+  store.set("options", allDefinedBoards);
+  store.set("boards", allUsingBoards);
   remote.getCurrentWindow().reload();
 }
 
 /**
- * ボードの設定情報をJSON形式でエクスポートする
- * @param {boolean} asIs 定義済みボードでなく、現在使用中のボードをエクスポートする
+ * 現在開いているボードの、定義済みバージョンをJSON形式でエクスポートする
  */
-function exportBoard(asIs = false) {
+function exportDefinedBoard() {
+  exportBoard("options");
+}
+
+/**
+ * 現在開いているボードの、使用中バージョンをJSON形式でエクスポートする
+ */
+function exportUsingBoard() {
+  exportBoard("boards");
+}
+
+/**
+ * ボードの設定情報をJSON形式でエクスポートする
+ * @params {string} baseKey "boards" or "options"
+ */
+function exportBoard(baseKey) {
   const targetBoard = document.getElementById("board-name-textbox").innerText;
-  const baseKey = asIs ? "boards" : "options";
-  let usingBoard = "";
+  let board = {};
   for (i in store.get(baseKey)) {
     if (store.get(baseKey)[i]["name"] == targetBoard) {
-      usingBoard = store.get(baseKey)[i];
+      board = store.get(baseKey)[i];
     }
   }
-  delete usingBoard.name;
+  delete board.name;
   const win = remote.getCurrentWindow();
   dialog.showSaveDialog(
     win,
@@ -421,7 +428,7 @@ function exportBoard(asIs = false) {
     },
     fileName => {
       if (fileName) {
-        const data = JSON.stringify(usingBoard, null, 2);
+        const data = JSON.stringify(board, null, 2);
         writeFile(fileName, data);
       }
     }

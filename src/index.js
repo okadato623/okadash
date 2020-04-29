@@ -4,11 +4,22 @@ const electron = require("electron");
 const app = electron.app;
 const ipcMain = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
+const path = require('path');
+const fs = require("fs");
 let mainWindow;
 let subWindow;
 let initWindow;
 let isSubOpen = false;
 let isInitOpen = false;
+
+// loading window size and position
+const boundsFilePath = path.join(app.getPath('userData'), 'bounds.json');
+let bounds = {};
+try {
+  bounds = JSON.parse(fs.readFileSync(boundsFilePath, 'utf8'));
+} catch (e) {
+  bounds = { "width": 1024, "height": 768 };
+}
 
 // for Google Analytics
 const ua = require("universal-analytics");
@@ -42,13 +53,17 @@ app.on("ready", function () {
     }
   });
   trackEvent("main", "Open App");
-  mainWindow.maximize();
+  mainWindow.setBounds(bounds);
   mainWindow.loadURL("file://" + __dirname + "/index.html");
 
   mainWindow.on("closed", function () {
     mainWindow = null;
   });
 });
+
+app.on("quit", function () {
+  fs.writeFileSync(boundsFilePath, JSON.stringify(mainWindow.getBounds()));
+})
 
 ipcMain.on("window-open", function () {
   if (isSubOpen) return;
