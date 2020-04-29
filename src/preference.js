@@ -11,55 +11,151 @@ const path = require("path");
  */
 const VERSION = "1.6.1";
 
-initialize();
 Vue.component("preference", {
-  template: "#preference"
-})
+  template: "#preference",
+  data() {
+    return {
+      settings: null,
+      definedBoardList: null,
+      tmpDefinedBoardList: null,
+      items: []
+    };
+  },
+  mounted() {
+    const configFilePath = path.join(app.getPath("userData"), "config.json");
+    fs.readFile(configFilePath, (_, data) => {
+      createBoardList(data);
+    });
+  },
+  methods: {
+    windowClose() {
+      window.close();
+    },
+    /**
+     * 定義ファイルの内容を元に、ボードの一覧を描画する
+     * @param {Buffer} data 定義ファイルの内容
+     */
+    createBoardList(data) {
+      this.settings = JSON.parse(data);
+      this.definedBoardList = this.settings["options"];
+      // 参照を切ってオブジェクトをコピー
+      this.tmpDefinedBoardList = Object.assign({}, this.tmpDefinedBoardList, this.definedBoard)
+
+      if (container.firstChild === null) importNewBoard("default", "Default Board");
+      container.firstChild.querySelector("a").click();
+    },
+,
+
+    /**
+     * JSONファイルを選択して新規ボードを作成する
+     */
+    openFileAndSave() {
+      const win = remote.getCurrentWindow();
+      remote.dialog.showOpenDialog(
+        win,
+        {
+          properties: ["openFile"],
+          filters: [
+            {
+              name: "settings",
+              extensions: ["json"]
+            }
+          ]
+        },
+        filePath => {
+          if (filePath) {
+            showModalDialogElement(filePath[0]);
+          }
+        }
+      );
+    },
+    /**
+     * ボードの設定をStoreに保存する
+     */
+    saveBoardSetting() {
+      const targetBoard = document.getElementById("board-name-textbox").innerText;
+      const container = document.getElementById("items-container");
+      const items = [];
+      let error = false;
+      container.querySelectorAll(".item-box").forEach(function (node) {
+        let item = {};
+        node.querySelectorAll("p").forEach(function (elem) {
+          switch (elem.innerText) {
+            case "Name":
+              item.name = elem.querySelector("input").value;
+              if (items.length === 0) {
+                item.size = "large";
+              } else if (items.length === 1) {
+                item.size = "medium";
+              }
+              if (
+                !isValidName(
+                  elem.querySelector("input").value,
+                  elem.querySelector("input")
+                )
+              )
+                error = true;
+              break;
+            case "URL":
+              item.url = elem.querySelector("input").value;
+              if (
+                !isValidURL(
+                  elem.querySelector("input").value,
+                  elem.querySelector("input")
+                )
+              )
+                error = true;
+              break;
+            case "Zoom":
+              item.zoom = elem.querySelector("input").value;
+              if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
+                error = true;
+              }
+              break;
+            case "Custom CSS":
+              item.customCSS = elem.querySelector("textarea").value.split("\n");
+              items.push(item);
+              break;
+          }
+        });
+      });
+
+      if (!error) {
+        let options = store.get("options");
+        for (i in options) {
+          if (targetBoard == options[i]["name"]) {
+            options[i]["contents"] = items;
+            break;
+          }
+        }
+        store.set("options", options);
+        store.set("boards", options);
+        document.getElementById("save-btn").innerText = "Saved!";
+        const reloadMessage = function () {
+          document.getElementById("save-btn").innerText = "Save Board Setting";
+        };
+        setTimeout(reloadMessage, 2000);
+      } else {
+        document.getElementById("save-btn").innerText = "Save failed...";
+        document.getElementById("save-btn").className = "btn btn-danger";
+        const reloadMessage = function () {
+          document.getElementById("save-btn").innerText = "Save Board Setting";
+          document.getElementById("save-btn").className = "btn btn-primary";
+        };
+        setTimeout(reloadMessage, 2000);
+      }
+    }
+  }
+});
 
 const vm = new Vue({
   el: "#app",
-  data(){
+  data() {
     return {
       message: "Hello Vue World"
-    }
-  }
-})
-
-
-/**
- * Preference画面の初期描画を行う
- */
-function initialize() {
-  const configFilePath = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(configFilePath, (_, data) => {
-    createBoardList(data);
-  });
-}
-
-/**
- * 定義ファイルの内容を元に、ボードの一覧を描画する
- * @param {Buffer} data 定義ファイルの内容
- */
-function createBoardList(data) {
-  const settings = JSON.parse(data);
-  const definedBoardList = settings["options"];
-  const container = document.getElementById("boards-container");
-
-  definedBoardList.forEach(definedBoard => {
-    const liElem = document.createElement("li");
-    const aElem = document.createElement("a");
-    aElem.onclick = function () {
-      container.childNodes.forEach(node => node.classList.remove("active"));
-      liElem.classList.add("active");
-      showBoardContents(definedBoard);
     };
-    aElem.innerHTML = definedBoard["name"];
-    liElem.appendChild(aElem);
-    container.appendChild(liElem);
-  });
-  if (container.firstChild === null) importNewBoard("default", "Default Board");
-  container.firstChild.querySelector("a").click();
-}
+  }
+});
 
 /**
  * 定義済みボードの内容を描画する
@@ -206,30 +302,6 @@ function createNewContent() {
   divElem.appendChild(hrElem);
 
   container.appendChild(divElem);
-}
-
-/**
- * JSONファイルを選択して新規ボードを作成する
- */
-function openFileAndSave() {
-  const win = remote.getCurrentWindow();
-  remote.dialog.showOpenDialog(
-    win,
-    {
-      properties: ["openFile"],
-      filters: [
-        {
-          name: "settings",
-          extensions: ["json"]
-        }
-      ]
-    },
-    filePath => {
-      if (filePath) {
-        showModalDialogElement(filePath[0]);
-      }
-    }
-  );
 }
 
 /**
@@ -460,75 +532,6 @@ function writeFile(path, data) {
       return;
     }
   });
-}
-
-/**
- * ボードの設定をStoreに保存する
- */
-function saveBoardSetting() {
-  const targetBoard = document.getElementById("board-name-textbox").innerText;
-  const container = document.getElementById("items-container");
-  const items = [];
-  let error = false;
-  container.querySelectorAll(".item-box").forEach(function (node) {
-    let item = {};
-    node.querySelectorAll("p").forEach(function (elem) {
-      switch (elem.innerText) {
-        case "Name":
-          item.name = elem.querySelector("input").value;
-          if (items.length === 0) {
-            item.size = "large";
-          } else if (items.length === 1) {
-            item.size = "medium";
-          }
-          if (
-            !isValidName(elem.querySelector("input").value, elem.querySelector("input"))
-          )
-            error = true;
-          break;
-        case "URL":
-          item.url = elem.querySelector("input").value;
-          if (!isValidURL(elem.querySelector("input").value, elem.querySelector("input")))
-            error = true;
-          break;
-        case "Zoom":
-          item.zoom = elem.querySelector("input").value;
-          if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
-            error = true;
-          }
-          break;
-        case "Custom CSS":
-          item.customCSS = elem.querySelector("textarea").value.split("\n");
-          items.push(item);
-          break;
-      }
-    });
-  });
-
-  if (!error) {
-    let options = store.get("options");
-    for (i in options) {
-      if (targetBoard == options[i]["name"]) {
-        options[i]["contents"] = items;
-        break;
-      }
-    }
-    store.set("options", options);
-    store.set("boards", options);
-    document.getElementById("save-btn").innerText = "Saved!";
-    const reloadMessage = function () {
-      document.getElementById("save-btn").innerText = "Save Board Setting";
-    };
-    setTimeout(reloadMessage, 2000);
-  } else {
-    document.getElementById("save-btn").innerText = "Save failed...";
-    document.getElementById("save-btn").className = "btn btn-danger";
-    const reloadMessage = function () {
-      document.getElementById("save-btn").innerText = "Save Board Setting";
-      document.getElementById("save-btn").className = "btn btn-primary";
-    };
-    setTimeout(reloadMessage, 2000);
-  }
 }
 
 /**
