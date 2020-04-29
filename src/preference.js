@@ -12,6 +12,19 @@ const path = require("path");
 const VERSION = "1.6.1";
 
 initialize();
+Vue.component("preference", {
+  template: "#preference"
+})
+
+const vm = new Vue({
+  el: "#app",
+  data(){
+    return {
+      message: "Hello Vue World"
+    }
+  }
+})
+
 
 /**
  * Preference画面の初期描画を行う
