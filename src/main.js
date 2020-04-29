@@ -7,7 +7,12 @@ const path = require("path");
 const Store = require("electron-store");
 const store = new Store();
 const menu = require("./menu");
-const WebView = require("./components/webView");
+const WebView = require("./components/webview");
+
+/**
+ * このウィンドウが表示しているボードのインデックス
+ */
+let currentBoardIndex = 0
 
 /**
  * アプリケーションのバージョン情報
@@ -53,6 +58,22 @@ const draggingBoarder = {
  * TODO: ペインクラスをちゃんと作ってオブジェクト指向で管理するようにする
  */
 const webViews = {};
+
+function boardNameToIndex() {
+  const currentBoardName = remote.getCurrentWindow().boardName
+  if (currentBoardName) {
+    const res = store.get("boards").findIndex((board) => {
+      if (board["name"] === currentBoardName) {
+        return true
+      }
+    })
+
+    // 存在しないボードを参照したときには 0 番目を返す
+    return res === -1 ? 0 : res
+  } else {
+    return 0
+  }
+}
 
 /**
  * 初期化
@@ -179,8 +200,10 @@ $(document).keydown(function (e) {
 function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
-  checkConfigVersion();
 
+  remote.getCurrentWindow().on('focus', () => {
+    initializeMenu(menu.menuTemplate);
+  })
   initializeMenu(menu.menuTemplate);
 
   // 使用中のボードをStoreから参照し、ペインの初期描画を行う
@@ -212,22 +235,9 @@ function initialize() {
  */
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  const query = {
-    query: `{
-      repository(owner: "konoyono", name: "okadash") {
-        releases(last: 1) {
-          nodes {
-            tagName
-          }
-       }
-      }
-    }`
-  };
-  request.open("POST", "https://api.github.com/graphql");
-  request.setRequestHeader("Content-Type", "application/json");
-  request.setRequestHeader(
-    "Authorization",
-    "bearer fbae27fc9bbeb9f5fe396672eaf68ba22f492435"
+  request.open(
+    "GET",
+    "https://api.github.com/repos/konoyono/okadash/releases/latest"
   );
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
@@ -236,10 +246,10 @@ function getLatestVersion() {
       // request failed...
     } else {
       const res = JSON.parse(request.responseText);
-      checkLatestVersion(res.data.repository.releases.nodes[0].tagName);
+      checkLatestVersion(res["tag_name"]);
     }
   };
-  request.send(JSON.stringify(query));
+  request.send(null);
 }
 
 /**
@@ -306,7 +316,7 @@ function createMenuItemForBoard() {
  * @param {string} index 対象ペイン要素のID
  */
 function createMenuItemForContextmenu(index) {
-  const options = store.get("options.0.contents");
+  const options = store.get(`options.${currentBoardIndex}.contents`);
   const content = getAdditionalPaneInfo(options);
 
   return createContextMenuItems(content, index);
@@ -321,7 +331,7 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const options = store.get("options.0.contents");
+  const options = store.get(`options.${currentBoardIndex}.contents`);
   const content = getAdditionalPaneInfo(options);
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
 
@@ -329,7 +339,7 @@ function createMenuItemForSmallPane() {
     menuItem.submenu.append(apMenuItem);
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
-  menuItem.submenu.append(createGoogleMenuItem());
+  menuItem.submenu.append(createNewPaneFromURLMenuItem());
 
   return menuItem;
 }
@@ -338,7 +348,7 @@ function createMenuItemForSmallPane() {
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
-  const usingBoard = store.get("boards")[0];
+  const usingBoard = store.get("boards")[currentBoardIndex];
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
   delete usingBoard.name;
@@ -384,7 +394,7 @@ function createBoardMenuItems() {
   const allOptions = store.get("options");
   const boardMenuItems = [];
   for (i in allOptions) {
-    const clicked = i;
+    const index = i;
     if (i == 0) {
       boardMenuItems.push(
         new MenuItem({
@@ -399,7 +409,7 @@ function createBoardMenuItems() {
           accelerator: `CommandOrControl+Option+${i}`,
           index: i,
           click() {
-            moveClickedContentsToTop(clicked);
+            openNewWindow(index);
           }
         })
       );
@@ -411,25 +421,12 @@ function createBoardMenuItems() {
 
 /**
  * 選択したボードを使用中ボードに切り替える
- * @param {number} clicked 選択されたボードのインデックス
+ * @param {number} index 選択されたボードのインデックス
  */
-function moveClickedContentsToTop(clicked) {
-  const allBoards = store.get("boards");
+function openNewWindow(index) {
   const allOptions = store.get("options");
-  const tmpOpt = allOptions[clicked];
-  const tmpBrd = allBoards[clicked];
-  for (i in allOptions) {
-    const key = Object.keys(allOptions).length - i - 1;
-    if (key < clicked) {
-      allOptions[key + 1] = allOptions[key];
-      allBoards[key + 1] = allBoards[key];
-    }
-  }
-  allOptions[0] = tmpOpt;
-  allBoards[0] = tmpBrd;
-  store.set("options", allOptions);
-  store.set("boards", allBoards);
-  remote.getCurrentWindow().reload();
+  const boardName = allOptions[index]["name"]
+  ipcRenderer.send("subwindow-open", boardName)
 }
 
 /**
@@ -469,32 +466,46 @@ function createContextMenuItems(contents, index) {
 }
 
 /**
- * Search In Google メニューを生成する
+ * Create new from URL メニューを生成する
  */
-function createGoogleMenuItem() {
+function createNewPaneFromURLMenuItem(index) {
   return new MenuItem({
-    label: "Search in Google",
-    accelerator: "CommandOrControl+l",
+    label: "Open new pane from URL",
     click() {
-      openGoogleInOverlay();
+      openNewPaneFromUrlDialog(index)
     }
   });
 }
 
 /**
- * グーグル検索用のWebViewオーバレイを開く
+ * URLから新規ペインを作成するためのダイアログを開く
+ * @param {string} 挿入するペイン(省略した場合新規smallペインを生成)
  */
-function openGoogleInOverlay() {
-  const main = document.getElementById("main-content");
-  const div = document.createElement("div");
-  const label = document.createElement("label");
-  div.className = "overlay";
-  label.className = "overlay-message";
-  label.innerHTML = "Press Esc to Close";
-  div.appendChild(label);
-  main.appendChild(div);
-  const webview = createWebView(div.id, { url: "https://google.com", forOverlay: true });
-  div.appendChild(webview.element);
+function openNewPaneFromUrlDialog(index = null) {
+  const dlg = document.querySelector("#create-new-pane-dialog");
+  dlg.style.display = "block";
+  dlg.showModal();
+
+  function onClose() {
+    if (dlg.returnValue === "ok") {
+      const newContent = {
+        name: dlg.querySelector(".name").value,
+        url: dlg.querySelector(".url").value,
+        zoom: 1,
+        customCSS: []
+      }
+
+      if (index !== null) {
+        recreateSelectedPane(index, newContent)
+      } else {
+        loadAdditionalPage(newContent)
+      }
+    } else {
+      dlg.close()
+    }
+    dlg.style.display = "none";
+  }
+  dlg.addEventListener("close", onClose, { once: true });
 }
 
 /**
@@ -549,7 +560,7 @@ function removeSmallPane(index) {
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
   const bars = Array.from(document.getElementsByClassName("dragbar-vertical-small"));
-  store.delete(`boards.0.contents.${index}`);
+  store.delete(`boards.${currentBoardIndex}.contents.${index}`);
   saveNewContents();
 
   smallPanes.forEach(function (pane) {
@@ -580,7 +591,7 @@ function createSwapButton(index, direction) {
   const swapTargetIndex = (Number(index) + direction).toString();
   const label = direction === -1 ? "<" : ">";
 
-  return $(`<button style="font-size: 12px;">${label}</button>`).click(() =>
+  return $(`<button style="font-size: 10px;">${label}</button>`).click(() =>
     swapSmallPane(index, swapTargetIndex)
   )[0];
 }
@@ -590,7 +601,7 @@ function createSwapButton(index, direction) {
  * @param {string} index 対象のペイン要素のID
  */
 function createCloseButton(index) {
-  return $(`<button style="font-size: 12px";>Close</button>`).click(() => {
+  return $(`<button style="font-size: 10px";>Close</button>`).click(() => {
     removeSmallPane(index);
   })[0];
 }
@@ -750,6 +761,77 @@ function openContextMenu(index) {
     menu.append(contextMenuItem);
   });
 
+  menu.append(new MenuItem({ type: "separator" }));
+  menu.append(createNewPaneFromURLMenuItem(index));
+}
+
+/**
+ * 検索UIを描画する
+ * @param {WebView} webView UIを使用するWebViewオブジェクト
+ */
+function addSearchbox(webView) {
+  const parent = webView.element.parentNode;
+  const $searchBox = $(`
+    <div class="search-box pane${parent.id}">
+      <input type="text" class="search-input" placeholder="search for text in page">
+      <span class="search-count"></span>
+    </div>
+  `);
+  $searchBox.prependTo(parent);
+  adjustSearchBox($searchBox);
+  webView.initializeTextSeacher({
+    boxSelector: `.search-box.pane${parent.id}`,
+    inputSelector: `.search-box.pane${parent.id} .search-input`,
+    countSelector: `.search-box.pane${parent.id} .search-count`,
+    visibleSelector: `.visible`
+  });
+}
+
+/**
+ * ペインをリロードするボタンを描画する
+ * @param {Element} div ボタンを挿入する要素
+ * @param {string}  index クリック時に最大化する要素のID
+ */
+function addReloadButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "reload-button";
+  btn.setAttribute("onclick", `openContextMenu(${index})`);
+  btn.innerHTML = `<i class="fas fa-exchange-alt"></i>`;
+  btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
+  div.insertBefore(btn, div.firstChild);
+}
+
+/**
+ * ペインを最大化するボタンを描画する
+ * @param {Element} div ボタンを挿入する要素
+ * @param {string}  index クリック時に最大化する要素のID
+ */
+function addMaximizeButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "max-button";
+  btn.setAttribute("onclick", `maximize(${index})`);
+  btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
+  btn.style = "font-size: 14px;";
+  div.insertBefore(btn, div.firstChild);
+}
+
+/**
+ * ペインリロードメニューを開く
+ * @param {string} 対象ペイン要素のID
+ */
+function openContextMenu(index) {
+  const remote = require("electron").remote;
+  const Menu = remote.Menu;
+
+  var menu = new Menu();
+  const contextMenuItems = createMenuItemForContextmenu(index);
+  contextMenuItems.forEach(function (contextMenuItem, i) {
+    menu.append(contextMenuItem);
+  });
+
+  menu.append(new MenuItem({ type: "separator" }));
+  menu.append(createNewPaneFromURLMenuItem(index));
+
   menu.popup(remote.getCurrentWindow());
 }
 
@@ -763,21 +845,23 @@ function getPaneNum() {
 /**
  * smallペインを追加する
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
+function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
   resetWindowSize();
   const size = "small";
   createPane({ size, url, zoom, customCSS });
+  storeName(getPaneNum() - 1, name);
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, url);
   storeZoom(getPaneNum() - 1, zoom);
   storeCustomCSS(getPaneNum() - 1, customCSS);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
-  const webView = convertToWebViewInstance(webviewElem);
+  const webView = convertToWebViewInstance(webviewElm);
   webviewElm.addEventListener("dom-ready", function () {
     addMaximizeButton(webviewElm.parentNode, webviewElm.parentNode.id);
     addReloadButton(webviewElm.parentNode, webviewElm.parentNode.id);
@@ -790,14 +874,16 @@ function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
  * 対象ペインを再生成する
  * @param {string} index 対象ペイン要素のID
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, { url, zoom, customCSS }) {
+function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
   div.querySelector("webview").remove();
 
+  storeName(index, name);
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
   storeZoom(index, zoom);
@@ -807,12 +893,21 @@ function recreateSelectedPane(index, { url, zoom, customCSS }) {
 }
 
 /**
+ * 現在表示しているペインの名前を保存する
+ * @param {string} index 対象ペインのID
+ * @param {string} name
+ */
+function storeName(index, name) {
+  store.set(`boards.${currentBoardIndex}.contents.${index}.name`, name);
+}
+
+/**
  * 現在表示しているペインのサイズを保存する
  * @param {string} index 対象ペインのID
  * @param {string} size
  */
 function storeSize(index, size) {
-  store.set(`boards.0.contents.${index}.size`, size);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.size`, size);
 }
 
 /**
@@ -821,7 +916,7 @@ function storeSize(index, size) {
  * @param {string} url
  */
 function storeUrl(index, url) {
-  store.set(`boards.0.contents.${index}.url`, url);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.url`, url);
 }
 
 /**
@@ -830,7 +925,7 @@ function storeUrl(index, url) {
  * @param {string} zoom
  */
 function storeZoom(index, zoom) {
-  store.set(`boards.0.contents.${index}.zoom`, zoom || 1.0);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.zoom`, zoom || 1.0);
 }
 
 /**
@@ -839,7 +934,7 @@ function storeZoom(index, zoom) {
  * @param {string} size
  */
 function storeCustomCSS(index, customCSS) {
-  store.set(`boards.0.contents.${index}.customCSS`, customCSS || []);
+  store.set(`boards.${currentBoardIndex}.contents.${index}.customCSS`, customCSS || []);
 }
 
 /**
@@ -913,8 +1008,8 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-
-  return buildJsonObjectFromStoredData(store.get("boards")[0]);
+  const currentBoardIndex = boardNameToIndex()
+  return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 
 /**
@@ -951,29 +1046,15 @@ function convertToWebViewInstance(webViewElement) {
 }
 
 /**
- * アプリケーションのバージョンと設定ファイルのバージョンが合致しない場合、
- * 設定ファイルを削除して初期設定に誘導する
- */
-function checkConfigVersion() {
-  const version = store.get("version");
-  if (version !== VERSION) {
-    const config = path.join(app.getPath("userData"), "config.json");
-    fs.unlink(config, () => {
-      ipcRenderer.send("initial-open");
-    });
-  }
-}
-
-/**
  * ボード内の破棄されたペインをボードの定義から除外する
  */
 function saveNewContents() {
-  const contents = store.get("boards.0.contents");
+  const contents = store.get(`boards.${currentBoardIndex}.contents`);
   let newContents = [];
   contents.forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("boards.0.contents", newContents);
+  store.set(`boards.${currentBoardIndex}.contents`, newContents);
 }
 
 /**
@@ -986,7 +1067,7 @@ function buildJsonObjectFromStoredData(board) {
   board["contents"].forEach(function (content) {
     if (content !== null) newContents.push(content);
   });
-  store.set("boards.0.contents", newContents);
+  store.set(`boards.${currentBoardIndex}.contents`, newContents);
   let jsonObj = {
     name: board["name"],
     contents: newContents
@@ -1059,9 +1140,9 @@ function calcWindowSize(init = false) {
     pane.style.height = "100%";
   });
   if (configHeight !== undefined) {
-    store.set("boards.0.contents.0.width", configWidth);
-    store.set("boards.0.contents.0.allWidth", columns);
-    store.set("boards.0.contents.1.height", configHeight);
+    store.set(`boards.${currentBoardIndex}.contents.0.width`, configWidth);
+    store.set(`boards.${currentBoardIndex}.contents.0.allWidth`, columns);
+    store.set(`boards.${currentBoardIndex}.contents.1.height`, configHeight);
   }
 
   // 各ペインの検索ボックスもリサイズ
