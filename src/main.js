@@ -777,7 +777,7 @@ function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
   storeCustomCSS(getPaneNum() - 1, customCSS);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
-  const webView = convertToWebViewInstance(webviewElem);
+  const webView = convertToWebViewInstance(webviewElm);
   webviewElm.addEventListener("dom-ready", function () {
     addMaximizeButton(webviewElm.parentNode, webviewElm.parentNode.id);
     addReloadButton(webviewElm.parentNode, webviewElm.parentNode.id);
