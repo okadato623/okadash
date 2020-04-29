@@ -7,7 +7,7 @@ const path = require("path");
 const Store = require("electron-store");
 const store = new Store();
 const menu = require("./menu");
-const WebView = require("./components/webView");
+const WebView = require("./components/webview");
 
 /**
  * このウィンドウが表示しているボードのインデックス
