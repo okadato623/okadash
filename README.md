@@ -7,7 +7,8 @@
 
 okadash is Simple and Highly Customizable Dashboard Tool made with Electron.  
 You can combine multiple websites in one window.  
-### More detail is [here](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)!
+### More detail is here 👇
+#### [[okadash] Simple and Highly Customizable dashboard tool for Mac and Windows | Qiita](https://qiita.com/okadato623/items/c2f1ba554af0103bef91)
 
 
 ![demo](https://github.com/konoyono/okadash/blob/master/images/forREADME.gif)
@@ -18,7 +19,7 @@ You can combine multiple websites in one window.
 [日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)  
 Made by Teachme Biz
 
-## Download
+## Download Latest Version
 
 [okadash-1.6.1-mac.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-mac.zip)  
 [okadash-1.6.1-win.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-win.zip)
