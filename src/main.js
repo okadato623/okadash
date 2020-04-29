@@ -293,7 +293,7 @@ function createMenuItemForBoard() {
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(
     new MenuItem({
-      label: "Export Using Board",
+      label: "Export Focused Board",
       click() {
         exportUsingBoard();
       }
@@ -398,7 +398,7 @@ function createBoardMenuItems() {
     if (i == 0) {
       boardMenuItems.push(
         new MenuItem({
-          label: allOptions[i]["name"] + " [ in use ]",
+          label: allOptions[i]["name"] + " [ default ]",
           index: i
         })
       );
