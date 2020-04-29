@@ -315,7 +315,7 @@ function createMenuItemForSmallPane() {
     menuItem.submenu.append(apMenuItem);
   });
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
-  menuItem.submenu.append(createGoogleMenuItem());
+  menuItem.submenu.append(createNewPaneFromURLMenuItem());
 
   return menuItem;
 }
@@ -455,32 +455,46 @@ function createContextMenuItems(contents, index) {
 }
 
 /**
- * Search In Google メニューを生成する
+ * Create new from URL メニューを生成する
  */
-function createGoogleMenuItem() {
+function createNewPaneFromURLMenuItem(index) {
   return new MenuItem({
-    label: "Search in Google",
-    accelerator: "CommandOrControl+l",
+    label: "Open new pane from URL",
     click() {
-      openGoogleInOverlay();
+      openNewPaneFromUrlDialog(index)
     }
   });
 }
 
 /**
- * グーグル検索用のWebViewオーバレイを開く
+ * URLから新規ペインを作成するためのダイアログを開く
+ * @param {string} 挿入するペイン(省略した場合新規smallペインを生成)
  */
-function openGoogleInOverlay() {
-  const main = document.getElementById("main-content");
-  const div = document.createElement("div");
-  const label = document.createElement("label");
-  div.className = "overlay";
-  label.className = "overlay-message";
-  label.innerHTML = "Press Esc to Close";
-  div.appendChild(label);
-  main.appendChild(div);
-  const webview = createWebView(div.id, { url: "https://google.com", forOverlay: true });
-  div.appendChild(webview.element);
+function openNewPaneFromUrlDialog(index = null) {
+  const dlg = document.querySelector("#create-new-pane-dialog");
+  dlg.style.display = "block";
+  dlg.showModal();
+
+  function onClose() {
+    if (dlg.returnValue === "ok") {
+      const newContent = {
+        name: dlg.querySelector(".name").value,
+        url: dlg.querySelector(".url").value,
+        zoom: 1,
+        customCSS: []
+      }
+
+      if (index !== null) {
+        recreateSelectedPane(index, newContent)
+      } else {
+        loadAdditionalPage(newContent)
+      }
+    } else {
+      dlg.close()
+    }
+    dlg.style.display = "none";
+  }
+  dlg.addEventListener("close", onClose, { once: true });
 }
 
 /**
@@ -566,7 +580,7 @@ function createSwapButton(index, direction) {
   const swapTargetIndex = (Number(index) + direction).toString();
   const label = direction === -1 ? "<" : ">";
 
-  return $(`<button style="font-size: 12px;">${label}</button>`).click(() =>
+  return $(`<button style="font-size: 10px;">${label}</button>`).click(() =>
     swapSmallPane(index, swapTargetIndex)
   )[0];
 }
@@ -576,7 +590,7 @@ function createSwapButton(index, direction) {
  * @param {string} index 対象のペイン要素のID
  */
 function createCloseButton(index) {
-  return $(`<button style="font-size: 12px";>Close</button>`).click(() => {
+  return $(`<button style="font-size: 10px";>Close</button>`).click(() => {
     removeSmallPane(index);
   })[0];
 }
@@ -736,6 +750,77 @@ function openContextMenu(index) {
     menu.append(contextMenuItem);
   });
 
+  menu.append(new MenuItem({ type: "separator" }));
+  menu.append(createNewPaneFromURLMenuItem(index));
+}
+
+/**
+ * 検索UIを描画する
+ * @param {WebView} webView UIを使用するWebViewオブジェクト
+ */
+function addSearchbox(webView) {
+  const parent = webView.element.parentNode;
+  const $searchBox = $(`
+    <div class="search-box pane${parent.id}">
+      <input type="text" class="search-input" placeholder="search for text in page">
+      <span class="search-count"></span>
+    </div>
+  `);
+  $searchBox.prependTo(parent);
+  adjustSearchBox($searchBox);
+  webView.initializeTextSeacher({
+    boxSelector: `.search-box.pane${parent.id}`,
+    inputSelector: `.search-box.pane${parent.id} .search-input`,
+    countSelector: `.search-box.pane${parent.id} .search-count`,
+    visibleSelector: `.visible`
+  });
+}
+
+/**
+ * ペインをリロードするボタンを描画する
+ * @param {Element} div ボタンを挿入する要素
+ * @param {string}  index クリック時に最大化する要素のID
+ */
+function addReloadButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "reload-button";
+  btn.setAttribute("onclick", `openContextMenu(${index})`);
+  btn.innerHTML = `<i class="fas fa-exchange-alt"></i>`;
+  btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
+  div.insertBefore(btn, div.firstChild);
+}
+
+/**
+ * ペインを最大化するボタンを描画する
+ * @param {Element} div ボタンを挿入する要素
+ * @param {string}  index クリック時に最大化する要素のID
+ */
+function addMaximizeButton(div, index) {
+  const btn = document.createElement("button");
+  btn.className = "max-button";
+  btn.setAttribute("onclick", `maximize(${index})`);
+  btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
+  btn.style = "font-size: 14px;";
+  div.insertBefore(btn, div.firstChild);
+}
+
+/**
+ * ペインリロードメニューを開く
+ * @param {string} 対象ペイン要素のID
+ */
+function openContextMenu(index) {
+  const remote = require("electron").remote;
+  const Menu = remote.Menu;
+
+  var menu = new Menu();
+  const contextMenuItems = createMenuItemForContextmenu(index);
+  contextMenuItems.forEach(function (contextMenuItem, i) {
+    menu.append(contextMenuItem);
+  });
+
+  menu.append(new MenuItem({ type: "separator" }));
+  menu.append(createNewPaneFromURLMenuItem(index));
+
   menu.popup(remote.getCurrentWindow());
 }
 
@@ -749,14 +834,16 @@ function getPaneNum() {
 /**
  * smallペインを追加する
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
+function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
   resetWindowSize();
   const size = "small";
   createPane({ size, url, zoom, customCSS });
+  storeName(getPaneNum() - 1, name);
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, url);
   storeZoom(getPaneNum() - 1, zoom);
@@ -776,20 +863,31 @@ function loadAdditionalPage({ url, zoom = 1.0, customCSS = [] }) {
  * 対象ペインを再生成する
  * @param {string} index 対象ペイン要素のID
  * @param {object} params
+ * @param {string} params.name
  * @param {string} params.url
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, { url, zoom, customCSS }) {
+function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
   div.querySelector("webview").remove();
 
+  storeName(index, name);
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
   storeZoom(index, zoom);
 
   const webview = createWebView(div.id, { url, zoom, customCSS });
   div.appendChild(webview.element);
+}
+
+/**
+ * 現在表示しているペインの名前を保存する
+ * @param {string} index 対象ペインのID
+ * @param {string} name
+ */
+function storeName(index, name) {
+  store.set(`boards.0.contents.${index}.name`, name);
 }
 
 /**
