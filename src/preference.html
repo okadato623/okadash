@@ -16,7 +16,6 @@
       crossorigin="anonymous"
     />
     <link rel="stylesheet" href="preference.css" />
-    <!-- 開発バージョンビルド -->
   </head>
 
   <body>
@@ -34,11 +33,21 @@
       integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
       crossorigin="anonymous"
     ></script>
+    <!-- 開発バージョンビルド -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <!-- Preference Component Template -->
     <script type="text/x-template" id="preference">
-        <div class="wrapper">
+      <div class="wrapper">
+        <dialog id="input-dialog" style="display: none;">
+          <form method="dialog">
+            <input id="input" onfocus="this.setSelectionRange(0, this.value.length)" style="width: 180px; margin-bottom: 20px;"
+              value="Enter Board Name" autofocus /><br />
+            <button type="submit" class="btn btn-outline-primary" value="ok">OK</button>
+            <button type="submit" class="btn btn-outline-secondary" value="cancel">Cancel</button>
+          </form>
+        </dialog>
+
         <!-- Sidebar  -->
         <nav id="sidebar" style="position: fixed;">
           <ul class="list-unstyled components">
@@ -59,40 +68,39 @@
           </ul>
         </nav>
 
-          <!-- Page Content  -->
-          <div id="content">
-            <label id="board-name-textbox">{{tmpDefinedBoardList.name}}</label>
-            <div v-if="tmpDefinedBoardList">
-              <ul>
-                <li v-for="contents in tmpDefinedBoardList.contents">
-                  <div class="item-box">
-                    <input type="text" v-model="board.">
-                    
-                  </div>
-                </li>
-              </ul>
-            </div>
-            
-            </br>
-            <button class="btn btn-outline-primary" onclick="exportDefinedBoard()">Export this board (definition)</button>
-            <button class="btn btn-outline-primary" onclick="exportUsingBoard()">Export this board (as you use)</button>
-            <button class="btn btn-outline-danger" onclick="deleteBoard()">Delete this board</button>
-            </br></br>
-            <p>Item List</p>
+        <!-- Page Content  -->
+        <div id="content">
+          <label id="board-name-textbox">{{tmpDefinedBoardList.name}}</label>
+          <div v-if="tmpDefinedBoardList">
             <ul>
-              <div id="items-container"></div>
+              <li v-for="(contents, inedx) in tmpDefinedBoardList.contents">
+                <div class="item-box">
+                  <p>Name</p>
+                  <input type="text" v-model="contents.name">
+                  <p>URL</p>
+                  <input type="text v-model="board.url" :class="urlHasError">
+                  <p>Zoom</p>
+                  <input type="text" v-model="contents.zoom" placeholder="1.0">
+                  <p>Custom CSS</p>
+                  <textarea name="" id="" cols="30" rows="10" v-model="board.customCSS" />
+                  <button class="btn btn-outline-danger" @click="removeItem(indx)">
+                    Delete item [{{ contents.name }]}
+                  </button>
+                </div>
+              </li>
             </ul>
           </div>
-        </div>
 
-        <dialog id="input-dialog" style="display: none;">
-          <form method="dialog">
-            <input id="input" onfocus="this.setSelectionRange(0, this.value.length)" style="width: 180px; margin-bottom: 20px;"
-              value="Enter Board Name" autofocus /><br />
-            <button type="submit" class="btn btn-outline-primary" value="ok">OK</button>
-            <button type="submit" class="btn btn-outline-secondary" value="cancel">Cancel</button>
-          </form>
-        </dialog>
+          </br>
+          <button class="btn btn-outline-primary" onclick="exportDefinedBoard()">Export this board (definition)</button>
+          <button class="btn btn-outline-primary" onclick="exportUsingBoard()">Export this board (as you use)</button>
+          <button class="btn btn-outline-danger" onclick="deleteBoard()">Delete this board</button>
+          </br></br>
+          <p>Item List</p>
+          <ul>
+            <div id="items-container"></div>
+          </ul>
+        </div>
       </div>
     </script>
     <script src="preference.js"></script>

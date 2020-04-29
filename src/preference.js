@@ -11,6 +11,14 @@ const path = require("path");
  */
 const VERSION = "1.6.1";
 
+/**
+ *
+ * @param {*} from
+ */
+function deepCopy(from) {
+  return JSON.parse(JSON.stringify(from));
+}
+
 Vue.component("preference", {
   template: "#preference",
   data() {
@@ -24,8 +32,16 @@ Vue.component("preference", {
   mounted() {
     const configFilePath = path.join(app.getPath("userData"), "config.json");
     fs.readFile(configFilePath, (_, data) => {
-      createBoardList(data);
+      this.createBoardList(data);
     });
+  },
+  watch: {
+    definedBoardList() {
+      console.log(this.definedBoardList);
+    },
+    tmpDefinedBoardList() {
+      console.log(this.tmpDefinedBoardList);
+    }
   },
   methods: {
     windowClose() {
@@ -39,13 +55,11 @@ Vue.component("preference", {
       this.settings = JSON.parse(data);
       this.definedBoardList = this.settings["options"];
       // 参照を切ってオブジェクトをコピー
-      this.tmpDefinedBoardList = Object.assign({}, this.tmpDefinedBoardList, this.definedBoard)
+      this.tmpDefinedBoardList = deepCopy(this.definedBoardList)
 
       if (container.firstChild === null) importNewBoard("default", "Default Board");
       container.firstChild.querySelector("a").click();
     },
-,
-
     /**
      * JSONファイルを選択して新規ボードを作成する
      */
