@@ -313,61 +313,6 @@ function showBoardContents(definedBoard) {
 }
 
 /**
- * アイテム欄を新規生成する
- */
-function createNewContent() {
-  const container = document.getElementById("items-container");
-  const divElem = document.createElement("div");
-  divElem.className = "item-box";
-
-  const nameElem = document.createElement("p");
-  const nameTextElem = document.createElement("input");
-  nameElem.innerHTML = "Name";
-  nameTextElem.type = "textbox";
-  nameTextElem.className = "content-textbox";
-  nameElem.appendChild(nameTextElem);
-
-  const urlElem = document.createElement("p");
-  const urlTextElem = document.createElement("input");
-  urlElem.innerHTML = "URL";
-  urlTextElem.type = "textbox";
-  urlTextElem.className = "content-textbox";
-  urlElem.appendChild(urlTextElem);
-
-  const zoomElem = document.createElement("p");
-  const zoomTextElem = document.createElement("input");
-  zoomElem.innerHTML = "Zoom";
-  zoomTextElem.type = "textbox";
-  zoomTextElem.className = "content-textbox";
-  zoomElem.appendChild(zoomTextElem);
-
-  const cssElem = document.createElement("p");
-  const tAreaElem = document.createElement("textarea");
-  cssElem.innerHTML = "Custom CSS";
-  tAreaElem.className = "textarea-ccss";
-  cssElem.appendChild(tAreaElem);
-
-  const btnElem = document.createElement("button");
-  btnElem.className = "btn btn-outline-danger";
-  btnElem.innerHTML = "Delete this item";
-  btnElem.onclick = function () {
-    btnElem.parentElement.remove();
-  };
-
-  const hrElem = document.createElement("hr");
-  hrElem.style = "margin: 30px;";
-
-  divElem.appendChild(nameElem);
-  divElem.appendChild(urlElem);
-  divElem.appendChild(zoomElem);
-  divElem.appendChild(cssElem);
-  divElem.appendChild(btnElem);
-  divElem.appendChild(hrElem);
-
-  container.appendChild(divElem);
-}
-
-/**
  * 新規ボード名を入力するモーダルを表示する
  * モーダルのOKボタンが押下されたらインポート処理を行う
  * @param {string} filePath 選択されたファイルパス
