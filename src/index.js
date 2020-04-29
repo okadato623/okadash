@@ -75,13 +75,14 @@ ipcMain.on("window-open", function () {
   subWindow = new BrowserWindow({
     width: 1200,
     height: 600,
-    frame: false,
+    frame: true,
     webPreferences: {
       nodeIntegration: true
     }
   });
   isSubOpen = true;
   subWindow.loadURL("file://" + __dirname + "/preference.html");
+  subWindow.openDevTools();
   trackEvent("main", "Preference Open");
   subWindow.on("closed", function () {
     subWindow = null;
