@@ -62,11 +62,12 @@ const webViews = {};
 function boardNameToIndex() {
   const currentBoardName = remote.getCurrentWindow().boardName
   if (currentBoardName) {
-    return store.get("boards").findIndex((board) => {
+    const res = store.get("boards").findIndex((board) => {
       if (board["name"] === currentBoardName) {
         return true
       }
     })
+    return res === -1 ? 0 : res
   } else {
     return 0
   }
