@@ -179,7 +179,6 @@ $(document).keydown(function (e) {
 function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
-  checkConfigVersion();
 
   initializeMenu(menu.menuTemplate);
 
@@ -935,20 +934,6 @@ function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
 function convertToWebViewInstance(webViewElement) {
   const paneElm = webViewElement.parentNode;
   return paneElm ? webViews[paneElm.id] : undefined;
-}
-
-/**
- * アプリケーションのバージョンと設定ファイルのバージョンが合致しない場合、
- * 設定ファイルを削除して初期設定に誘導する
- */
-function checkConfigVersion() {
-  const version = store.get("version");
-  if (version !== VERSION) {
-    const config = path.join(app.getPath("userData"), "config.json");
-    fs.unlink(config, () => {
-      ipcRenderer.send("initial-open");
-    });
-  }
 }
 
 /**
