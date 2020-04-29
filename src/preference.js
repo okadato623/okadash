@@ -24,8 +24,9 @@ Vue.component("preference", {
   data() {
     return {
       settings: null,
+      selectBoardIndex: 0,
       definedBoardList: null,
-      tmpDefinedBoardList: null,
+      tmpBoard: null,
       items: []
     };
   },
@@ -55,7 +56,7 @@ Vue.component("preference", {
       this.settings = JSON.parse(data);
       this.definedBoardList = this.settings["options"];
       // 参照を切ってオブジェクトをコピー
-      this.tmpDefinedBoardList = deepCopy(this.definedBoardList)
+      this.tmpBoard = deepCopy(this.definedBoardList[this.selectBoardIndex])
 
       if (container.firstChild === null) importNewBoard("default", "Default Board");
       container.firstChild.querySelector("a").click();

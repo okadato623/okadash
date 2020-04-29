@@ -52,7 +52,15 @@
         <nav id="sidebar" style="position: fixed;">
           <ul class="list-unstyled components">
             <p style="font-size: 24px;">Board List</p>
-            <div id="boards-container"></div>
+            <ul id="boards-container">
+              <li
+              v-for="(board, i) in definedBoardList" 
+              :class="selectBoardIndex === i ? 'active': ''"
+              @click="selectBoardIndex = i"
+              >
+              {{board.name}}
+            </li>
+            </ul>
           </ul>
           <div style="text-align: center">
             <button class="add-board-btn" @click="openFileAndSave">+</button>
@@ -70,19 +78,19 @@
 
         <!-- Page Content  -->
         <div id="content">
-          <label id="board-name-textbox">{{tmpDefinedBoardList.name}}</label>
-          <div v-if="tmpDefinedBoardList">
+          <label id="board-name-textbox">{{tmpBoard.name}}</label>
+          <div v-if="tmpBoard">
             <ul>
-              <li v-for="(contents, inedx) in tmpDefinedBoardList.contents">
+              <li v-for="(content, inedx) in tmpBoard.contents">
                 <div class="item-box">
                   <p>Name</p>
-                  <input type="text" v-model="contents.name">
+                  <input type="text" v-model="content.name">
                   <p>URL</p>
-                  <input type="text v-model="board.url" :class="urlHasError">
+                  <input type="text" v-model="content.url">
                   <p>Zoom</p>
-                  <input type="text" v-model="contents.zoom" placeholder="1.0">
+                  <input type="text" v-model="content.zoom" placeholder="1.0">
                   <p>Custom CSS</p>
-                  <textarea name="" id="" cols="30" rows="10" v-model="board.customCSS" />
+                  <textarea name="" id="" cols="30" rows="10" v-model="content.customCSS" />
                   <button class="btn btn-outline-danger" @click="removeItem(indx)">
                     Delete item [{{ contents.name }]}
                   </button>
