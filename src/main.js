@@ -474,6 +474,18 @@ function createNewPaneFromURLMenuItem() {
 }
 
 /**
+ * Reload pane from URL メニューを生成する
+ */
+function reloadPaneFromURLMenuItem(index) {
+  return new MenuItem({
+    label: "Reload pane from URL",
+    click() {
+      reloadPaneFromUrlDialog(index)
+    }
+  });
+}
+
+/**
  * URLから新規ペインを作成するためのダイアログを開く
  */
 function openNewPaneFromUrlDialog() {
@@ -483,38 +495,55 @@ function openNewPaneFromUrlDialog() {
 
   function onClose() {
     if (dlg.returnValue === "ok") {
-      alert("OK")
+      const newContent = {}
+      newContent["name"] = dlg.querySelector(".name").value
+      newContent["url"] = dlg.querySelector(".url").value
+      newContent["zoom"] = 1
+      newContent["customCSS"] = []
+
+      const allBoards = store.get("boards.0.contents");
+      const allOptions = store.get("options.0.contents");
+      allBoards.push(newContent)
+      allOptions.push(newContent)
+      store.set("boards.0.contents", allBoards)
+      store.set("options.0.contents", allOptions)
+      loadAdditionalPage(newContent["url"], [])
+      initializeMenu(menu.menuTemplate);
     } else {
       dlg.close()
     }
     dlg.style.display = "none";
   }
   dlg.addEventListener("close", onClose, { once: true });
-  // return new Promise((resolve, reject) => {
-  //   const filename = path.basename(filePath, ".json");
-  //   const dlg = document.querySelector("#input-dialog");
-  //   dlg.style.display = "block";
-  //   dlg.querySelector("input").value = filename;
-  //   dlg.addEventListener("cancel", event => {
-  //     event.preventDefault();
-  //   });
-  //   dlg.showModal();
-  //   function onClose() {
-  //     if (dlg.returnValue === "ok") {
-  //       const inputValue = document.querySelector("#input").value;
-  //       if (checkDuplicateNameExists(inputValue)) {
-  //         alert(`Board name '${inputValue}' is already in use`);
-  //         remote.getCurrentWindow().reload();
-  //       } else {
-  //         resolve(importNewBoard(filePath, inputValue));
-  //       }
-  //     } else {
-  //       reject();
-  //       remote.getCurrentWindow().reload();
-  //     }
-  //   }
-  //   dlg.addEventListener("close", onClose, { once: true });
-  // });
+}
+
+/**
+ * URLからペインをリロードするためのダイアログを開く
+ */
+function reloadPaneFromUrlDialog(index) {
+  const dlg = document.querySelector("#create-new-pane-dialog");
+  dlg.style.display = "block";
+  dlg.showModal();
+
+  function onClose() {
+    if (dlg.returnValue === "ok") {
+      const newContent = {}
+      newContent["name"] = dlg.querySelector(".name").value
+      newContent["url"] = dlg.querySelector(".url").value
+      newContent["zoom"] = 1
+      newContent["customCSS"] = []
+
+      const allOptions = store.get("options.0.contents");
+      allOptions.push(newContent)
+      store.set("options.0.contents", allOptions)
+      recreateSelectedPane(newContent["url"], [], index)
+      initializeMenu(menu.menuTemplate);
+    } else {
+      dlg.close()
+    }
+    dlg.style.display = "none";
+  }
+  dlg.addEventListener("close", onClose, { once: true });
 }
 
 /**
@@ -667,11 +696,11 @@ function refreshButtons() {
  */
 function addButtons(div, index) {
   if (index != 2)
-    div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 12px";><</button>`;
+    div.innerHTML += `<button onclick=move(${index},"-1") style="font-size: 10px";><</button>`;
   if (getPaneNum() !== 3)
-    div.innerHTML += `<button onclick=removeSmallPane(${index}) style="font-size: 12px";>Close</button>`;
+    div.innerHTML += `<button onclick=removeSmallPane(${index}) style="font-size: 10px";>Close</button>`;
   if (index != getPaneNum() - 1)
-    div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 12px";>></button>`;
+    div.innerHTML += `<button onclick=move(${index},"1") style="font-size: 10px";>></button>`;
 }
 
 /**
@@ -717,7 +746,7 @@ function openContextMenu(index) {
   });
 
   menu.append(new MenuItem({ type: "separator" }));
-  menu.append(createNewPaneFromURLMenuItem());
+  menu.append(reloadPaneFromURLMenuItem(index));
 
   menu.popup(remote.getCurrentWindow());
 }
