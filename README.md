@@ -5,8 +5,8 @@
 
 ## Description
 
-### okadash is Simple and Highly Customizable Dashboard Tool made with Electron.  
-### You can combine multiple websites in one window.  
+### okadash is Simple and Highly Customizable Dashboard Tool made with Electron.
+### You can combine multiple websites in one window.
 
 <br/><br/><br/><br/><br/><br/><br/>
 
@@ -19,13 +19,13 @@
 
 ## How To Use
 
-[日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)  
+[日本語マニュアルはこちら](https://teachme.jp/8/manuals/7520587/)
 Made by Teachme Biz
 
 ## Download Latest Version
 
-[okadash-1.6.1-mac.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-mac.zip)  
-[okadash-1.6.1-win.zip](https://github.com/konoyono/okadash/releases/download/1.6.1/okadash-1.6.1-win.zip)
+[okadash-1.7.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.7.0/okadash-1.7.0-mac.zip)
+[okadash-1.7.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.7.0/okadash-1.7.0-win.zip)
 
 ## Quick Start
 
