@@ -95,6 +95,9 @@ class WebView {
     });
   }
 
+  /**
+   * Webviewに右クリックメニューを埋め込む
+   */
   initializeContextMenu() {
     ContextMenu({
       window: this.element,
