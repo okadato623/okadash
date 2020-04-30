@@ -17,7 +17,7 @@ let currentBoardIndex = 0
 /**
  * アプリケーションのバージョン情報
  */
-const VERSION = "1.6.1";
+const VERSION = "1.7.0";
 
 /**
  * ボード全体のサイズ
