@@ -1,3 +1,4 @@
+const ContextMenu = require("electron-context-menu");
 const ElectronSearchText = require("electron-search-text");
 
 /**
@@ -39,6 +40,7 @@ class WebView {
         .getWebContents()
         .on("before-input-event", (_, e) => this.execShortcutKey(e));
     });
+    this.initializeContextMenu();
   }
 
   /**
@@ -90,6 +92,21 @@ class WebView {
     this.addShortcutKey("meta+f", () => {
       this.seacher.emit("show");
       this.seacher.findInPage();
+    });
+  }
+
+  initializeContextMenu() {
+    ContextMenu({
+      window: this.element,
+      prepend: (_, params) => [
+        {
+          label: "Open in external browser",
+          visible: isValidURL(params.linkURL),
+          click: () => {
+            openExternal(params.linkURL);
+          }
+        }
+      ]
     });
   }
 }
