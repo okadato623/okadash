@@ -763,74 +763,6 @@ function openContextMenu(index) {
 
   menu.append(new MenuItem({ type: "separator" }));
   menu.append(createNewPaneFromURLMenuItem(index));
-}
-
-/**
- * 検索UIを描画する
- * @param {WebView} webView UIを使用するWebViewオブジェクト
- */
-function addSearchbox(webView) {
-  const parent = webView.element.parentNode;
-  const $searchBox = $(`
-    <div class="search-box pane${parent.id}">
-      <input type="text" class="search-input" placeholder="search for text in page">
-      <span class="search-count"></span>
-    </div>
-  `);
-  $searchBox.prependTo(parent);
-  adjustSearchBox($searchBox);
-  webView.initializeTextSeacher({
-    boxSelector: `.search-box.pane${parent.id}`,
-    inputSelector: `.search-box.pane${parent.id} .search-input`,
-    countSelector: `.search-box.pane${parent.id} .search-count`,
-    visibleSelector: `.visible`
-  });
-}
-
-/**
- * ペインをリロードするボタンを描画する
- * @param {Element} div ボタンを挿入する要素
- * @param {string}  index クリック時に最大化する要素のID
- */
-function addReloadButton(div, index) {
-  const btn = document.createElement("button");
-  btn.className = "reload-button";
-  btn.setAttribute("onclick", `openContextMenu(${index})`);
-  btn.innerHTML = `<i class="fas fa-exchange-alt"></i>`;
-  btn.style = `font-size: 14px;  margin-left: ${div.clientWidth - 20}px;`;
-  div.insertBefore(btn, div.firstChild);
-}
-
-/**
- * ペインを最大化するボタンを描画する
- * @param {Element} div ボタンを挿入する要素
- * @param {string}  index クリック時に最大化する要素のID
- */
-function addMaximizeButton(div, index) {
-  const btn = document.createElement("button");
-  btn.className = "max-button";
-  btn.setAttribute("onclick", `maximize(${index})`);
-  btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
-  btn.style = "font-size: 14px;";
-  div.insertBefore(btn, div.firstChild);
-}
-
-/**
- * ペインリロードメニューを開く
- * @param {string} 対象ペイン要素のID
- */
-function openContextMenu(index) {
-  const remote = require("electron").remote;
-  const Menu = remote.Menu;
-
-  var menu = new Menu();
-  const contextMenuItems = createMenuItemForContextmenu(index);
-  contextMenuItems.forEach(function (contextMenuItem, i) {
-    menu.append(contextMenuItem);
-  });
-
-  menu.append(new MenuItem({ type: "separator" }));
-  menu.append(createNewPaneFromURLMenuItem(index));
 
   menu.popup(remote.getCurrentWindow());
 }
@@ -890,6 +822,7 @@ function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
 
   const webview = createWebView(div.id, { url, zoom, customCSS });
   div.appendChild(webview.element);
+  addSearchbox(webview)
 }
 
 /**
@@ -1008,7 +941,7 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-  const currentBoardIndex = boardNameToIndex()
+  currentBoardIndex = boardNameToIndex()
   return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 
