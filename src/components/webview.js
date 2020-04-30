@@ -24,6 +24,7 @@ class WebView {
       "meta+]": element => element.goForward()
     };
     this.seacher = null;
+    this.disposeContextMenu = null;
 
     this.initialize();
   }
@@ -36,11 +37,11 @@ class WebView {
     this.element.autosize = "on";
     this.element.addEventListener("dom-ready", () => {
       this.apply();
+      this.initializeContextMenu();
       this.element
         .getWebContents()
         .on("before-input-event", (_, e) => this.execShortcutKey(e));
     });
-    this.initializeContextMenu();
   }
 
   /**
@@ -99,7 +100,7 @@ class WebView {
    * Webviewに右クリックメニューを埋め込む
    */
   initializeContextMenu() {
-    ContextMenu({
+    this.disposeContextMenu = ContextMenu({
       window: this.element,
       prepend: (_, params) => [
         {
@@ -111,6 +112,17 @@ class WebView {
         }
       ]
     });
+  }
+
+  /**
+   * WebViewを安全に破棄する
+   * 生成したWebviewElementを破棄する際は必ずこのメソッドを通すこと
+   */
+  dispose() {
+    if (this.disposeContextMenu) {
+      this.disposeContextMenu();
+    }
+    this.element.remove();
   }
 }
 
