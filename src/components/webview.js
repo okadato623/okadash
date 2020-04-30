@@ -104,6 +104,19 @@ class WebView {
       window: this.element,
       prepend: (_, params) => [
         {
+          label: "Go Back",
+          visible: this.element.canGoBack(),
+          click: () => this.element.goBack()
+        },
+        {
+          label: "Go Forward",
+          visible: this.element.canGoForward(),
+          click: () => this.element.goForward()
+        },
+        {
+          type: "separator"
+        },
+        {
           label: "Open in external browser",
           visible: isValidURL(params.linkURL),
           click: () => {
