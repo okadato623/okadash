@@ -293,7 +293,7 @@ function createMenuItemForBoard() {
   menuItem.submenu.append(new MenuItem({ type: "separator" }));
   menuItem.submenu.append(
     new MenuItem({
-      label: "Export Focused Board",
+      label: "Export This Board",
       click() {
         exportUsingBoard();
       }
