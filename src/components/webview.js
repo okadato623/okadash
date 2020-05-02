@@ -1,3 +1,4 @@
+const ContextMenu = require("electron-context-menu");
 const ElectronSearchText = require("electron-search-text");
 
 /**
@@ -23,6 +24,7 @@ class WebView {
       "meta+]": element => element.goForward()
     };
     this.seacher = null;
+    this.disposeContextMenu = null;
 
     this.initialize();
   }
@@ -35,6 +37,7 @@ class WebView {
     this.element.autosize = "on";
     this.element.addEventListener("dom-ready", () => {
       this.apply();
+      this.initializeContextMenu();
       this.element
         .getWebContents()
         .on("before-input-event", (_, e) => this.execShortcutKey(e));
@@ -91,6 +94,48 @@ class WebView {
       this.seacher.emit("show");
       this.seacher.findInPage();
     });
+  }
+
+  /**
+   * Webviewに右クリックメニューを埋め込む
+   */
+  initializeContextMenu() {
+    this.disposeContextMenu = ContextMenu({
+      window: this.element,
+      prepend: (_, params) => [
+        {
+          label: "Go Back",
+          visible: this.element.canGoBack(),
+          click: () => this.element.goBack()
+        },
+        {
+          label: "Go Forward",
+          visible: this.element.canGoForward(),
+          click: () => this.element.goForward()
+        },
+        {
+          type: "separator"
+        },
+        {
+          label: "Open in external browser",
+          visible: isValidURL(params.linkURL),
+          click: () => {
+            openExternal(params.linkURL);
+          }
+        }
+      ]
+    });
+  }
+
+  /**
+   * WebViewを安全に破棄する
+   * 生成したWebviewElementを破棄する際は必ずこのメソッドを通すこと
+   */
+  dispose() {
+    if (this.disposeContextMenu) {
+      this.disposeContextMenu();
+    }
+    this.element.remove();
   }
 }
 

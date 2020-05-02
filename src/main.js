@@ -813,7 +813,8 @@ function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
  */
 function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
-  div.querySelector("webview").remove();
+  const webViewElm = div.querySelector("webview");
+  convertToWebViewInstance(webViewElm).dispose();
 
   storeName(index, name);
   storeUrl(index, url);
