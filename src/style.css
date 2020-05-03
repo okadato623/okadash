@@ -48,6 +48,10 @@ dialog .name,.url {
   line-height: 0;
   overflow: visible;
   cursor: pointer;
+  opacity: 0.1;
+}
+.reload-button:hover {
+  opacity: 1;
 }
 .max-button {
   display: inline-block;
@@ -63,6 +67,10 @@ dialog .name,.url {
   line-height: 0;
   overflow: visible;
   cursor: pointer;
+  opacity: 0.1;
+}
+.max-button:hover {
+  opacity: 1;
 }
 
 .search-box {
