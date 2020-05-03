@@ -99,6 +99,10 @@ dialog .name,.url {
   position: absolute;
   bottom: 30px;
   z-index: 1;
+  opacity: 0.1;
+}
+.tool-buttons:hover {
+  opacity: 1;
 }
 .large {
   grid-row: 1 / 100; /* large enough */
