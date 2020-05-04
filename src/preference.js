@@ -185,52 +185,7 @@ function showModalDialogElement(filePath) {
 function importNewBoard(source, boardName) {
   if (source === "default") {
     const workspaceName = document.getElementById("workspace-name").value;
-    var settings = JSON.parse(`
-    {
-      "contents": [
-        {
-          "name": "Slack",
-          "url": "https://${workspaceName}.slack.com",
-          "size": "large",
-          "zoom": 1.0,
-          "customCSS": [
-            ".p-channel_sidebar { width: 160px !important; }",
-            ".p-classic_nav__team_header { display: none !important; }",
-            ".p-workspace--context-pane-collapsed { grid-template-columns: 160px auto !important; }"
-          ]
-        },
-        {
-          "name": "Google News",
-          "url": "https://news.google.com/",
-          "size": "medium",
-          "zoom": 1.0,
-          "customCSS": []
-        },
-        {
-          "name": "Slack(body)",
-          "url": "https://${workspaceName}.slack.com",
-          "zoom": 1.0,
-          "customCSS": [
-            ".p-workspace__sidebar { display: none !important; }",
-            ".p-classic_nav__team_header { display: none !important;}",
-            ".p-workspace--context-pane-collapsed { grid-template-columns: 0px auto !important;}",
-            ".p-workspace--context-pane-expanded { grid-template-columns: 0px auto !important;}"
-          ]
-        },
-        {
-          "name": "twitter",
-          "url": "https://twitter.com",
-          "zoom": 1.0,
-          "customCSS": ["header { display: none !important; }"]
-        },
-        {
-          "name": "calendar",
-          "zoom": 1.0,
-          "url": "https://okadash-files.s3-ap-northeast-1.amazonaws.com/calendar.html"
-        }
-      ]
-    }
-  `);
+    var settings = require("../config/defaultBoard.js")(workspaceName);
   } else {
     var settings = JSON.parse(fs.readFileSync(source));
   }
