@@ -5,11 +5,26 @@ const Store = require("electron-store");
 const store = new Store();
 const app = remote.app;
 const path = require("path");
+const Board = require("./models/board");
+const Content = require("./models/content");
+const ContentForm = require("./components/contentForm");
 
 /**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.7.0";
+
+/**
+ * 読み込み済みの定義済みボード一覧
+ * @type {[Board]}
+ */
+let definedBoardList = [];
+
+/**
+ * 描画中のコンテントフォームコンポーネントのリスト
+ * @type {[ContentForm]}
+ */
+let contentFormList = [];
 
 initialize();
 
@@ -29,8 +44,14 @@ function initialize() {
  */
 function createBoardList(data) {
   const settings = JSON.parse(data);
-  const definedBoardList = settings["options"];
   const container = document.getElementById("boards-container");
+
+  definedBoardList = settings["options"].map(option => {
+    return new Board({
+      name: option["name"],
+      contents: option["contents"].map(content => new Content(content))
+    });
+  });
 
   definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
@@ -40,7 +61,7 @@ function createBoardList(data) {
       liElem.classList.add("active");
       showBoardContents(definedBoard);
     };
-    aElem.innerHTML = definedBoard["name"];
+    aElem.innerHTML = definedBoard.name;
     liElem.appendChild(aElem);
     container.appendChild(liElem);
   });
@@ -50,7 +71,7 @@ function createBoardList(data) {
 
 /**
  * 定義済みボードの内容を描画する
- * @param {any} definedBoard
+ * @param {Board} definedBoard
  */
 function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
@@ -59,140 +80,44 @@ function showBoardContents(definedBoard) {
   document.getElementById("board-name-textbox").innerText = definedBoard["name"];
 
   // 既に描画済みの内容を破棄
+  contentFormList = [];
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
-  definedBoard["contents"].forEach(content => {
-    const divElem = document.createElement("div");
-    divElem.className = "item-box";
-
-    // name属性用のUI生成
-    const nameElem = document.createElement("p");
-    const nameTextElem = document.createElement("input");
-    nameElem.innerHTML = "Name";
-    nameTextElem.type = "textbox";
-    nameTextElem.className = "content-textbox";
-    nameTextElem.value = content["name"];
-    nameElem.appendChild(nameTextElem);
-
-    // URL属性用のUI生成
-    const urlElem = document.createElement("p");
-    const urlTextElem = document.createElement("input");
-    urlElem.innerHTML = "URL";
-    urlTextElem.type = "url";
-    urlTextElem.className = "content-textbox";
-    urlTextElem.value = content["url"];
-    if (/workspace/.test(content["url"])) urlTextElem.style.background = "#fdd";
-    urlElem.appendChild(urlTextElem);
-
-    // Zoom属性用のUI生成
-    const zoomElem = document.createElement("p");
-    const zoomTextElem = document.createElement("input");
-    zoomElem.innerHTML = "Zoom";
-    zoomTextElem.type = "textbox";
-    zoomTextElem.className = "content-textbox";
-    zoomTextElem.value = content["zoom"] || 1.0;
-    zoomElem.appendChild(zoomTextElem);
-
-    // CustomCSS属性用のUI生成
-    const cssElem = document.createElement("p");
-    const tAreaElem = document.createElement("textarea");
-    cssElem.innerHTML = "Custom CSS";
-    tAreaElem.id = content["name"];
-    tAreaElem.className = "textarea-ccss";
-    tAreaElem.value = content["customCSS"].join("\n");
-    cssElem.appendChild(tAreaElem);
-
-    // コンテンツの削除ボタンの生成
-    const btnElem = document.createElement("button");
-    btnElem.className = "btn btn-outline-danger";
-    btnElem.innerHTML = "Delete item [ " + content["name"] + " ]";
-    btnElem.onclick = function () {
-      if (!confirm("Sure?")) return;
-      btnElem.parentElement.remove();
-    };
-
-    // コンテンツごとの境界線
-    const hrElem = document.createElement("hr");
-    hrElem.style = "margin: 30px;";
-
-    // 生成した各要素をコンテンツ情報を表示する領域にぶっこむ
-    divElem.appendChild(nameElem);
-    divElem.appendChild(urlElem);
-    divElem.appendChild(zoomElem);
-    divElem.appendChild(cssElem);
-    divElem.appendChild(btnElem);
-    divElem.appendChild(hrElem);
-
-    container.appendChild(divElem);
+  definedBoard.contents.forEach(content => {
+    const contentForm = createContentForm(content);
+    contentFormList.push(contentForm);
+    container.appendChild(contentForm.$element[0]);
   });
 
+  // ボード追加ボタンの描画と、クリック時のボート追加処理を定義
   const addBtnElem = document.createElement("button");
   addBtnElem.className = "add-board-btn";
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    createNewContent();
+    const contentForm = createContentForm();
+    contentFormList.push(contentForm);
+    container.appendChild(contentForm.$element[0]);
     container.appendChild(addBtnElem);
   };
   container.appendChild(addBtnElem);
 }
 
 /**
- * アイテム欄を新規生成する
+ * Contentオブジェクトに基づいてコンテントフォームを生成する
+ * @param {Content} content
  */
-function createNewContent() {
-  const container = document.getElementById("items-container");
-  const divElem = document.createElement("div");
-  divElem.className = "item-box";
-
-  const nameElem = document.createElement("p");
-  const nameTextElem = document.createElement("input");
-  nameElem.innerHTML = "Name";
-  nameTextElem.type = "textbox";
-  nameTextElem.className = "content-textbox";
-  nameElem.appendChild(nameTextElem);
-
-  const urlElem = document.createElement("p");
-  const urlTextElem = document.createElement("input");
-  urlElem.innerHTML = "URL";
-  urlTextElem.type = "textbox";
-  urlTextElem.className = "content-textbox";
-  urlElem.appendChild(urlTextElem);
-
-  const zoomElem = document.createElement("p");
-  const zoomTextElem = document.createElement("input");
-  zoomElem.innerHTML = "Zoom";
-  zoomTextElem.type = "textbox";
-  zoomTextElem.className = "content-textbox";
-  zoomElem.appendChild(zoomTextElem);
-
-  const cssElem = document.createElement("p");
-  const tAreaElem = document.createElement("textarea");
-  cssElem.innerHTML = "Custom CSS";
-  tAreaElem.className = "textarea-ccss";
-  cssElem.appendChild(tAreaElem);
-
-  const btnElem = document.createElement("button");
-  btnElem.className = "btn btn-outline-danger";
-  btnElem.innerHTML = "Delete this item";
-  btnElem.onclick = function () {
-    btnElem.parentElement.remove();
-  };
-
-  const hrElem = document.createElement("hr");
-  hrElem.style = "margin: 30px;";
-
-  divElem.appendChild(nameElem);
-  divElem.appendChild(urlElem);
-  divElem.appendChild(zoomElem);
-  divElem.appendChild(cssElem);
-  divElem.appendChild(btnElem);
-  divElem.appendChild(hrElem);
-
-  container.appendChild(divElem);
+function createContentForm(content = new Content()) {
+  return new ContentForm(content, contentForm => {
+    if (confirm("Sure?")) {
+      const targetIndex = contentFormList.findIndex(cf => cf.id === contentForm.id);
+      contentFormList.splice(targetIndex, 1);
+      contentForm.$element[0].remove();
+    }
+  });
 }
 
 /**
@@ -339,13 +264,7 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  let found = false;
-  const container = document.getElementById("boards-container");
-  container.childNodes.forEach(function (node) {
-    if (boardName == node.querySelector("a").innerText) found = true;
-  });
-
-  return found;
+  return definedBoardList.some(board => board.name === boardName);
 }
 
 /**
@@ -453,61 +372,20 @@ function writeFile(path, data) {
  * ボードの設定をStoreに保存する
  */
 function saveBoardSetting() {
-  const targetBoard = document.getElementById("board-name-textbox").innerText;
-  const container = document.getElementById("items-container");
-  const items = [];
-  let error = false;
-  container.querySelectorAll(".item-box").forEach(function (node) {
-    let item = {};
-    node.querySelectorAll("p").forEach(function (elem) {
-      switch (elem.innerText) {
-        case "Name":
-          item.name = elem.querySelector("input").value;
-          if (items.length === 0) {
-            item.size = "large";
-          } else if (items.length === 1) {
-            item.size = "medium";
-          }
-          if (
-            !isValidName(elem.querySelector("input").value, elem.querySelector("input"))
-          )
-            error = true;
-          break;
-        case "URL":
-          item.url = elem.querySelector("input").value;
-          if (!isValidURL(elem.querySelector("input").value, elem.querySelector("input")))
-            error = true;
-          break;
-        case "Zoom":
-          item.zoom = elem.querySelector("input").value;
-          if (!isValidZoom(item.zoom, elem.querySelector("input"))) {
-            error = true;
-          }
-          break;
-        case "Custom CSS":
-          item.customCSS = elem.querySelector("textarea").value.split("\n");
-          items.push(item);
-          break;
-      }
-    });
+  const targetBoardName = document.getElementById("board-name-textbox").innerText;
+  const newContents = [];
+  let errors = [];
+
+  // フォーム内容のバリデーションしつつ取得
+  contentFormList.forEach((contentForm, idx) => {
+    const size = ["large", "medium"][idx] || "small";
+    newContents.push(contentForm.toObject({ size }));
+    errors = errors.concat(contentForm.validate());
   });
 
-  if (!error) {
-    let options = store.get("options");
-    for (i in options) {
-      if (targetBoard == options[i]["name"]) {
-        options[i]["contents"] = items;
-        break;
-      }
-    }
-    store.set("options", options);
-    store.set("boards", options);
-    document.getElementById("save-btn").innerText = "Saved!";
-    const reloadMessage = function () {
-      document.getElementById("save-btn").innerText = "Save Board Setting";
-    };
-    setTimeout(reloadMessage, 2000);
-  } else {
+  // 1件以上エラーがあった場合、アラートし、保存は拒否する
+  if (errors.length > 0) {
+    errors.forEach(error => alert(error));
     document.getElementById("save-btn").innerText = "Save failed...";
     document.getElementById("save-btn").className = "btn btn-danger";
     const reloadMessage = function () {
@@ -515,70 +393,21 @@ function saveBoardSetting() {
       document.getElementById("save-btn").className = "btn btn-primary";
     };
     setTimeout(reloadMessage, 2000);
+    return;
   }
-}
 
-/**
- * 入力されたアイテム名の値を検証する
- * @param {string}  name
- * @param {Element} elem
- */
-function isValidName(name, elem) {
-  if (name == "") {
-    alert("Item Name Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (/\"/.test(name)) {
-    alert(`Cannot use " in Item (${name})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  elem.style.background = "#fff";
-  return true;
-}
-
-/**
- * 入力されたURLの値を検証する
- * @param {string}  url
- * @param {Element} elem
- */
-function isValidURL(url, elem) {
-  if (url == "") {
-    alert("URL is Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (!url.match(/^(https?|file)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/)) {
-    alert(`Invalid URL: (${url})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  if (/\"/.test(url)) {
-    alert(`Cannot use " in Item (${url})`);
-    elem.style.background = "#fdd";
-    return false;
-  }
-  elem.style.background = "#fff";
-  return true;
-}
-
-/**
- * 入力された拡大率の値を検証する
- * @param {string}  zoom
- * @param {Element} elem
- */
-function isValidZoom(zoom, elem) {
-  if (zoom == "") {
-    alert("Zoom is Needed");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  const zoomNum = Number(zoom);
-  if (isNaN(zoomNum) || zoomNum < 0.25 || zoomNum > 5.0) {
-    alert("Zoom must be a number between 0.25 and 5.0");
-    elem.style.background = "#fdd";
-    return false;
-  }
-  return true;
+  // 保存処理
+  let options = store.get("options");
+  options.forEach(option => {
+    if (option["name"] === targetBoardName) {
+      option["contents"] = newContents;
+    }
+  });
+  store.set("options", options);
+  store.set("boards", options);
+  document.getElementById("save-btn").innerText = "Saved!";
+  const reloadMessage = function () {
+    document.getElementById("save-btn").innerText = "Save Board Setting";
+  };
+  setTimeout(reloadMessage, 2000);
 }
