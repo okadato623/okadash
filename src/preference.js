@@ -9,13 +9,14 @@ const Board = require("./models/board");
 const Content = require("./models/content");
 const ContentForm = require("./components/contentForm");
 
-// TODO こっちにStoreって名前をつける
-const newStore = require("./store").singleton;
-
 /**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.7.0";
+
+// TODO こっちにStoreって名前をつける
+const NewStore = require("./store");
+const newStore = new NewStore(VERSION);
 
 /**
  * 描画中のコンテントフォームコンポーネントのリスト
@@ -225,6 +226,7 @@ function deleteBoard() {
   if (!confirm(confirmMessage)) return;
 
   newStore.deleteBoard(currentBoardName);
+  newStore.saveAllSettings();
   remote.getCurrentWindow().reload();
 }
 

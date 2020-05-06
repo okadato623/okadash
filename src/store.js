@@ -5,15 +5,15 @@ const electronStore = new ElectronStore();
 
 /**
  * ElectronStoreで永続化した設定ファイルの読み書きを行う
- * 原則として全てのコードでsingletonを利用し、設定ファイルを直接操作しない
  * TODO: allWidthをどう扱うのか
  */
 class Store {
-  static singleton = new Store();
-
-  constructor() {
+  /**
+   * @param {string} appVersion アプリケーションのバージョン
+   */
+  constructor(appVersion) {
+    this.appVersion = appVersion;
     this.loadAllSettings();
-    console.log(this);
   }
 
   /**
@@ -80,6 +80,13 @@ class Store {
   }
 
   /**
+   * アプリケーションのバージョンで、設定ファイルのバージョンを更新する
+   */
+  updateVersion() {
+    this.version = this.appVersion;
+  }
+
+  /**
    * 設定ファイルを元に新規ボードを追加
    * @param {string} name
    * @param {[object]} contents
@@ -102,7 +109,6 @@ class Store {
 
     this.definedBoardList.splice(index, 1);
     this.usingBoardList.splice(index, 1);
-    this.saveAllSettings();
     return true;
   }
 
