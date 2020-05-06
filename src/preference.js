@@ -9,6 +9,9 @@ const Board = require("./models/board");
 const Content = require("./models/content");
 const ContentForm = require("./components/contentForm");
 
+// TODO こっちにStoreって名前をつける
+const newStore = require("./store").singleton;
+
 /**
  * アプリケーションのバージョン情報
  */
@@ -32,26 +35,15 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  const configFilePath = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(configFilePath, (_, data) => {
-    createBoardList(data);
-  });
+  createBoardList(newStore.definedBoardList);
 }
 
 /**
  * 定義ファイルの内容を元に、ボードの一覧を描画する
- * @param {Buffer} data 定義ファイルの内容
+ * @param {[Board]} definedBoardList
  */
-function createBoardList(data) {
-  const settings = JSON.parse(data);
+function createBoardList(definedBoardList) {
   const container = document.getElementById("boards-container");
-
-  definedBoardList = settings["options"].map(option => {
-    return new Board({
-      name: option["name"],
-      contents: option["contents"].map(content => new Content(content))
-    });
-  });
 
   definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
