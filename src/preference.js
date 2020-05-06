@@ -209,6 +209,8 @@ function checkDuplicateNameExists(boardName) {
 }
 
 /**
+ * インポートした設定ファイルが適切な構成かをチェックする
+ * TODO: これもStoreクラス…?
  * @param {Object} jsonObj インポートした設定ファイル
  */
 function validateJson(jsonObj) {
@@ -228,7 +230,7 @@ function validateJson(jsonObj) {
  * 現在開いているボードを削除する
  */
 function deleteBoard() {
-  const currentBoardName = $("#boards-container li.active").text();
+  const currentBoardName = getCurrentBoardName();
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
@@ -255,7 +257,7 @@ function exportUsingBoard() {
  * @params {string} baseKey "boards" or "options"
  */
 function exportBoard(baseKey) {
-  const targetBoard = document.getElementById("board-name-textbox").innerText;
+  const targetBoard = getCurrentBoardName();
   let board = {};
   for (i in store.get(baseKey)) {
     if (store.get(baseKey)[i]["name"] == targetBoard) {
@@ -341,4 +343,11 @@ function saveBoardSetting() {
     document.getElementById("save-btn").innerText = "Save Board Setting";
   };
   setTimeout(reloadMessage, 2000);
+}
+
+/**
+ * 現在選択中のボード名を取得する
+ */
+function getCurrentBoardName() {
+  return $("#boards-container li.active").text();
 }
