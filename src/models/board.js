@@ -14,6 +14,15 @@ class Board {
     this.contents = contents;
   }
 
+  /**
+   * ボードにコンテンツを追加する
+   * @param {Content} content
+   */
+  addContent(content = new Content()) {
+    this.contents.push(content);
+    return content;
+  }
+
   toObject() {
     return {
       name: this.name,

@@ -85,7 +85,8 @@ function showBoardContents(definedBoard) {
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    const contentForm = createContentForm();
+    const newContent = getCurrentBoard().addContent();
+    const contentForm = createContentForm(newContent);
     contentFormList.push(contentForm);
     container.appendChild(contentForm.$element[0]);
     container.appendChild(addBtnElem);
@@ -97,7 +98,7 @@ function showBoardContents(definedBoard) {
  * Contentオブジェクトに基づいてコンテントフォームを生成する
  * @param {Content} content
  */
-function createContentForm(content = new Content()) {
+function createContentForm(content) {
   return new ContentForm(content, contentForm => {
     if (confirm("Sure?")) {
       const targetIndex = contentFormList.findIndex(cf => cf.id === contentForm.id);
@@ -334,4 +335,12 @@ function saveBoardSetting() {
  */
 function getCurrentBoardName() {
   return $("#boards-container li.active").text();
+}
+
+/**
+ * 現在選択中のボードを取得する
+ */
+function getCurrentBoard() {
+  const boardName = getCurrentBoardName();
+  return newStore.findDefinedBoard(boardName);
 }
