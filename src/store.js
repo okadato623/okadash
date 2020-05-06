@@ -59,7 +59,7 @@ class Store {
   /**
    * オブジェクトが持っている最新の設定情報を元に永続化
    */
-  updateAllSettings() {
+  saveAllSettings() {
     electronStore.set({
       version: this.version,
       boards: this.usingBoardList.map(board => board.toObject()),
