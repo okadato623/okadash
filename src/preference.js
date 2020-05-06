@@ -179,19 +179,9 @@ function importNewBoard(source, boardName) {
     return null;
   }
 
-  const newOption = { name: boardName, contents: settings["contents"] };
-  let optList = store.get("options");
-  let brdList = store.get("boards");
-  if (optList) {
-    optList.push(newOption);
-    brdList.push(newOption);
-    store.set("options", optList);
-    store.set("boards", brdList);
-  } else {
-    store.set("version", VERSION);
-    store.set("options", [newOption]);
-    store.set("boards", [newOption]);
-  }
+  newStore.addBoardFromObject(boardName, settings["contents"]);
+  newStore.saveAllSettings();
+
   if (source === "default") {
     const window = remote.getCurrentWindow();
     window.close();

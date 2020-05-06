@@ -80,6 +80,17 @@ class Store {
   }
 
   /**
+   * 設定ファイルを元に新規ボードを追加
+   * @param {string} name
+   * @param {[object]} contents
+   */
+  addBoardFromObject(name, contents) {
+    const newBoard = new Board({ name, contents: contents.map(c => new Content(c)) });
+    this.definedBoardList.push(newBoard);
+    this.usingBoardList.push(newBoard);
+  }
+
+  /**
    * ボード名を指定してボードを削除する
    * このメソッドは定義済みボードを探索し、使用中ボードもまとめて削除する
    * @param {string} name
