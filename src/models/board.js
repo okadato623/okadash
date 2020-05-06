@@ -31,6 +31,9 @@ class Board {
     this.contents.splice(index, 1);
   }
 
+  /**
+   * オブジェクトを生成する
+   */
   toObject() {
     return {
       name: this.name,
