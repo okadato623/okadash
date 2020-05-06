@@ -14,8 +14,8 @@ const VERSION = "1.7.0";
 /**
  * アプリケーションの設定
  */
-const Store = require("./store");
-const store = new Store(VERSION);
+const Setting = require("./setting");
+const setting = new Setting(VERSION);
 
 /**
  * 描画中のコンテントフォームコンポーネントのリスト
@@ -29,7 +29,7 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  createBoardList(store.definedBoardList);
+  createBoardList(setting.definedBoardList);
 }
 
 /**
@@ -183,8 +183,8 @@ function importNewBoard(source, boardName) {
     return null;
   }
 
-  store.addBoardFromObject(boardName, settings["contents"]);
-  store.saveAllSettings();
+  setting.addBoardFromObject(boardName, settings["contents"]);
+  setting.saveAllSettings();
 
   if (source === "default") {
     const window = remote.getCurrentWindow();
@@ -199,7 +199,7 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  return store.definedBoardList.some(board => board.name === boardName);
+  return setting.definedBoardList.some(board => board.name === boardName);
 }
 
 /**
@@ -228,8 +228,8 @@ function deleteBoard() {
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  store.deleteBoard(currentBoardName);
-  store.saveAllSettings();
+  setting.deleteBoard(currentBoardName);
+  setting.saveAllSettings();
   remote.getCurrentWindow().reload();
 }
 
@@ -238,7 +238,7 @@ function deleteBoard() {
  */
 function exportDefinedBoard() {
   const boardName = getCurrentBoardName();
-  exportBoard(store.findDefinedBoard(boardName));
+  exportBoard(setting.findDefinedBoard(boardName));
 }
 
 /**
@@ -246,7 +246,7 @@ function exportDefinedBoard() {
  */
 function exportUsingBoard() {
   const boardName = getCurrentBoardName();
-  exportBoard(store.findUsingBoard(boardName));
+  exportBoard(setting.findUsingBoard(boardName));
 }
 
 /**
@@ -323,8 +323,8 @@ function saveBoardSetting() {
   }
 
   // 保存処理
-  store.syncDefinedBoardToUsingBoard();
-  store.saveAllSettings();
+  setting.syncDefinedBoardToUsingBoard();
+  setting.saveAllSettings();
   document.getElementById("save-btn").innerText = "Saved!";
   const reloadMessage = function () {
     document.getElementById("save-btn").innerText = "Save Board Setting";
@@ -344,5 +344,5 @@ function getCurrentBoardName() {
  */
 function getCurrentBoard() {
   const boardName = getCurrentBoardName();
-  return store.findDefinedBoard(boardName);
+  return setting.findDefinedBoard(boardName);
 }

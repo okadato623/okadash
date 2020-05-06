@@ -7,7 +7,7 @@ const electronStore = new ElectronStore();
  * ElectronStoreで永続化した設定ファイルの読み書きを行う
  * TODO: allWidthをどう扱うのか
  */
-class Store {
+class Setting {
   /**
    * @param {string} appVersion アプリケーションのバージョン
    */
@@ -20,8 +20,8 @@ class Store {
    * ElectronStoreから最新の設定情報を読み込み、全ての設定値を更新する
    */
   loadAllSettings() {
-    this.settings = electronStore.store;
-    this.version = this.settings["version"];
+    this.store = electronStore.store;
+    this.version = this.store["version"];
     this.usingBoardList = this.loadUsingBoardList();
     this.definedBoardList = this.loadDefinedBoardList();
   }
@@ -48,7 +48,7 @@ class Store {
    * @return {[Board]}
    */
   loadBoardList(key) {
-    return this.settings[key].map(board => {
+    return this.store[key].map(board => {
       return new Board({
         name: board["name"],
         contents: board["contents"].map(content => new Content(content))
@@ -129,4 +129,4 @@ class Store {
   }
 }
 
-module.exports = Store;
+module.exports = Setting;
