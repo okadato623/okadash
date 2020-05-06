@@ -30,6 +30,21 @@ class Content {
   }
 
   /**
+   * 各種要素のバリデーションを行い結果を戻す
+   */
+  validateAll() {
+    const validationResult = {
+      name: this.validateName(),
+      url: this.validateUrl(),
+      zoom: this.validateZoom()
+    };
+    return {
+      ...validationResult,
+      isAllValid: Object.values(validationResult).every(r => r === true)
+    };
+  }
+
+  /**
    * Name属性が保存可能な内容であるかチェックする
    */
   validateName() {

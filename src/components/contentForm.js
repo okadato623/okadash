@@ -51,15 +51,12 @@ class ContentForm {
    * @return {[string]} エラーメッセージ一覧
    */
   validate() {
-    const errors = [];
     this.$element.find("input,textarea").css("backgroundColor", "#fff");
 
-    const validationResult = {
-      name: this.content.validateName(),
-      url: this.content.validateUrl(),
-      zoom: this.content.validateZoom()
-    };
+    const validationResult = this.content.validateAll();
+    if (validationResult.isAllValid === true) return [];
 
+    const errors = [];
     if (validationResult.name !== true) {
       this.$element.find("input.name").css("backgroundColor", "#fdd");
       errors.push(validationResult.name);
