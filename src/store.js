@@ -82,6 +82,22 @@ class Store {
     this.saveAllSettings();
     return true;
   }
+
+  /**
+   * ボード名を元に定義済みボードを取得する
+   * @param {string} name
+   */
+  findDefinedBoard(name) {
+    return this.definedBoardList.find(board => board.name === name);
+  }
+
+  /**
+   * ボード名を元に使用中ボードを取得する
+   * @param {string} name
+   */
+  findUsingBoard(name) {
+    return this.usingBoardList.find(board => board.name === name);
+  }
 }
 
 module.exports = Store;

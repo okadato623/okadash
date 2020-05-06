@@ -242,29 +242,27 @@ function deleteBoard() {
  * 現在開いているボードの、定義済みバージョンをJSON形式でエクスポートする
  */
 function exportDefinedBoard() {
-  exportBoard("options");
+  const boardName = getCurrentBoardName();
+  exportBoard(newStore.findDefinedBoard(boardName));
 }
 
 /**
  * 現在開いているボードの、使用中バージョンをJSON形式でエクスポートする
  */
 function exportUsingBoard() {
-  exportBoard("boards");
+  const boardName = getCurrentBoardName();
+  exportBoard(newStore.findUsingBoard(boardName));
 }
 
 /**
  * ボードの設定情報をJSON形式でエクスポートする
- * @params {string} baseKey "boards" or "options"
+ * @param {Board} board エクスポート対象
  */
-function exportBoard(baseKey) {
-  const targetBoard = getCurrentBoardName();
-  let board = {};
-  for (i in store.get(baseKey)) {
-    if (store.get(baseKey)[i]["name"] == targetBoard) {
-      board = store.get(baseKey)[i];
-    }
-  }
-  delete board.name;
+function exportBoard(board) {
+  const boardName = getCurrentBoardName();
+  const boardObject = board.toObject();
+  delete boardObject.name;
+
   const win = remote.getCurrentWindow();
   dialog.showSaveDialog(
     win,
@@ -280,7 +278,7 @@ function exportBoard(baseKey) {
     },
     fileName => {
       if (fileName) {
-        const data = JSON.stringify(board, null, 2);
+        const data = JSON.stringify(boardObject, null, 2);
         writeFile(fileName, data);
       }
     }
