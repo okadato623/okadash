@@ -62,6 +62,7 @@ function createBoardList(definedBoardList) {
  */
 function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
+  const board = getCurrentBoard();
 
   window.scrollTo(0, 0);
   document.getElementById("board-name-textbox").innerText = definedBoard["name"];
@@ -74,7 +75,7 @@ function showBoardContents(definedBoard) {
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
   definedBoard.contents.forEach(content => {
-    const contentForm = createContentForm(content);
+    const contentForm = createContentForm(board, content);
     contentFormList.push(contentForm);
     container.appendChild(contentForm.$element[0]);
   });
@@ -85,8 +86,8 @@ function showBoardContents(definedBoard) {
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    const newContent = getCurrentBoard().addContent();
-    const contentForm = createContentForm(newContent);
+    const newContent = board.addContent();
+    const contentForm = createContentForm(board, newContent);
     contentFormList.push(contentForm);
     container.appendChild(contentForm.$element[0]);
     container.appendChild(addBtnElem);
@@ -96,14 +97,16 @@ function showBoardContents(definedBoard) {
 
 /**
  * Contentオブジェクトに基づいてコンテントフォームを生成する
+ * @param {Board} board
  * @param {Content} content
  */
-function createContentForm(content) {
+function createContentForm(board, content) {
   return new ContentForm(content, contentForm => {
     if (confirm("Sure?")) {
       const targetIndex = contentFormList.findIndex(cf => cf.id === contentForm.id);
       contentFormList.splice(targetIndex, 1);
       contentForm.$element[0].remove();
+      board.removeContent(targetIndex);
     }
   });
 }

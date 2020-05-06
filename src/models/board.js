@@ -23,6 +23,14 @@ class Board {
     return content;
   }
 
+  /**
+   * ボード内のコンテンツを削除する
+   * @param {number} index
+   */
+  removeContent(index) {
+    this.contents.splice(index, 1);
+  }
+
   toObject() {
     return {
       name: this.name,
