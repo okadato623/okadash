@@ -6,7 +6,6 @@ const electronStore = new ElectronStore();
 /**
  * ElectronStoreで永続化した設定ファイルの読み書きを行う
  * NOTE: あんまり大きくなるなら、状態の管理と永続化の管理でクラス分割するのもあり
- * TODO: allWidthをどう扱うのか
  */
 class Setting {
   /**
