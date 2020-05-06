@@ -68,6 +68,18 @@ class Store {
   }
 
   /**
+   * 定義済みボードの内容で使用中ボードを更新する
+   */
+  syncDefinedBoardToUsingBoard() {
+    this.usingBoardList = this.definedBoardList.map(board => {
+      return new Board({
+        name: board["name"],
+        contents: board["contents"].map(content => new Content(content))
+      });
+    });
+  }
+
+  /**
    * ボード名を指定してボードを削除する
    * このメソッドは定義済みボードを探索し、使用中ボードもまとめて削除する
    * @param {string} name

@@ -303,7 +303,7 @@ function writeFile(path, data) {
  * ボードの設定をStoreに保存する
  */
 function saveBoardSetting() {
-  const targetBoardName = document.getElementById("board-name-textbox").innerText;
+  const targetBoardName = getCurrentBoardName();
   const newContents = [];
   let errors = [];
 
@@ -328,14 +328,8 @@ function saveBoardSetting() {
   }
 
   // 保存処理
-  let options = store.get("options");
-  options.forEach(option => {
-    if (option["name"] === targetBoardName) {
-      option["contents"] = newContents;
-    }
-  });
-  store.set("options", options);
-  store.set("boards", options);
+  newStore.syncDefinedBoardToUsingBoard();
+  newStore.saveAllSettings();
   document.getElementById("save-btn").innerText = "Saved!";
   const reloadMessage = function () {
     document.getElementById("save-btn").innerText = "Save Board Setting";
