@@ -1,10 +1,12 @@
 const ElectronStore = require("electron-store");
 const Board = require("./models/board");
 const Content = require("./models/content");
+const electronStore = new ElectronStore();
 
 /**
  * ElectronStoreで永続化した設定ファイルの読み書きを行う
  * 原則として全てのコードでsingletonを利用し、設定ファイルを直接操作しない
+ * TODO: allWidthをどう扱うのか
  */
 class Store {
   static singleton = new Store();
@@ -18,7 +20,6 @@ class Store {
    * ElectronStoreから最新の設定情報を読み込み、全ての設定値を更新する
    */
   loadAllSettings() {
-    const electronStore = new ElectronStore();
     this.settings = electronStore.store;
     this.version = this.settings["version"];
     this.usingBoardList = this.loadUsingBoardList();
@@ -52,6 +53,17 @@ class Store {
         name: board["name"],
         contents: board["contents"].map(content => new Content(content))
       });
+    });
+  }
+
+  /**
+   * オブジェクトが持っている最新の設定情報を元に永続化
+   */
+  updateAllSettings() {
+    electronStore.set({
+      version: this.version,
+      boards: this.usingBoardList.map(board => board.toObject()),
+      options: this.definedBoardList.map(board => board.toObject())
     });
   }
 }

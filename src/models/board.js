@@ -13,5 +13,12 @@ class Board {
     this.name = name;
     this.contents = contents;
   }
+
+  toObject() {
+    return {
+      name: this.name,
+      contents: this.contents.map(content => content.toObject())
+    };
+  }
 }
 module.exports = Board;
