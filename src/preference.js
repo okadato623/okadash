@@ -18,12 +18,6 @@ const newStore = require("./store").singleton;
 const VERSION = "1.7.0";
 
 /**
- * 読み込み済みの定義済みボード一覧
- * @type {[Board]}
- */
-let definedBoardList = [];
-
-/**
  * 描画中のコンテントフォームコンポーネントのリスト
  * @type {[ContentForm]}
  */
@@ -211,7 +205,7 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  return definedBoardList.some(board => board.name === boardName);
+  return newStore.definedBoardList.some(board => board.name === boardName);
 }
 
 /**
