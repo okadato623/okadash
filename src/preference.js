@@ -229,20 +229,10 @@ function validateJson(jsonObj) {
  */
 function deleteBoard() {
   const currentBoardName = $("#boards-container li.active").text();
-  const allUsingBoards = store.get("boards");
-  const allDefinedBoards = store.get("options");
-
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  for (i in allDefinedBoards) {
-    if (currentBoardName == allDefinedBoards[i]["name"]) {
-      allDefinedBoards.splice(i, 1);
-      allUsingBoards.splice(i, 1);
-    }
-  }
-  store.set("options", allDefinedBoards);
-  store.set("boards", allUsingBoards);
+  newStore.deleteBoard(currentBoardName);
   remote.getCurrentWindow().reload();
 }
 

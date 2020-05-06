@@ -66,6 +66,22 @@ class Store {
       options: this.definedBoardList.map(board => board.toObject())
     });
   }
+
+  /**
+   * ボード名を指定してボードを削除する
+   * このメソッドは定義済みボードを探索し、使用中ボードもまとめて削除する
+   * @param {string} name
+   * @return {boolean} ボードが見つからない場合 false
+   */
+  deleteBoard(name) {
+    const index = this.definedBoardList.findIndex(board => board.name === name);
+    if (index === -1) return false;
+
+    this.definedBoardList.splice(index, 1);
+    this.usingBoardList.splice(index, 1);
+    this.saveAllSettings();
+    return true;
+  }
 }
 
 module.exports = Store;
