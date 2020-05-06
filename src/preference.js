@@ -1,9 +1,6 @@
 var { remote } = require("electron");
 var { dialog } = remote;
 const fs = require("fs");
-const Store = require("electron-store");
-const store = new Store();
-const app = remote.app;
 const path = require("path");
 const Board = require("./models/board");
 const Content = require("./models/content");
@@ -14,9 +11,11 @@ const ContentForm = require("./components/contentForm");
  */
 const VERSION = "1.7.0";
 
-// TODO こっちにStoreって名前をつける
-const NewStore = require("./store");
-const newStore = new NewStore(VERSION);
+/**
+ * アプリケーションの設定
+ */
+const Store = require("./store");
+const store = new Store(VERSION);
 
 /**
  * 描画中のコンテントフォームコンポーネントのリスト
@@ -30,7 +29,7 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  createBoardList(newStore.definedBoardList);
+  createBoardList(store.definedBoardList);
 }
 
 /**
@@ -184,8 +183,8 @@ function importNewBoard(source, boardName) {
     return null;
   }
 
-  newStore.addBoardFromObject(boardName, settings["contents"]);
-  newStore.saveAllSettings();
+  store.addBoardFromObject(boardName, settings["contents"]);
+  store.saveAllSettings();
 
   if (source === "default") {
     const window = remote.getCurrentWindow();
@@ -200,7 +199,7 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  return newStore.definedBoardList.some(board => board.name === boardName);
+  return store.definedBoardList.some(board => board.name === boardName);
 }
 
 /**
@@ -229,8 +228,8 @@ function deleteBoard() {
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  newStore.deleteBoard(currentBoardName);
-  newStore.saveAllSettings();
+  store.deleteBoard(currentBoardName);
+  store.saveAllSettings();
   remote.getCurrentWindow().reload();
 }
 
@@ -239,7 +238,7 @@ function deleteBoard() {
  */
 function exportDefinedBoard() {
   const boardName = getCurrentBoardName();
-  exportBoard(newStore.findDefinedBoard(boardName));
+  exportBoard(store.findDefinedBoard(boardName));
 }
 
 /**
@@ -247,7 +246,7 @@ function exportDefinedBoard() {
  */
 function exportUsingBoard() {
   const boardName = getCurrentBoardName();
-  exportBoard(newStore.findUsingBoard(boardName));
+  exportBoard(store.findUsingBoard(boardName));
 }
 
 /**
@@ -324,8 +323,8 @@ function saveBoardSetting() {
   }
 
   // 保存処理
-  newStore.syncDefinedBoardToUsingBoard();
-  newStore.saveAllSettings();
+  store.syncDefinedBoardToUsingBoard();
+  store.saveAllSettings();
   document.getElementById("save-btn").innerText = "Saved!";
   const reloadMessage = function () {
     document.getElementById("save-btn").innerText = "Save Board Setting";
@@ -345,5 +344,5 @@ function getCurrentBoardName() {
  */
 function getCurrentBoard() {
   const boardName = getCurrentBoardName();
-  return newStore.findDefinedBoard(boardName);
+  return store.findDefinedBoard(boardName);
 }
