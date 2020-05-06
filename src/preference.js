@@ -267,7 +267,7 @@ function exportBoard(board) {
   dialog.showSaveDialog(
     win,
     {
-      defaultPath: document.getElementById("board-name-textbox").innerText,
+      defaultPath: boardName,
       properties: ["openFile"],
       filters: [
         {
