@@ -114,6 +114,11 @@ class WebView {
           click: () => this.element.goForward()
         },
         {
+          label: "Reload",
+          visible: true,
+          click: () => this.element.reload()
+        },
+        {
           type: "separator"
         },
         {
