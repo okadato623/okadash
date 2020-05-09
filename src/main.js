@@ -508,6 +508,11 @@ function openNewPaneFromUrlDialog(index = null) {
   dlg.addEventListener("close", onClose, { once: true });
 }
 
+/**
+ * eventから現在のペインのURLとidを受け取り、
+ * ペインを変更するためのダイアログを開く
+ * @param {*} event 
+ */
 function replacePaneFromUrlDialog(event){
   const {url, id} = event.detail
   const dlg = document.querySelector("#create-new-pane-dialog");

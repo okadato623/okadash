@@ -98,7 +98,7 @@ class WebView {
   }
 
   /**
-   * meta + U でアドレスダイアログを開く
+   * meta + U でURLダイアログを開く
    */
   initializeUrlDialogShortcut(){
     this.addShortcutKey("meta+u", () => {
