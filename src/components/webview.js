@@ -98,7 +98,7 @@ class WebView {
   }
 
   /**
-   * meta + U でURLダイアログを開く
+   * meta + U でURLダイアログを開くショートカットを埋め込む
    */
   initializeUrlDialogShortcut() {
     this.addShortcutKey("meta+u", () => {
