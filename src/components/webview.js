@@ -100,13 +100,15 @@ class WebView {
   /**
    * meta + U でURLダイアログを開く
    */
-  initializeUrlDialogShortcut(){
+  initializeUrlDialogShortcut() {
     this.addShortcutKey("meta+u", () => {
       const localElement = remote.webContents.fromId(this.element.getWebContentsId());
-      const url = localElement.getURL();      
-      const ev = new CustomEvent("openReplaceUrlDialog", {detail: {url, id: this.element.id}})
-      window.dispatchEvent(ev)
-    })
+      const url = localElement.getURL();
+      const ev = new CustomEvent("openReplaceUrlDialog", {
+        detail: { url, id: this.element.id }
+      });
+      window.dispatchEvent(ev);
+    });
   }
 
   /**
