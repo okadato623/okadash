@@ -1,9 +1,6 @@
 var { remote } = require("electron");
 var { dialog } = remote;
 const fs = require("fs");
-const Store = require("electron-store");
-const store = new Store();
-const app = remote.app;
 const path = require("path");
 const Board = require("./models/board");
 const Content = require("./models/content");
@@ -15,10 +12,10 @@ const ContentForm = require("./components/contentForm");
 const VERSION = "1.7.0";
 
 /**
- * 読み込み済みの定義済みボード一覧
- * @type {[Board]}
+ * アプリケーションの設定
  */
-let definedBoardList = [];
+const Setting = require("./setting");
+const setting = new Setting(VERSION);
 
 /**
  * 描画中のコンテントフォームコンポーネントのリスト
@@ -32,26 +29,15 @@ initialize();
  * Preference画面の初期描画を行う
  */
 function initialize() {
-  const configFilePath = path.join(app.getPath("userData"), "config.json");
-  fs.readFile(configFilePath, (_, data) => {
-    createBoardList(data);
-  });
+  createBoardList(setting.definedBoardList);
 }
 
 /**
  * 定義ファイルの内容を元に、ボードの一覧を描画する
- * @param {Buffer} data 定義ファイルの内容
+ * @param {[Board]} definedBoardList
  */
-function createBoardList(data) {
-  const settings = JSON.parse(data);
+function createBoardList(definedBoardList) {
   const container = document.getElementById("boards-container");
-
-  definedBoardList = settings["options"].map(option => {
-    return new Board({
-      name: option["name"],
-      contents: option["contents"].map(content => new Content(content))
-    });
-  });
 
   definedBoardList.forEach(definedBoard => {
     const liElem = document.createElement("li");
@@ -75,6 +61,7 @@ function createBoardList(data) {
  */
 function showBoardContents(definedBoard) {
   const container = document.getElementById("items-container");
+  const board = getCurrentBoard();
 
   window.scrollTo(0, 0);
   document.getElementById("board-name-textbox").innerText = definedBoard["name"];
@@ -87,7 +74,7 @@ function showBoardContents(definedBoard) {
 
   // ボード内のコンテンツの数だけフォームを繰り返し描画する
   definedBoard.contents.forEach(content => {
-    const contentForm = createContentForm(content);
+    const contentForm = createContentForm(board, content);
     contentFormList.push(contentForm);
     container.appendChild(contentForm.$element[0]);
   });
@@ -98,7 +85,8 @@ function showBoardContents(definedBoard) {
   addBtnElem.innerHTML = "+";
   addBtnElem.onclick = function () {
     addBtnElem.remove();
-    const contentForm = createContentForm();
+    const newContent = board.addContent();
+    const contentForm = createContentForm(board, newContent);
     contentFormList.push(contentForm);
     container.appendChild(contentForm.$element[0]);
     container.appendChild(addBtnElem);
@@ -108,14 +96,16 @@ function showBoardContents(definedBoard) {
 
 /**
  * Contentオブジェクトに基づいてコンテントフォームを生成する
+ * @param {Board} board
  * @param {Content} content
  */
-function createContentForm(content = new Content()) {
+function createContentForm(board, content) {
   return new ContentForm(content, contentForm => {
     if (confirm("Sure?")) {
       const targetIndex = contentFormList.findIndex(cf => cf.id === contentForm.id);
       contentFormList.splice(targetIndex, 1);
       contentForm.$element[0].remove();
+      board.removeContent(targetIndex);
     }
   });
 }
@@ -193,19 +183,9 @@ function importNewBoard(source, boardName) {
     return null;
   }
 
-  const newOption = { name: boardName, contents: settings["contents"] };
-  let optList = store.get("options");
-  let brdList = store.get("boards");
-  if (optList) {
-    optList.push(newOption);
-    brdList.push(newOption);
-    store.set("options", optList);
-    store.set("boards", brdList);
-  } else {
-    store.set("version", VERSION);
-    store.set("options", [newOption]);
-    store.set("boards", [newOption]);
-  }
+  setting.addBoardFromObject(boardName, settings["contents"]);
+  setting.saveAllSettings();
+
   if (source === "default") {
     const window = remote.getCurrentWindow();
     window.close();
@@ -219,10 +199,12 @@ function importNewBoard(source, boardName) {
  * @param {string} boardName
  */
 function checkDuplicateNameExists(boardName) {
-  return definedBoardList.some(board => board.name === boardName);
+  return setting.definedBoardList.some(board => board.name === boardName);
 }
 
 /**
+ * インポートした設定ファイルが適切な構成かをチェックする
+ * TODO: これもStoreクラス…?
  * @param {Object} jsonObj インポートした設定ファイル
  */
 function validateJson(jsonObj) {
@@ -242,21 +224,12 @@ function validateJson(jsonObj) {
  * 現在開いているボードを削除する
  */
 function deleteBoard() {
-  const currentBoardName = $("#boards-container li.active").text();
-  const allUsingBoards = store.get("boards");
-  const allDefinedBoards = store.get("options");
-
+  const currentBoardName = getCurrentBoardName();
   const confirmMessage = `Delete board name '${currentBoardName}'. OK?`;
   if (!confirm(confirmMessage)) return;
 
-  for (i in allDefinedBoards) {
-    if (currentBoardName == allDefinedBoards[i]["name"]) {
-      allDefinedBoards.splice(i, 1);
-      allUsingBoards.splice(i, 1);
-    }
-  }
-  store.set("options", allDefinedBoards);
-  store.set("boards", allUsingBoards);
+  setting.deleteBoard(currentBoardName);
+  setting.saveAllSettings();
   remote.getCurrentWindow().reload();
 }
 
@@ -264,34 +237,32 @@ function deleteBoard() {
  * 現在開いているボードの、定義済みバージョンをJSON形式でエクスポートする
  */
 function exportDefinedBoard() {
-  exportBoard("options");
+  const boardName = getCurrentBoardName();
+  exportBoard(setting.findDefinedBoard(boardName));
 }
 
 /**
  * 現在開いているボードの、使用中バージョンをJSON形式でエクスポートする
  */
 function exportUsingBoard() {
-  exportBoard("boards");
+  const boardName = getCurrentBoardName();
+  exportBoard(setting.findUsingBoard(boardName));
 }
 
 /**
  * ボードの設定情報をJSON形式でエクスポートする
- * @params {string} baseKey "boards" or "options"
+ * @param {Board} board エクスポート対象
  */
-function exportBoard(baseKey) {
-  const targetBoard = document.getElementById("board-name-textbox").innerText;
-  let board = {};
-  for (i in store.get(baseKey)) {
-    if (store.get(baseKey)[i]["name"] == targetBoard) {
-      board = store.get(baseKey)[i];
-    }
-  }
-  delete board.name;
+function exportBoard(board) {
+  const boardName = getCurrentBoardName();
+  const boardObject = board.toObject();
+  delete boardObject.name;
+
   const win = remote.getCurrentWindow();
   dialog.showSaveDialog(
     win,
     {
-      defaultPath: document.getElementById("board-name-textbox").innerText,
+      defaultPath: boardName,
       properties: ["openFile"],
       filters: [
         {
@@ -302,7 +273,7 @@ function exportBoard(baseKey) {
     },
     fileName => {
       if (fileName) {
-        const data = JSON.stringify(board, null, 2);
+        const data = JSON.stringify(boardObject, null, 2);
         writeFile(fileName, data);
       }
     }
@@ -327,7 +298,7 @@ function writeFile(path, data) {
  * ボードの設定をStoreに保存する
  */
 function saveBoardSetting() {
-  const targetBoardName = document.getElementById("board-name-textbox").innerText;
+  const targetBoardName = getCurrentBoardName();
   const newContents = [];
   let errors = [];
 
@@ -352,17 +323,26 @@ function saveBoardSetting() {
   }
 
   // 保存処理
-  let options = store.get("options");
-  options.forEach(option => {
-    if (option["name"] === targetBoardName) {
-      option["contents"] = newContents;
-    }
-  });
-  store.set("options", options);
-  store.set("boards", options);
+  setting.syncDefinedBoardToUsingBoard();
+  setting.saveAllSettings();
   document.getElementById("save-btn").innerText = "Saved!";
   const reloadMessage = function () {
     document.getElementById("save-btn").innerText = "Save Board Setting";
   };
   setTimeout(reloadMessage, 2000);
+}
+
+/**
+ * 現在選択中のボード名を取得する
+ */
+function getCurrentBoardName() {
+  return $("#boards-container li.active").text();
+}
+
+/**
+ * 現在選択中のボードを取得する
+ */
+function getCurrentBoard() {
+  const boardName = getCurrentBoardName();
+  return setting.findDefinedBoard(boardName);
 }
