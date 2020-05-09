@@ -38,6 +38,7 @@ class WebView {
     this.element.addEventListener("dom-ready", () => {
       this.apply();
       this.initializeContextMenu();
+      this.initializeUrlDialogShortcut();
       this.element
         .getWebContents()
         .on("before-input-event", (_, e) => this.execShortcutKey(e));
@@ -94,6 +95,18 @@ class WebView {
       this.seacher.emit("show");
       this.seacher.findInPage();
     });
+  }
+
+  /**
+   * meta + U でアドレスダイアログを開く
+   */
+  initializeUrlDialogShortcut(){
+    this.addShortcutKey("meta+u", () => {
+      const localElement = remote.webContents.fromId(this.element.getWebContentsId());
+      const url = localElement.getURL();      
+      const ev = new CustomEvent("openReplaceUrlDialog", {detail: {url, id: this.element.id}})
+      window.dispatchEvent(ev)
+    })
   }
 
   /**

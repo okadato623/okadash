@@ -508,6 +508,21 @@ function openNewPaneFromUrlDialog(index = null) {
   dlg.addEventListener("close", onClose, { once: true });
 }
 
+function replacePaneFromUrlDialog(event){
+  const {url, id} = event.detail
+  const dlg = document.querySelector("#create-new-pane-dialog");
+
+  const index = getWebviews().findIndex(webView => {
+    return webView.id === id
+  })
+  const pane = store.get("boards")[currentBoardIndex].contents[index]
+  dlg.querySelector(".url").value = url; 
+  dlg.querySelector(".name").value = pane.name;
+
+  openNewPaneFromUrlDialog(index)
+}
+window.addEventListener("openReplaceUrlDialog", replacePaneFromUrlDialog)
+
 /**
  * ボード内アイテムリストを元に、メニュー用のオブジェクトリストを戻す
  * @param {Array} contents ボード内のアイテムリスト
