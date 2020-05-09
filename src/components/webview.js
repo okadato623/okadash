@@ -98,10 +98,10 @@ class WebView {
   }
 
   /**
-   * meta + U でURLダイアログを開くショートカットを埋め込む
+   * meta + L でURLダイアログを開くショートカットを埋め込む
    */
   initializeUrlDialogShortcut() {
-    this.addShortcutKey("meta+u", () => {
+    this.addShortcutKey("meta+l", () => {
       const localElement = remote.webContents.fromId(this.element.getWebContentsId());
       const url = localElement.getURL();
       const ev = new CustomEvent("openReplaceUrlDialog", {
