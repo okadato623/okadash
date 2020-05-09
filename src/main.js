@@ -352,7 +352,9 @@ function exportUsingBoard() {
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
   delete usingBoard.name;
+  const win = remote.getCurrentWindow();
   dialog.showSaveDialog(
+    win,
     {
       properties: ["openFile"],
       filters: [
