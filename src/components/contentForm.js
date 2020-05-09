@@ -17,7 +17,7 @@ class ContentForm {
    * Contentの内容に応じたフォームUIを生成する
    */
   createElement() {
-    const { name, url, zoom, customCSS } = this.content.toObject();
+    const { name, url, zoom, customCSS, customUA } = this.content.toObject();
     const $element = $(`
       <div class="item-box">
         <p>
@@ -31,6 +31,10 @@ class ContentForm {
         <p>
           Zoom
           <input value="${zoom}" type="textbox" class="zoom content-textbox" />
+        </p>
+        <p>
+          Custom UserAgent
+          <input value="${customUA}" type="textbox" class="customUA content-textbox" />
         </p>
         <p>
           Custom CSS
@@ -83,6 +87,7 @@ class ContentForm {
     this.content.name = this.$element.find("input.name").val();
     this.content.url = this.$element.find("input.url").val();
     this.content.zoom = this.$element.find("input.zoom").val();
+    this.content.customUA = this.$element.find("input.customUA").val();
     this.content.customCSS = this.$element.find("textarea.custom-css").val().split("\n");
   }
 
@@ -91,8 +96,8 @@ class ContentForm {
    * @params {object} options マージするオブジェクト
    */
   toObject(options = {}) {
-    const { name, url, zoom, customCSS } = this.content.toObject();
-    return { name, url, zoom, customCSS, ...options };
+    const { name, url, zoom, customCSS ,customUA} = this.content.toObject();
+    return { name, url, zoom, customCSS, customUA, ...options };
   }
 
   /**
