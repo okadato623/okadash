@@ -21,9 +21,15 @@ class Setting {
    */
   loadAllSettings() {
     this.store = electronStore.store;
-    this.version = this.store["version"];
-    this.usingBoardList = this.loadUsingBoardList();
-    this.definedBoardList = this.loadDefinedBoardList();
+    if (Object.keys(this.store).length === 0) {
+      this.version = this.appVersion;
+      this.usingBoardList = [];
+      this.definedBoardList = [];
+    } else {
+      this.version = this.store["version"];
+      this.usingBoardList = this.loadUsingBoardList();
+      this.definedBoardList = this.loadDefinedBoardList();
+    }
   }
 
   /**
