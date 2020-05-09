@@ -17,6 +17,12 @@ class ContentForm {
    * Contentの内容に応じたフォームUIを生成する
    */
   createElement() {
+    const ua = {
+      default: "",
+      iPhone13: "Mozilla/5.0 (iPhone; CPU iPhone OS 13_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Mobile/15E148 Safari/604.1",
+      Pixel4: "Mozilla/5.0 (Linux; Android 10; Pixel 4 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.62 Mobile Safari/537.36"
+    }
+
     const { name, url, zoom, customCSS, customUA } = this.content.toObject();
     const $element = $(`
       <div class="item-box">
@@ -34,7 +40,13 @@ class ContentForm {
         </p>
         <p>
           Custom UserAgent
-          <input value="${customUA}" type="textbox" class="customUA content-textbox" />
+          <select class="customUA content-selectbox">
+            <option ${customUA === "" ? "selected" : ""}>default</option>
+            <option value="${ua.iPhone13}" ${customUA === ua.iPhone13 ? "selected": ""}
+            >iPhone iOS13</option>
+            <option value="${ua.Pixel4}" ${customUA === ua.Pixel4 ? "selected" : ""}
+            >Pixel4 Android10</option>
+          </select>
         </p>
         <p>
           Custom CSS
@@ -87,7 +99,7 @@ class ContentForm {
     this.content.name = this.$element.find("input.name").val();
     this.content.url = this.$element.find("input.url").val();
     this.content.zoom = this.$element.find("input.zoom").val();
-    this.content.customUA = this.$element.find("input.customUA").val();
+    this.content.customUA = this.$element.find("select.customUA").val();
     this.content.customCSS = this.$element.find("textarea.custom-css").val().split("\n");
   }
 

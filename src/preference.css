@@ -193,6 +193,11 @@ a.article:hover {
   width: 100%;
 }
 
+.content-selectbox {
+  width: 100%;
+  height: 2em;
+}
+
 .textarea-ccss {
   width: 100%;
   height: 120px;
