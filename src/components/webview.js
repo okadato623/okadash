@@ -13,8 +13,10 @@ class WebView {
    * @param {string}   params.url
    * @param {number}   params.zoom
    * @param {[string]} params.customCSS
+   * @param {string} params.customUA
    */
-  constructor({ url, zoom, customCSS }) {
+  constructor({ url, zoom, customCSS, customUA }) {
+    this.customUA = customUA || ""
     this.url = url || "";
     this.zoom = zoom || 1.0;
     this.customCSS = customCSS || [];
@@ -35,6 +37,7 @@ class WebView {
   initialize() {
     if (isValidURL(this.url)) this.element.src = this.url;
     this.element.autosize = "on";
+    this.element.useragent = this.customUA;
     this.element.addEventListener("dom-ready", () => {
       this.apply();
       this.initializeContextMenu();
