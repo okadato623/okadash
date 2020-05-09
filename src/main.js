@@ -364,13 +364,13 @@ function exportUsingBoard() {
         }
       ]
     },
-    fileName => {
-      if (fileName) {
-        const data = JSON.stringify(usingBoard, null, 2);
-        writeFile(fileName, data);
-      }
+  ).then(result => {
+    const fileName = result.filePath;
+    if (fileName) {
+      const data = JSON.stringify(usingBoard, null, 2);
+      writeFile(fileName, data);
     }
-  );
+  })
 }
 
 /**
@@ -811,7 +811,7 @@ function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, {name, url, zoom, customCSS }) {
+function recreateSelectedPane(index, { name, url, zoom, customCSS }) {
   const div = document.getElementById(`${index}`);
   const webViewElm = div.querySelector("webview");
   convertToWebViewInstance(webViewElm).dispose();
