@@ -768,6 +768,18 @@ function addMaximizeButton(div, index) {
 }
 
 /**
+ * URL変更ダイアログを開く
+ * @param {Element} webview
+ */
+function openUrlChangeDialog(webview) {
+  const url = webview.getURL();
+  const ev = new CustomEvent("openReplaceUrlDialog", {
+    detail: { url, id: webview.id }
+  });
+  window.dispatchEvent(ev);
+}
+
+/**
  * ペインリロードメニューを開く
  * @param {string} 対象ペイン要素のID
  */
@@ -978,6 +990,7 @@ function loadSettings() {
  */
 function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS });
+  webview.addShortcutKey("meta+l", webview => openUrlChangeDialog(webview));
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
