@@ -4,11 +4,8 @@ var { Menu, MenuItem, dialog } = remote;
 const app = remote.app;
 const fs = require("fs");
 const path = require("path");
-const Store = require("electron-store");
-const store = new Store();
 const menu = require("./menu");
 const WebView = require("./components/webview");
-
 const Content = require("./models/content");
 
 /**
@@ -220,7 +217,7 @@ function initialize() {
   });
   initializeMenu(menu.menuTemplate);
 
-  // 使用中のボードをStoreから参照し、ペインの初期描画を行う
+  // 使用中のボード設定を元にペインの初期描画を行う
   const contents = getCurrentBoard().contents;
   contents.forEach(content => createPane(content, true));
 
@@ -891,25 +888,6 @@ function createWebView(id, content, forOverlay = false) {
 function convertToWebViewInstance(webViewElement) {
   const paneElm = webViewElement.parentNode;
   return paneElm ? webViews[paneElm.id] : undefined;
-}
-
-/**
- * Storeから取得したボードオブジェクトを元に描画用のボードオブジェクトを生成する
- * @param {Object} board ボードオブジェクト
- */
-function buildJsonObjectFromStoredData(board) {
-  let newContents = [];
-  if (board === undefined) ipcRenderer.send("initial-open");
-  board["contents"].forEach(function (content) {
-    if (content !== null) newContents.push(content);
-  });
-  store.set(`boards.${currentBoardIndex}.contents`, newContents);
-  let jsonObj = {
-    name: board["name"],
-    contents: newContents
-  };
-
-  return jsonObj;
 }
 
 /**
