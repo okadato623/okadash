@@ -352,8 +352,7 @@ function createMenuItemForSmallPane() {
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
-  const usingBoard = setting.usingBoardList[currentBoardIndex];
-  const usingBoardObject = usingBoard.toObject();
+  const usingBoardObject = getCurrentBoard().toObject();
   delete usingBoardObject.name;
 
   // jsonにしたものをファイルに吐き出す
@@ -506,9 +505,9 @@ function replacePaneFromUrlDialog(event) {
   const index = getWebviews().findIndex(webView => {
     return webView.id === id;
   });
-  const pane = store.get("boards")[currentBoardIndex].contents[index];
+  const content = getCurrentBoard().contents[index];
   dlg.querySelector(".url").value = url;
-  dlg.querySelector(".name").value = pane.name;
+  dlg.querySelector(".name").value = content.name;
 
   openNewPaneFromUrlDialog(index);
 }
@@ -954,6 +953,7 @@ function loadSettings() {
  */
 function createWebView(id, content, forOverlay = false) {
   const webview = new WebView(content);
+  webview.addShortcutKey("meta+l", openUrlChangeDialog);
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
