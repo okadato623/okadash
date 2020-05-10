@@ -593,19 +593,12 @@ function createCloseButton(index) {
  * @param {string} toIndex   交換さきペイン要素のID
  */
 function swapSmallPane(fromIndex, toIndex) {
-  const settings = loadSettings();
   const fromPane = document.getElementById(fromIndex);
   const toPane = document.getElementById(toIndex);
 
   // 両ペインの定義済み設定を交換
-  storeUrl(fromIndex, settings.contents[toIndex]["url"]);
-  storeUrl(toIndex, settings.contents[fromIndex]["url"]);
-  storeZoom(fromIndex, settings.contents[toIndex]["zoom"]);
-  storeZoom(toIndex, settings.contents[fromIndex]["zoom"]);
-  storeCustomCSS(fromIndex, settings.contents[toIndex]["customCSS"]);
-  storeCustomCSS(toIndex, settings.contents[fromIndex]["customCSS"]);
-  storeCustomUA(fromIndex, settings.contents[toIndex]["customUA"]);
-  storeCustomUA(toIndex, settings.contents[fromIndex]["customUA"]);
+  getCurrentBoard().swapContent(fromIndex, toIndex);
+  setting.saveAllSettings();
 
   // ペインのIDと表示位置を交換
   [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [

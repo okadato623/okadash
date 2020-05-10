@@ -32,6 +32,18 @@ class Board {
   }
 
   /**
+   * コンテンツの場所を入れ替える
+   * @param {number} fromIndex
+   * @param {number} toIndex
+   */
+  swapContent(fromIndex, toIndex) {
+    [this.contents[fromIndex], this.contents[toIndex]] = [
+      this.contents[toIndex],
+      this.contents[fromIndex]
+    ];
+  }
+
+  /**
    * ボード全体のサイズ情報を取得する
    * TODO: この辺り謎なので整理したい
    */
