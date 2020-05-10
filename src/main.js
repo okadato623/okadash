@@ -397,32 +397,16 @@ function writeFile(path, data) {
  * ボード切り替え用のメニューを生成する
  */
 function createBoardMenuItems() {
-  const allOptions = store.get("options");
-  const boardMenuItems = [];
-  for (i in allOptions) {
-    const index = i;
-    if (i == 0) {
-      boardMenuItems.push(
-        new MenuItem({
-          label: allOptions[i]["name"] + " [ default ]",
-          index: i
-        })
-      );
-    } else {
-      boardMenuItems.push(
-        new MenuItem({
-          label: allOptions[i]["name"],
-          accelerator: `CommandOrControl+Option+${i}`,
-          index: i,
-          click() {
-            openNewWindow(index);
-          }
-        })
-      );
-    }
-  }
-
-  return boardMenuItems;
+  return setting.definedBoardList.map((definedBoard, index) => {
+    return new MenuItem({
+      index,
+      label: definedBoard.name,
+      accelerator: `CommandOrControl+Option+${index}`,
+      click() {
+        openNewWindow(index);
+      }
+    });
+  });
 }
 
 /**
