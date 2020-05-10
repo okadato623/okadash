@@ -990,7 +990,7 @@ function loadSettings() {
  */
 function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS });
-  webview.addShortcutKey("meta+l", webview => openUrlChangeDialog(webview));
+  webview.addShortcutKey("meta+l", openUrlChangeDialog);
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
