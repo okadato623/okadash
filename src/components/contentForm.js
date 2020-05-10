@@ -19,9 +19,11 @@ class ContentForm {
   createElement() {
     const ua = {
       default: "",
-      iPhone13: "Mozilla/5.0 (iPhone; CPU iPhone OS 13_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Mobile/15E148 Safari/604.1",
-      Pixel4: "Mozilla/5.0 (Linux; Android 10; Pixel 4 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.62 Mobile Safari/537.36"
-    }
+      iPhone13:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 13_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Mobile/15E148 Safari/604.1",
+      Pixel4:
+        "Mozilla/5.0 (Linux; Android 10; Pixel 4 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.62 Mobile Safari/537.36"
+    };
 
     const { name, url, zoom, customCSS, customUA } = this.content.toObject();
     const $element = $(`
@@ -41,11 +43,15 @@ class ContentForm {
         <p>
           Custom UserAgent
           <select class="customUA content-selectbox">
-            <option ${customUA === "" ? "selected" : ""}>default</option>
-            <option value="${ua.iPhone13}" ${customUA === ua.iPhone13 ? "selected": ""}
-            >iPhone iOS13</option>
-            <option value="${ua.Pixel4}" ${customUA === ua.Pixel4 ? "selected" : ""}
-            >Pixel4 Android10</option>
+            <option value="${ua.default}" ${customUA === "" ? "selected" : ""}>
+              default
+            </option>
+            <option value="${ua.iPhone13}" ${customUA === ua.iPhone13 ? "selected" : ""}>
+              iPhone iOS13
+            </option>
+            <option value="${ua.Pixel4}" ${customUA === ua.Pixel4 ? "selected" : ""}>
+              Pixel4 Android10
+            </option>
           </select>
         </p>
         <p>
@@ -59,7 +65,7 @@ class ContentForm {
 
     $element.children("button").click(() => this.onClickDeleteButton(this));
     $element.find("input,textarea").on("blur", () => this.syncToContent());
-    $element.find("select").on("change", () => this.syncToContent())
+    $element.find("select").on("change", () => this.syncToContent());
     return $element;
   }
 
@@ -109,7 +115,7 @@ class ContentForm {
    * @params {object} options マージするオブジェクト
    */
   toObject(options = {}) {
-    const { name, url, zoom, customCSS ,customUA} = this.content.toObject();
+    const { name, url, zoom, customCSS, customUA } = this.content.toObject();
     return { name, url, zoom, customCSS, customUA, ...options };
   }
 
