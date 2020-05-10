@@ -59,6 +59,7 @@ class ContentForm {
 
     $element.children("button").click(() => this.onClickDeleteButton(this));
     $element.find("input,textarea").on("blur", () => this.syncToContent());
+    $element.find("select").on("change", () => this.syncToContent())
     return $element;
   }
 
