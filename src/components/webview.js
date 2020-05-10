@@ -1,5 +1,6 @@
 const ContextMenu = require("electron-context-menu");
 const ElectronSearchText = require("electron-search-text");
+const Content = require("../models/content");
 
 /**
  * webview要素のラッパークラス
@@ -9,18 +10,14 @@ const ElectronSearchText = require("electron-search-text");
 class WebView {
   /**
    * オブジェクト生成時に完成したWebViewを生成する
-   * @param {Object}   params
-   * @param {string}   params.url
-   * @param {number}   params.zoom
-   * @param {[string]} params.customCSS
-   * @param {string} params.customUA
+   * @param {Content} content
    */
-  constructor({ url, zoom, customCSS, customUA }) {
-    this.customUA = customUA || ""
-    this.url = url || "";
-    this.zoom = zoom || 1.0;
-    this.customCSS = customCSS || [];
-    this.element = createWebViewElement(url);
+  constructor(content) {
+    this.customUA = content.customUA;
+    this.url = content.url;
+    this.zoom = content.zoom;
+    this.customCSS = content.customCSS;
+    this.element = createWebViewElement(content.url);
     this.shortcutKeyMap = {
       "meta+[": element => element.goBack(),
       "meta+]": element => element.goForward()

@@ -678,7 +678,7 @@ function maximize(index) {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebView(div.id, { url, forOverlay: true });
+  const webview = createWebView(div.id, new Content({ url }), true);
   div.appendChild(webview.element);
 }
 
@@ -860,7 +860,7 @@ function recreateSelectedPane(index, { name, url, zoom, customCSS, customUA }) {
   storeZoom(index, zoom);
   storeCustomUA(index, customUA);
 
-  const webview = createWebView(div.id, { url, zoom, customCSS, customUA });
+  const webview = createWebView(div.id, new Content({ url, zoom, customCSS, customUA }));
   div.appendChild(webview.element);
   addSearchbox(webview);
 }
@@ -931,10 +931,7 @@ function createPane(content, init = false) {
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
   const forSmallPane = content.size === "small";
-  const webview = createWebView(divContainer.id, {
-    ...content.toObject(),
-    forSmallPane
-  });
+  const webview = createWebView(divContainer.id, content);
   divContainer.appendChild(webview.element);
 
   createDraggableBar(content.size);
@@ -997,19 +994,15 @@ function loadSettings() {
 /**
  * Webviewオブジェクトを生成する
  * @param {string}   id オブジェクトに紐付けるユニークな文字列
- * @param {Object}   params
- * @param {string}   params.url
- * @param {number}   params.zoom
- * @param {[string]} params.customCSS
- * @param {boolean}  params.forOverlay   オーバレイ用途であるか
- * @param {boolean}  params.forSmallPane smallペイン用途であるか
+ * @param {Content}  content
+ * @param {Boolean}  forOverlay オーバレイ用途であるか
  */
-function createWebView(id, { url, zoom, customCSS, customUA, forOverlay, forSmallPane }) {
-  const webview = new WebView({ url, zoom, customCSS, customUA });
+function createWebView(id, content, forOverlay = false) {
+  const webview = new WebView(content);
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
-  } else if (forSmallPane) {
+  } else if (content.size === "small") {
     webview.addShortcutKey("meta+w", webview => removeSmallPane(webview.parentNode.id));
   }
   webViews[id] = webview;
