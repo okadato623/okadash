@@ -445,7 +445,7 @@ function createAdditionalPaneMenuItems(contents) {
       label: content["name"],
       accelerator: `CommandOrControl+${content["index"] + 1}`,
       click() {
-        loadAdditionalPage(content);
+        loadAdditionalPage(new Content(content));
       }
     });
   });
@@ -504,7 +504,7 @@ function openNewPaneFromUrlDialog(index = null) {
       if (index !== null) {
         recreateSelectedPane(index, newContent);
       } else {
-        loadAdditionalPage(newContent);
+        loadAdditionalPage(new Content(newContent));
       }
     } else {
       dlg.close();
@@ -816,22 +816,19 @@ function getPaneNum() {
 
 /**
  * smallペインを追加する
- * @param {object} params
- * @param {string} params.name
- * @param {string} params.url
- * @param {string} params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content} content
  */
-function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = "" }) {
+function loadAdditionalPage(content) {
   resetWindowSize();
-  const size = "small";
-  createPane({ size, url, zoom, customCSS, customUA });
-  storeName(getPaneNum() - 1, name);
-  storeSize(getPaneNum() - 1, size);
-  storeUrl(getPaneNum() - 1, url);
-  storeZoom(getPaneNum() - 1, zoom);
-  storeCustomCSS(getPaneNum() - 1, customCSS);
-  storeCustomUA(getPaneNum() - 1, customUA);
+  content.size = "small";
+
+  createPane(content);
+  storeName(getPaneNum() - 1, content.name);
+  storeSize(getPaneNum() - 1, content.size);
+  storeUrl(getPaneNum() - 1, content.url);
+  storeZoom(getPaneNum() - 1, content.zoom);
+  storeCustomCSS(getPaneNum() - 1, content.customCSS);
+  storeCustomUA(getPaneNum() - 1, content.customUA);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
   const webView = convertToWebViewInstance(webviewElm);
