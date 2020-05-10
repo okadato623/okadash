@@ -24,6 +24,17 @@ class Board {
   }
 
   /**
+   * ボード内のコンテントを新しいコンテントで置き換える
+   * @param {number} index
+   * @param {Content} newContent
+   */
+  replaceContent(index, newContent) {
+    Content.configuableFields.forEach(key => {
+      this.contents[index][key] = newContent[key];
+    });
+  }
+
+  /**
    * ボード内のコンテンツを削除する
    * @param {number} index
    */
@@ -32,15 +43,18 @@ class Board {
   }
 
   /**
-   * コンテンツの場所を入れ替える
+   * コンテンツの内容を入れ替える
+   * NOTE: 内容のみ入れ替えるのでオブジェクトごとの交換でなく入れ替え可能属性のみ交換する
    * @param {number} fromIndex
    * @param {number} toIndex
    */
   swapContent(fromIndex, toIndex) {
-    [this.contents[fromIndex], this.contents[toIndex]] = [
-      this.contents[toIndex],
-      this.contents[fromIndex]
-    ];
+    const from = this.contents[fromIndex];
+    const to = this.contents[toIndex];
+
+    Content.configuableFields.forEach(key => {
+      [from[key], to[key]] = [to[key], from[key]];
+    });
   }
 
   /**

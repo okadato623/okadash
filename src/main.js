@@ -474,17 +474,17 @@ function openNewPaneFromUrlDialog(index = null) {
 
   function onClose() {
     if (dlg.returnValue === "ok") {
-      const newContent = {
+      const newContent = new Content({
         name: dlg.querySelector(".name").value,
         url: dlg.querySelector(".url").value,
         zoom: 1,
         customCSS: []
-      };
+      });
 
       if (index !== null) {
         recreateSelectedPane(index, newContent);
       } else {
-        loadAdditionalPage(new Content(newContent));
+        loadAdditionalPage(newContent);
       }
     } else {
       dlg.close();
@@ -788,80 +788,19 @@ function loadAdditionalPage(content) {
 /**
  * 対象ペインを再生成する
  * @param {string} index 対象ペイン要素のID
- * @param {object} params
- * @param {string} params.name
- * @param {string} params.url
- * @param {string} params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content} content
  */
-function recreateSelectedPane(index, { name, url, zoom, customCSS, customUA }) {
+function recreateSelectedPane(index, content) {
   const div = document.getElementById(`${index}`);
   const webViewElm = div.querySelector("webview");
   convertToWebViewInstance(webViewElm).dispose();
 
-  storeName(index, name);
-  storeUrl(index, url);
-  storeCustomCSS(index, customCSS);
-  storeZoom(index, zoom);
-  storeCustomUA(index, customUA);
+  getCurrentBoard().replaceContent(index, content);
+  setting.saveAllSettings();
 
-  const webview = createWebView(div.id, new Content({ url, zoom, customCSS, customUA }));
+  const webview = createWebView(div.id, content);
   div.appendChild(webview.element);
   addSearchbox(webview);
-}
-
-/**
- * 現在表示しているペインの名前を保存する
- * @param {string} index 対象ペインのID
- * @param {string} name
- */
-function storeName(index, name) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.name`, name);
-}
-
-/**
- * 現在表示しているペインのサイズを保存する
- * @param {string} index 対象ペインのID
- * @param {string} size
- */
-function storeSize(index, size) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.size`, size);
-}
-
-/**
- * 現在表示しているペインのURLを保存する
- * @param {string} index 対象ペインのID
- * @param {string} url
- */
-function storeUrl(index, url) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.url`, url);
-}
-
-/**
- * 現在表示しているペインの拡大率を保存する
- * @param {string} index 対象ペインのID
- * @param {string} zoom
- */
-function storeZoom(index, zoom) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.zoom`, zoom || 1.0);
-}
-
-/**
- * 現在表示しているペインのカスタムCSSを保存する
- * @param {string} index 対象ペインのID
- * @param {[string]} customCSS
- */
-function storeCustomCSS(index, customCSS) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.customCSS`, customCSS || []);
-}
-
-/**
- * 現在表示しているペインのカスタムUAを保存する
- * @param {string} index 対象ペインのID
- * @param {string} customUA
- */
-function storeCustomUA(index, customUA) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.customUA`, customUA || "");
 }
 
 /**
