@@ -510,6 +510,26 @@ function openNewPaneFromUrlDialog(index = null) {
 }
 
 /**
+ * eventから現在のペインのURLとidを受け取り、
+ * ペインを変更するためのダイアログを開く
+ * @param {*} event
+ */
+function replacePaneFromUrlDialog(event) {
+  const { url, id } = event.detail;
+  const dlg = document.querySelector("#create-new-pane-dialog");
+
+  const index = getWebviews().findIndex(webView => {
+    return webView.id === id;
+  });
+  const pane = store.get("boards")[currentBoardIndex].contents[index];
+  dlg.querySelector(".url").value = url;
+  dlg.querySelector(".name").value = pane.name;
+
+  openNewPaneFromUrlDialog(index);
+}
+window.addEventListener("openReplaceUrlDialog", replacePaneFromUrlDialog);
+
+/**
  * ボード内アイテムリストを元に、メニュー用のオブジェクトリストを戻す
  * @param {Array} contents ボード内のアイテムリスト
  */
@@ -749,6 +769,18 @@ function addMaximizeButton(div, index) {
   btn.innerHTML = `<i class="fas fa-arrows-alt-h fa-rotate-135"></i>`;
   btn.style = "font-size: 14px;";
   div.insertBefore(btn, div.firstChild);
+}
+
+/**
+ * URL変更ダイアログを開く
+ * @param {Element} webview
+ */
+function openUrlChangeDialog(webview) {
+  const url = webview.getURL();
+  const ev = new CustomEvent("openReplaceUrlDialog", {
+    detail: { url, id: webview.id }
+  });
+  window.dispatchEvent(ev);
 }
 
 /**
