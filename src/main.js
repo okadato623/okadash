@@ -323,10 +323,8 @@ function createMenuItemForBoard() {
  * @param {string} index 対象ペイン要素のID
  */
 function createMenuItemForContextmenu(index) {
-  const options = store.get(`options.${currentBoardIndex}.contents`);
-  const content = getAdditionalPaneInfo(options);
-
-  return createContextMenuItems(content, index);
+  const contents = setting.definedBoardList[currentBoardIndex].contents;
+  return createContextMenuItems(contents, index);
 }
 
 /**
@@ -338,9 +336,8 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const options = store.get(`options.${currentBoardIndex}.contents`);
-  const content = getAdditionalPaneInfo(options);
-  const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
+  const contents = setting.definedBoardList[currentBoardIndex].contents;
+  const additionalPaneMenuItems = createAdditionalPaneMenuItems(contents);
 
   additionalPaneMenuItems.forEach(function (apMenuItem) {
     menuItem.submenu.append(apMenuItem);
@@ -421,31 +418,29 @@ function openNewWindow(index) {
 
 /**
  * ボード内のアイテムリスト情報を元に、ペイン追加用のメニューアイテムを生成する
- * @param {Array} contents
+ * @param {[Content]} contents
  */
 function createAdditionalPaneMenuItems(contents) {
-  const additionalPaneMenuItems = contents.map(function (content) {
+  return contents.map((content, index) => {
     return new MenuItem({
-      label: content["name"],
-      accelerator: `CommandOrControl+${content["index"] + 1}`,
+      label: content.name,
+      accelerator: `CommandOrControl+${index + 1}`,
       click() {
-        loadAdditionalPage(new Content(content));
+        loadAdditionalPage(content);
       }
     });
   });
-
-  return additionalPaneMenuItems;
 }
 
 /**
  * アイテムリストを元に、ペイン再生性用のメニューアイテムを作成する
- * @param {[any]}  contents
+ * @param {[Content]}  contents
  * @param {string} index 対象ペイン要素のID
  */
 function createContextMenuItems(contents, index) {
   const contextMenuItems = contents.map(function (content) {
     return new MenuItem({
-      label: content["name"],
+      label: content.name,
       click() {
         recreateSelectedPane(index, content);
       }
@@ -517,31 +512,6 @@ function replacePaneFromUrlDialog(event) {
   openNewPaneFromUrlDialog(index);
 }
 window.addEventListener("openReplaceUrlDialog", replacePaneFromUrlDialog);
-
-/**
- * ボード内アイテムリストを元に、メニュー用のオブジェクトリストを戻す
- * @param {Array} contents ボード内のアイテムリスト
- */
-function getAdditionalPaneInfo(contents) {
-  const content = contents.map(function (content, index) {
-    try {
-      url = new URL(content["url"]);
-    } catch {
-      alert(
-        "[Error] invalid URL format found in settings.  Maybe [workspace] in settings?"
-      );
-      ipcRenderer.send("window-open");
-    }
-    return {
-      name: content["name"],
-      url: content["url"],
-      zoom: content["zoom"],
-      customCSS: content["customCSS"],
-      index: index
-    };
-  });
-  return content;
-}
 
 /**
  * 現在描画されているWebviewの一覧を取得する
