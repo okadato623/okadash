@@ -540,8 +540,9 @@ function removeSmallPane(index) {
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
   const bars = Array.from(document.getElementsByClassName("dragbar-vertical-small"));
-  store.delete(`boards.${currentBoardIndex}.contents.${index}`);
-  saveNewContents();
+
+  getCurrentBoard().removeContent(index);
+  setting.saveAllSettings();
 
   smallPanes.forEach(function (pane) {
     if (pane.id > index) {
@@ -973,18 +974,6 @@ function createWebView(id, content, forOverlay = false) {
 function convertToWebViewInstance(webViewElement) {
   const paneElm = webViewElement.parentNode;
   return paneElm ? webViews[paneElm.id] : undefined;
-}
-
-/**
- * ボード内の破棄されたペインをボードの定義から除外する
- */
-function saveNewContents() {
-  const contents = store.get(`boards.${currentBoardIndex}.contents`);
-  let newContents = [];
-  contents.forEach(function (content) {
-    if (content !== null) newContents.push(content);
-  });
-  store.set(`boards.${currentBoardIndex}.contents`, newContents);
 }
 
 /**
