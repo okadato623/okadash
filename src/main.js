@@ -35,14 +35,8 @@ const mainContentSize = {
   height: document.getElementById("main-content").clientHeight
 };
 
-/**
- * 初期描画するボードの情報
- */
-let json = loadSettings();
-
-let allWidth = json.contents[0].allWidth;
-let configWidth = json.contents[0].width;
-let configHeight = json.contents[1].height;
+// TODO: 仕様整理してグローバル変数やめる
+let sizeInfo = getCurrentBoard().getSizeInfo();
 
 /**
  * ウィンドウサイズが変わるたびに、全て再描画し直す
@@ -211,7 +205,10 @@ $(document).keydown(function (e) {
  * バージョン確認、設定ファイルの互換性確認、メニュー生成、ペインとWebViewの初期化
  */
 function initialize() {
-  if (store.size == 0) return;
+  if (!setting.validate()) {
+    ipcRenderer.send("initial-open");
+    return;
+  }
   getLatestVersion();
 
   remote.getCurrentWindow().on("focus", () => {
@@ -935,18 +932,6 @@ function createButtonDiv() {
 }
 
 /**
- * storeを元に初期描画するボードのオブジェクトを生成する
- */
-function loadSettings() {
-  if (store.size == 0) {
-    ipcRenderer.send("initial-open");
-    return;
-  }
-  currentBoardIndex = boardNameToIndex();
-  return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
-}
-
-/**
  * Webviewオブジェクトを生成する
  * @param {string}   id オブジェクトに紐付けるユニークな文字列
  * @param {Content}  content
@@ -1002,9 +987,15 @@ function resetWindowSize() {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   ratio =
-    `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+    `${sizeInfo.configWidth}% 0% ` +
+    `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
   columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
+  rows = `
+    grid-template-rows: ${sizeInfo.configHeight}%
+    0%
+    ${100 - sizeInfo.configHeight}%
+    !important ;
+  `;
   main.style = columns + rows;
   draggingBoarder.id = "";
 }
@@ -1017,10 +1008,10 @@ function calcWindowSize(init = false) {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   const largeWidth = $(".large")[0].clientWidth;
-  configWidth = (largeWidth / mainContentSize.width) * 100;
+  sizeInfo.configWidth = (largeWidth / mainContentSize.width) * 100;
   if ($(".medium")[0] !== undefined) {
     var mediumHheight = $(".medium")[0].clientHeight;
-    configHeight = (mediumHheight / mainContentSize.height) * 100;
+    sizeInfo.configHeight = (mediumHheight / mainContentSize.height) * 100;
   }
   let columns = "";
   let rows = "";
@@ -1046,11 +1037,17 @@ function calcWindowSize(init = false) {
   } else {
     // リセット時の処理なので等分するだけ
     ratio =
-      `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+      `${sizeInfo.configWidth}% 0% ` +
+      `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
   columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
-  if (init && allWidth !== undefined) columns = allWidth;
+  rows = `
+    grid-template-rows: ${sizeInfo.configHeight}%
+    0%
+    ${100 - sizeInfo.configHeight}%
+    !important ;
+  `;
+  if (init && sizeInfo.allWidth !== undefined) columns = sizeInfo.allWidth;
   main.style = columns + rows;
   refreshButtons();
   const panes = Array.from(document.getElementsByClassName("small"));
@@ -1058,10 +1055,13 @@ function calcWindowSize(init = false) {
     pane.style.width = "100%";
     pane.style.height = "100%";
   });
-  if (configHeight !== undefined) {
-    store.set(`boards.${currentBoardIndex}.contents.0.width`, configWidth);
-    store.set(`boards.${currentBoardIndex}.contents.0.allWidth`, columns);
-    store.set(`boards.${currentBoardIndex}.contents.1.height`, configHeight);
+  if (sizeInfo.configHeight !== undefined) {
+    getCurrentBoard().updateSizeInfo(
+      columns,
+      sizeInfo.configWidth,
+      sizeInfo.configHeight
+    );
+    setting.saveAllSettings();
   }
 
   // 各ペインの検索ボックスもリサイズ

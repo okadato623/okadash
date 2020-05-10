@@ -32,6 +32,34 @@ class Board {
   }
 
   /**
+   * ボード全体のサイズ情報を取得する
+   * TODO: この辺り謎なので整理したい
+   */
+  getSizeInfo() {
+    if (this.contents.length > 1) {
+      return {
+        allWidth: this.contents[0].allWidth,
+        configWidth: this.contents[0].width,
+        configHeight: this.contents[1].height
+      };
+    } else {
+      return { allWidth: "", configWidth: "", configHeight: "" };
+    }
+  }
+
+  /**
+   * ボード全体のサイズ情報を更新する
+   * @param {string} allWidth
+   * @param {string} width
+   * @param {string} height
+   */
+  updateSizeInfo(allWidth, width, height) {
+    this.contents[0].allWidth = allWidth;
+    this.contents[0].width = width;
+    this.contents[1].height = height;
+  }
+
+  /**
    * オブジェクトを生成する
    */
   toObject() {
