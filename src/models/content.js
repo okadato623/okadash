@@ -13,7 +13,7 @@ class Content {
    * @param {string}   params.height
    * @param {[string]} params.customCSS
    */
-  constructor({ name, url, zoom, size, allWidth, width, height, customCSS } = {}) {
+  constructor({ name, url, zoom, size, allWidth, width, height, customCSS, customUA } = {}) {
     this.name = name || "";
     this.url = url || "";
     this.zoom = zoom || 1.0;
@@ -22,6 +22,7 @@ class Content {
     this.width = width || undefined;
     this.height = height || undefined;
     this.customCSS = customCSS || [];
+    this.customUA = customUA || "";
   }
 
   /**
@@ -75,7 +76,8 @@ class Content {
       allWidth: this.allWidth,
       width: this.width,
       height: this.height,
-      customCSS: this.customCSS
+      customCSS: this.customCSS,
+      customUA: this.customUA
     };
   }
 

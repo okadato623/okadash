@@ -211,6 +211,7 @@ function initialize() {
   contents.forEach(function (content) {
     if (content["size"] === undefined) content["size"] = "small";
     if (content["zoom"] === undefined) content["zoom"] = 1.0;
+    if (content["customUA"]  === undefined) content["customUA"] = ""
     createPane(content, true);
   });
   // 描画されたWebviewを操作するためのUIを追加する
@@ -642,6 +643,9 @@ function swapSmallPane(fromIndex, toIndex) {
   storeZoom(toIndex, settings.contents[fromIndex]["zoom"]);
   storeCustomCSS(fromIndex, settings.contents[toIndex]["customCSS"]);
   storeCustomCSS(toIndex, settings.contents[fromIndex]["customCSS"]);
+  storeCustomUA(fromIndex, settings.contents[toIndex]["customUA"]);
+  storeCustomUA(toIndex, settings.contents[fromIndex]["customUA"]);
+
 
   // ペインのIDと表示位置を交換
   [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [
@@ -814,15 +818,16 @@ function getPaneNum() {
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
+function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = ""}) {
   resetWindowSize();
   const size = "small";
-  createPane({ size, url, zoom, customCSS });
+  createPane({ size, url, zoom, customCSS, customUA });
   storeName(getPaneNum() - 1, name);
   storeSize(getPaneNum() - 1, size);
   storeUrl(getPaneNum() - 1, url);
   storeZoom(getPaneNum() - 1, zoom);
   storeCustomCSS(getPaneNum() - 1, customCSS);
+  storeCustomUA(getPaneNum() - 1, customUA);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
   const webView = convertToWebViewInstance(webviewElm);
@@ -843,7 +848,7 @@ function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [] }) {
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, { name, url, zoom, customCSS }) {
+function recreateSelectedPane(index, {name, url, zoom, customCSS, customUA }) {
   const div = document.getElementById(`${index}`);
   const webViewElm = div.querySelector("webview");
   convertToWebViewInstance(webViewElm).dispose();
@@ -852,8 +857,9 @@ function recreateSelectedPane(index, { name, url, zoom, customCSS }) {
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
   storeZoom(index, zoom);
+  storeCustomUA(index, customUA)
 
-  const webview = createWebView(div.id, { url, zoom, customCSS });
+  const webview = createWebView(div.id, { url, zoom, customCSS, customUA });
   div.appendChild(webview.element);
   addSearchbox(webview)
 }
@@ -897,10 +903,19 @@ function storeZoom(index, zoom) {
 /**
  * 現在表示しているペインのカスタムCSSを保存する
  * @param {string} index 対象ペインのID
- * @param {string} size
+ * @param {[string]} customCSS
  */
 function storeCustomCSS(index, customCSS) {
   store.set(`boards.${currentBoardIndex}.contents.${index}.customCSS`, customCSS || []);
+}
+
+/**
+ * 現在表示しているペインのカスタムUAを保存する
+ * @param {string} index 対象ペインのID
+ * @param {string} customUA 
+ */
+function storeCustomUA(index, customUA){
+  store.set(`boards.${currentBoardIndex}.contents.${index}.customUA`, customUA || "");
 }
 
 /**
@@ -911,14 +926,14 @@ function storeCustomCSS(index, customCSS) {
  * @param {[string]} params.customCSS
  * @param {boolean}  init  初期描画による作成であるか
  */
-function createPane({ size, url, zoom, customCSS }, init = false) {
+function createPane({ size, url, zoom, customCSS, customUA }, init = false) {
   let divContainer = createContainerDiv(size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
   const forSmallPane = size === "small";
-  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPane });
+  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPane, customUA});
   divContainer.appendChild(webview.element);
 
   createDraggableBar(size);
@@ -988,9 +1003,8 @@ function loadSettings() {
  * @param {boolean}  params.forOverlay   オーバレイ用途であるか
  * @param {boolean}  params.forSmallPane smallペイン用途であるか
  */
-function createWebView(id, { url, zoom, customCSS, forOverlay, forSmallPane }) {
-  const webview = new WebView({ url, zoom, customCSS });
-  webview.addShortcutKey("meta+l", openUrlChangeDialog);
+function createWebView(id, { url, zoom, customCSS, customUA, forOverlay, forSmallPane }) {
+  const webview = new WebView({ url, zoom, customCSS, customUA });
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
