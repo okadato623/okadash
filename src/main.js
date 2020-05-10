@@ -12,12 +12,18 @@ const WebView = require("./components/webview");
 /**
  * このウィンドウが表示しているボードのインデックス
  */
-let currentBoardIndex = 0
+let currentBoardIndex = 0;
 
 /**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.7.0";
+
+/**
+ * アプリケーションの設定
+ */
+const Setting = require("./setting");
+const setting = new Setting(VERSION);
 
 /**
  * ボード全体のサイズ
@@ -60,18 +66,12 @@ const draggingBoarder = {
 const webViews = {};
 
 function boardNameToIndex() {
-  const currentBoardName = remote.getCurrentWindow().boardName
+  const currentBoardName = remote.getCurrentWindow().boardName;
   if (currentBoardName) {
-    const res = store.get("boards").findIndex((board) => {
-      if (board["name"] === currentBoardName) {
-        return true
-      }
-    })
-
-    // 存在しないボードを参照したときには 0 番目を返す
-    return res === -1 ? 0 : res
+    const index = setting.findUsingBoardIndex(currentBoardName);
+    return index === -1 ? 0 : index; // 存在しないボードを参照したときには 0 番目を返す
   } else {
-    return 0
+    return 0;
   }
 }
 
@@ -201,9 +201,9 @@ function initialize() {
   if (store.size == 0) return;
   getLatestVersion();
 
-  remote.getCurrentWindow().on('focus', () => {
+  remote.getCurrentWindow().on("focus", () => {
     initializeMenu(menu.menuTemplate);
-  })
+  });
   initializeMenu(menu.menuTemplate);
 
   // 使用中のボードをStoreから参照し、ペインの初期描画を行う
@@ -211,7 +211,7 @@ function initialize() {
   contents.forEach(function (content) {
     if (content["size"] === undefined) content["size"] = "small";
     if (content["zoom"] === undefined) content["zoom"] = 1.0;
-    if (content["customUA"]  === undefined) content["customUA"] = ""
+    if (content["customUA"] === undefined) content["customUA"] = "";
     createPane(content, true);
   });
   // 描画されたWebviewを操作するためのUIを追加する
@@ -236,10 +236,7 @@ function initialize() {
  */
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  request.open(
-    "GET",
-    "https://api.github.com/repos/konoyono/okadash/releases/latest"
-  );
+  request.open("GET", "https://api.github.com/repos/konoyono/okadash/releases/latest");
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
       // requesting
@@ -354,9 +351,8 @@ function exportUsingBoard() {
   // allWidthとかとってこれる？
   delete usingBoard.name;
   const win = remote.getCurrentWindow();
-  dialog.showSaveDialog(
-    win,
-    {
+  dialog
+    .showSaveDialog(win, {
       properties: ["openFile"],
       filters: [
         {
@@ -364,14 +360,14 @@ function exportUsingBoard() {
           extensions: ["json"]
         }
       ]
-    },
-  ).then(result => {
-    const fileName = result.filePath;
-    if (fileName) {
-      const data = JSON.stringify(usingBoard, null, 2);
-      writeFile(fileName, data);
-    }
-  })
+    })
+    .then(result => {
+      const fileName = result.filePath;
+      if (fileName) {
+        const data = JSON.stringify(usingBoard, null, 2);
+        writeFile(fileName, data);
+      }
+    });
 }
 
 /**
@@ -426,8 +422,8 @@ function createBoardMenuItems() {
  */
 function openNewWindow(index) {
   const allOptions = store.get("options");
-  const boardName = allOptions[index]["name"]
-  ipcRenderer.send("subwindow-open", boardName)
+  const boardName = allOptions[index]["name"];
+  ipcRenderer.send("subwindow-open", boardName);
 }
 
 /**
@@ -473,7 +469,7 @@ function createNewPaneFromURLMenuItem(index) {
   return new MenuItem({
     label: "Open new pane from URL",
     click() {
-      openNewPaneFromUrlDialog(index)
+      openNewPaneFromUrlDialog(index);
     }
   });
 }
@@ -494,15 +490,15 @@ function openNewPaneFromUrlDialog(index = null) {
         url: dlg.querySelector(".url").value,
         zoom: 1,
         customCSS: []
-      }
+      };
 
       if (index !== null) {
-        recreateSelectedPane(index, newContent)
+        recreateSelectedPane(index, newContent);
       } else {
-        loadAdditionalPage(newContent)
+        loadAdditionalPage(newContent);
       }
     } else {
-      dlg.close()
+      dlg.close();
     }
     dlg.style.display = "none";
   }
@@ -645,7 +641,6 @@ function swapSmallPane(fromIndex, toIndex) {
   storeCustomCSS(toIndex, settings.contents[fromIndex]["customCSS"]);
   storeCustomUA(fromIndex, settings.contents[toIndex]["customUA"]);
   storeCustomUA(toIndex, settings.contents[fromIndex]["customUA"]);
-
 
   // ペインのIDと表示位置を交換
   [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [
@@ -818,7 +813,7 @@ function getPaneNum() {
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = ""}) {
+function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = "" }) {
   resetWindowSize();
   const size = "small";
   createPane({ size, url, zoom, customCSS, customUA });
@@ -848,7 +843,7 @@ function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = 
  * @param {string} params.zoom
  * @param {[string]} params.customCSS
  */
-function recreateSelectedPane(index, {name, url, zoom, customCSS, customUA }) {
+function recreateSelectedPane(index, { name, url, zoom, customCSS, customUA }) {
   const div = document.getElementById(`${index}`);
   const webViewElm = div.querySelector("webview");
   convertToWebViewInstance(webViewElm).dispose();
@@ -857,11 +852,11 @@ function recreateSelectedPane(index, {name, url, zoom, customCSS, customUA }) {
   storeUrl(index, url);
   storeCustomCSS(index, customCSS);
   storeZoom(index, zoom);
-  storeCustomUA(index, customUA)
+  storeCustomUA(index, customUA);
 
   const webview = createWebView(div.id, { url, zoom, customCSS, customUA });
   div.appendChild(webview.element);
-  addSearchbox(webview)
+  addSearchbox(webview);
 }
 
 /**
@@ -912,9 +907,9 @@ function storeCustomCSS(index, customCSS) {
 /**
  * 現在表示しているペインのカスタムUAを保存する
  * @param {string} index 対象ペインのID
- * @param {string} customUA 
+ * @param {string} customUA
  */
-function storeCustomUA(index, customUA){
+function storeCustomUA(index, customUA) {
   store.set(`boards.${currentBoardIndex}.contents.${index}.customUA`, customUA || "");
 }
 
@@ -933,7 +928,13 @@ function createPane({ size, url, zoom, customCSS, customUA }, init = false) {
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
   const forSmallPane = size === "small";
-  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPane, customUA});
+  const webview = createWebView(divContainer.id, {
+    url,
+    zoom,
+    customCSS,
+    forSmallPane,
+    customUA
+  });
   divContainer.appendChild(webview.element);
 
   createDraggableBar(size);
@@ -989,7 +990,7 @@ function loadSettings() {
     ipcRenderer.send("initial-open");
     return;
   }
-  currentBoardIndex = boardNameToIndex()
+  currentBoardIndex = boardNameToIndex();
   return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
 }
 

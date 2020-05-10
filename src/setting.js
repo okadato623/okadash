@@ -127,6 +127,14 @@ class Setting {
   findUsingBoard(name) {
     return this.usingBoardList.find(board => board.name === name);
   }
+
+  /**
+   * ボード名を元に使用中ボードのインデックスを取得する
+   * @param {string} name
+   */
+  findUsingBoardIndex(name) {
+    return this.usingBoardList.findIndex(board => board.name === name);
+  }
 }
 
 module.exports = Setting;
