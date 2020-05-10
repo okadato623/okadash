@@ -411,8 +411,7 @@ function createBoardMenuItems() {
  * @param {number} index 選択されたボードのインデックス
  */
 function openNewWindow(index) {
-  const allOptions = store.get("options");
-  const boardName = allOptions[index]["name"];
+  const boardName = setting.definedBoardList[index].name;
   ipcRenderer.send("subwindow-open", boardName);
 }
 
