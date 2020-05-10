@@ -352,10 +352,12 @@ function createMenuItemForSmallPane() {
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
-  const usingBoard = store.get("boards")[currentBoardIndex];
+  const usingBoard = setting.usingBoardList[currentBoardIndex];
+  const usingBoardObject = usingBoard.toObject();
+  delete usingBoardObject.name;
+
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
-  delete usingBoard.name;
   const win = remote.getCurrentWindow();
   dialog
     .showSaveDialog(win, {
@@ -370,7 +372,7 @@ function exportUsingBoard() {
     .then(result => {
       const fileName = result.filePath;
       if (fileName) {
-        const data = JSON.stringify(usingBoard, null, 2);
+        const data = JSON.stringify(usingBoardObject, null, 2);
         writeFile(fileName, data);
       }
     });
