@@ -27,6 +27,13 @@ class Setting {
   }
 
   /**
+   * 設定ファイルが空か
+   */
+  isEmpty() {
+    return this.store.size === 0;
+  }
+
+  /**
    * 使用中ボード一覧を生成する
    * @return {[Board]}
    */

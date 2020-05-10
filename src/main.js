@@ -9,6 +9,8 @@ const store = new Store();
 const menu = require("./menu");
 const WebView = require("./components/webview");
 
+const Content = require("./models/content");
+
 /**
  * このウィンドウが表示しているボードのインデックス
  */
@@ -65,6 +67,14 @@ const draggingBoarder = {
  */
 const webViews = {};
 
+/**
+ * 初期化
+ */
+initialize();
+
+/**
+ * 現在フォーカス中ボードのインデックスを取得する
+ */
 function boardNameToIndex() {
   const currentBoardName = remote.getCurrentWindow().boardName;
   if (currentBoardName) {
@@ -76,9 +86,12 @@ function boardNameToIndex() {
 }
 
 /**
- * 初期化
+ * 現在フォーカス中ボードを取得する
  */
-initialize();
+function getCurrentBoard() {
+  const index = boardNameToIndex();
+  return setting.usingBoardList[index];
+}
 
 /**
  * 縦のボーダー上でのマウスダウンをトリガーにドラッグ可視化用のゴーストバーを生成し、カーソル移動に追従させる
@@ -207,13 +220,9 @@ function initialize() {
   initializeMenu(menu.menuTemplate);
 
   // 使用中のボードをStoreから参照し、ペインの初期描画を行う
-  const contents = json.contents;
-  contents.forEach(function (content) {
-    if (content["size"] === undefined) content["size"] = "small";
-    if (content["zoom"] === undefined) content["zoom"] = 1.0;
-    if (content["customUA"] === undefined) content["customUA"] = "";
-    createPane(content, true);
-  });
+  const contents = getCurrentBoard().contents;
+  contents.forEach(content => createPane(content, true));
+
   // 描画されたWebviewを操作するためのUIを追加する
   getWebviews().forEach(function (webviewElm) {
     const webView = convertToWebViewInstance(webviewElm);
@@ -915,29 +924,23 @@ function storeCustomUA(index, customUA) {
 
 /**
  * 新規ペインを描画する
- * @param {Object}   params
- * @param {string}   params.size
- * @param {number}   params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content}  content
  * @param {boolean}  init  初期描画による作成であるか
  */
-function createPane({ size, url, zoom, customCSS, customUA }, init = false) {
-  let divContainer = createContainerDiv(size);
+function createPane(content, init = false) {
+  let divContainer = createContainerDiv(content.size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  const forSmallPane = size === "small";
+  const forSmallPane = content.size === "small";
   const webview = createWebView(divContainer.id, {
-    url,
-    zoom,
-    customCSS,
-    forSmallPane,
-    customUA
+    ...content.toObject(),
+    forSmallPane
   });
   divContainer.appendChild(webview.element);
 
-  createDraggableBar(size);
+  createDraggableBar(content.size);
   calcWindowSize(init);
 }
 
