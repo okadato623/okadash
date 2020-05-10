@@ -36,7 +36,11 @@ const mainContentSize = {
 };
 
 // TODO: 仕様整理してグローバル変数やめる
-let sizeInfo = getCurrentBoard().getSizeInfo();
+let sizeInfo;
+if (setting.validate()) {
+  sizeInfo = getCurrentBoard().getSizeInfo();
+  console.log(sizeInfo);
+}
 
 /**
  * ウィンドウサイズが変わるたびに、全て再描画し直す
@@ -774,13 +778,9 @@ function loadAdditionalPage(content) {
   resetWindowSize();
   content.size = "small";
 
+  getCurrentBoard().addContent(content);
+  setting.saveAllSettings();
   createPane(content);
-  storeName(getPaneNum() - 1, content.name);
-  storeSize(getPaneNum() - 1, content.size);
-  storeUrl(getPaneNum() - 1, content.url);
-  storeZoom(getPaneNum() - 1, content.zoom);
-  storeCustomCSS(getPaneNum() - 1, content.customCSS);
-  storeCustomUA(getPaneNum() - 1, content.customUA);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
   const webView = convertToWebViewInstance(webviewElm);
@@ -989,12 +989,12 @@ function resetWindowSize() {
   ratio =
     `${sizeInfo.configWidth}% 0% ` +
     `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
-  columns = `grid-template-columns: ${ratio} !important ;`;
+  columns = `grid-template-columns: ${ratio} !important;`;
   rows = `
     grid-template-rows: ${sizeInfo.configHeight}%
     0%
     ${100 - sizeInfo.configHeight}%
-    !important ;
+    !important;
   `;
   main.style = columns + rows;
   draggingBoarder.id = "";
@@ -1040,12 +1040,12 @@ function calcWindowSize(init = false) {
       `${sizeInfo.configWidth}% 0% ` +
       `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
-  columns = `grid-template-columns: ${ratio} !important ;`;
+  columns = `grid-template-columns: ${ratio} !important;`;
   rows = `
     grid-template-rows: ${sizeInfo.configHeight}%
     0%
     ${100 - sizeInfo.configHeight}%
-    !important ;
+    !important;
   `;
   if (init && sizeInfo.allWidth !== undefined) columns = sizeInfo.allWidth;
   main.style = columns + rows;
