@@ -827,7 +827,7 @@ function recreateSelectedPane(index, {name, url, zoom, customCSS, customUA }) {
   storeZoom(index, zoom);
   storeCustomUA(index, customUA)
 
-  const webview = createWebView(div.id, { url, zoom, customCSS });
+  const webview = createWebView(div.id, { url, zoom, customCSS, customUA });
   div.appendChild(webview.element);
   addSearchbox(webview)
 }
