@@ -9,11 +9,6 @@ const WebView = require("./components/webview");
 const Content = require("./models/content");
 
 /**
- * このウィンドウが表示しているボードのインデックス
- */
-let currentBoardIndex = 0;
-
-/**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.7.0";
@@ -69,7 +64,7 @@ initialize();
 /**
  * 現在フォーカス中ボードのインデックスを取得する
  */
-function boardNameToIndex() {
+function getCurrentBoardIndex() {
   const currentBoardName = remote.getCurrentWindow().boardName;
   if (currentBoardName) {
     const index = setting.findUsingBoardIndex(currentBoardName);
@@ -83,8 +78,7 @@ function boardNameToIndex() {
  * 現在フォーカス中ボードを取得する
  */
 function getCurrentBoard() {
-  const index = boardNameToIndex();
-  return setting.usingBoardList[index];
+  return setting.usingBoardList[getCurrentBoardIndex()];
 }
 
 /**
@@ -320,7 +314,7 @@ function createMenuItemForBoard() {
  * @param {string} index 対象ペイン要素のID
  */
 function createMenuItemForContextmenu(index) {
-  const contents = setting.definedBoardList[currentBoardIndex].contents;
+  const contents = setting.definedBoardList[getCurrentBoardIndex()].contents;
   return createContextMenuItems(contents, index);
 }
 
@@ -333,7 +327,7 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const contents = setting.definedBoardList[currentBoardIndex].contents;
+  const contents = setting.definedBoardList[getCurrentBoardIndex()].contents;
   const additionalPaneMenuItems = createAdditionalPaneMenuItems(contents);
 
   additionalPaneMenuItems.forEach(function (apMenuItem) {
