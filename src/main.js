@@ -36,7 +36,6 @@ const mainContentSize = {
 let sizeInfo;
 if (setting.validate()) {
   sizeInfo = getCurrentBoard().getSizeInfo();
-  console.log(sizeInfo);
 }
 
 /**
