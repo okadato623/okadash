@@ -912,7 +912,7 @@ function storeCustomCSS(index, customCSS) {
 /**
  * 現在表示しているペインのカスタムUAを保存する
  * @param {string} index 対象ペインのID
- * @param {string} customUA 
+ * @param {string} customUA
  */
 function storeCustomUA(index, customUA){
   store.set(`boards.${currentBoardIndex}.contents.${index}.customUA`, customUA || "");
@@ -1005,6 +1005,7 @@ function loadSettings() {
  */
 function createWebView(id, { url, zoom, customCSS, customUA, forOverlay, forSmallPane }) {
   const webview = new WebView({ url, zoom, customCSS, customUA });
+  webview.addShortcutKey("meta+l", openUrlChangeDialog);
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
