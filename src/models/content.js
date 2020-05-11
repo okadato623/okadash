@@ -19,9 +19,9 @@ class Content {
     this.url = params.url || "";
     this.zoom = params.zoom || 1.0;
     this.size = params.size || "small";
-    this.allWidth = params.llWidth || undefined;
-    this.width = params.idth || undefined;
-    this.height = params.eight || undefined;
+    this.allWidth = params.allWidth || undefined;
+    this.width = params.width || undefined;
+    this.height = params.height || undefined;
     this.customCSS = params.customCSS || [];
     this.customUA = params.customUA || "";
   }
