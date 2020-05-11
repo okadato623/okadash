@@ -12,17 +12,18 @@ class Content {
    * @param {string}   params.width
    * @param {string}   params.height
    * @param {[string]} params.customCSS
+   * @param {string}   params.customUA
    */
-  constructor({ name, url, zoom, size, allWidth, width, height, customCSS, customUA } = {}) {
-    this.name = name || "";
-    this.url = url || "";
-    this.zoom = zoom || 1.0;
-    this.size = size || "small";
-    this.allWidth = allWidth || undefined;
-    this.width = width || undefined;
-    this.height = height || undefined;
-    this.customCSS = customCSS || [];
-    this.customUA = customUA || "";
+  constructor(params = {}) {
+    this.name = params.name || "";
+    this.url = params.url || "";
+    this.zoom = params.zoom || 1.0;
+    this.size = params.size || "small";
+    this.allWidth = params.allWidth || undefined;
+    this.width = params.width || undefined;
+    this.height = params.height || undefined;
+    this.customCSS = params.customCSS || [];
+    this.customUA = params.customUA || "";
   }
 
   /**
