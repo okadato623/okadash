@@ -115,9 +115,8 @@ function createContentForm(board, content) {
  */
 function openFileAndSave() {
   const win = remote.getCurrentWindow();
-  remote.dialog.showOpenDialog(
-    win,
-    {
+  remote.dialog
+    .showOpenDialog(win, {
       properties: ["openFile"],
       filters: [
         {
@@ -125,13 +124,12 @@ function openFileAndSave() {
           extensions: ["json"]
         }
       ]
-    },
-    filePath => {
-      if (filePath) {
-        showModalDialogElement(filePath[0]);
+    })
+    .then(result => {
+      if (result.filePaths) {
+        showModalDialogElement(result.filePaths[0]);
       }
-    }
-  );
+    });
 }
 
 /**
