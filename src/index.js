@@ -87,9 +87,6 @@ ipcMain.on("window-open", function () {
     subWindow = null;
     isSubOpen = false;
     trackEvent("main", "Preference Close");
-    BrowserWindow.getAllWindows().forEach(win => {
-      win.reload();
-    })
   });
 });
 
