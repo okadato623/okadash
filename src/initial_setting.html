@@ -38,21 +38,24 @@
     />
 
     <h4>At first, please tell me your Slack workspace name!</h4>
-    <h3>
-      https://<input
-        id="workspace-name"
-        type="textbox"
-        style="width: 200px; text-align: center;"
-        autofocus
-      />.slack.com
-    </h3>
-    <br />
-    <button
-      class="btn btn-primary btn-lg box-shadow"
-      onclick="javascript:importNewBoard('default', 'Default Board')"
-    >
-      Let's okadash!!
-    </button>
+    <form>
+      <h3>
+        https://<input
+          id="workspace-name"
+          type="textbox"
+          style="width: 200px; text-align: center;"
+          autofocus
+        />.slack.com
+      </h3>
+      <br />
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg box-shadow"
+        onclick="javascript:importNewBoard('default', 'Default Board')"
+      >
+        Let's okadash!!
+      </button>
+    </form>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script>

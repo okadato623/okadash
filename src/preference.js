@@ -173,6 +173,7 @@ function showModalDialogElement(filePath) {
 function importNewBoard(source, boardName) {
   if (source === "default") {
     const workspaceName = document.getElementById("workspace-name").value;
+    if (!workspaceName) return null;
     var settings = require("../config/defaultBoard.js")(workspaceName);
   } else {
     var settings = JSON.parse(fs.readFileSync(source));
