@@ -596,6 +596,9 @@ function swapSmallPane(fromIndex, toIndex) {
   getCurrentBoard().swapContent(fromIndex, toIndex);
   setting.saveAllSettings();
 
+  // Webviewを交換
+  [webViews[fromIndex], webViews[toIndex]] = [webViews[toIndex], webViews[fromIndex]];
+
   // ペインのIDと表示位置を交換
   [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [
     toPane.id,
