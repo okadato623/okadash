@@ -386,10 +386,12 @@ function writeFile(path, data) {
  * ボード切り替え用のメニューを生成する
  */
 function createBoardMenuItems() {
+  const current = getCurrentBoardIndex();
+
   return setting.definedBoardList.map((definedBoard, index) => {
     return new MenuItem({
       index,
-      label: definedBoard.name,
+      label: current === index ? `${definedBoard.name} [current]` : definedBoard.name,
       accelerator: `CommandOrControl+Option+${index}`,
       click() {
         openNewWindow(index);
