@@ -34,25 +34,28 @@
     <h3>Let's put everything together in one window!!</h3>
     <img
       src="https://okadash-files.s3-ap-northeast-1.amazonaws.com/use_image.jpg"
-      style="height: 600px; border: solid; border-color: #444; margin: 30px;"
+      style="height: 500px; border: solid; border-color: #444; margin: 20px;"
     />
 
     <h4>At first, please tell me your Slack workspace name!</h4>
-    <h3>
-      https://<input
-        id="workspace-name"
-        type="textbox"
-        style="width: 200px; text-align: center;"
-        autofocus
-      />.slack.com
-    </h3>
-    <br />
-    <button
-      class="btn btn-primary btn-lg box-shadow"
-      onclick="javascript:importNewBoard('default', 'Default Board')"
-    >
-      Let's okadash!!
-    </button>
+    <form>
+      <h3>
+        https://<input
+          id="workspace-name"
+          type="textbox"
+          style="width: 200px; text-align: center;"
+          autofocus
+        />.slack.com
+      </h3>
+      <br />
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg box-shadow"
+        onclick="javascript:importNewBoard('default', 'Default Board')"
+      >
+        Let's okadash!!
+      </button>
+    </form>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script>

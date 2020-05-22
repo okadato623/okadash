@@ -9,7 +9,7 @@ const ContentForm = require("./components/contentForm");
 /**
  * アプリケーションのバージョン情報
  */
-const VERSION = "1.7.0";
+const VERSION = "1.8.0";
 
 /**
  * アプリケーションの設定
@@ -173,6 +173,7 @@ function showModalDialogElement(filePath) {
 function importNewBoard(source, boardName) {
   if (source === "default") {
     const workspaceName = document.getElementById("workspace-name").value;
+    if (!workspaceName) return null;
     var settings = require("../config/defaultBoard.js")(workspaceName);
   } else {
     var settings = JSON.parse(fs.readFileSync(source));

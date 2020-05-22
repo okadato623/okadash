@@ -11,7 +11,7 @@ const Content = require("./models/content");
 /**
  * アプリケーションのバージョン情報
  */
-const VERSION = "1.7.0";
+const VERSION = "1.8.0";
 
 /**
  * アプリケーションの設定
