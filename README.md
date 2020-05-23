@@ -19,8 +19,8 @@ You can combine multiple websites in one window.**
 
 ## Download Latest Version
 
-[okadash-1.8.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.8.0/okadash-1.8.0-mac.zip)
-[okadash-1.8.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.8.0/okadash-1.8.0-win.zip)
+- [okadash-1.8.0-mac.zip](https://github.com/konoyono/okadash/releases/download/1.8.0/okadash-1.8.0-mac.zip)
+- [okadash-1.8.0-win.zip](https://github.com/konoyono/okadash/releases/download/1.8.0/okadash-1.8.0-win.zip)
 
 ## Quick Start
 
