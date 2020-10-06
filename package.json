@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^8.2.5",
+    "electron": "^8.5.1",
     "electron-builder": "^21.2.0",
     "prettier": "^2.0.4"
   },
