@@ -42,6 +42,7 @@ function createBrowserWindow() {
       hasShadow: false,
       alwaysOnTop: false,
       nodeIntegration: true,
+      enableRemoteModule: true,
       webviewTag: true
     }
   });
@@ -77,6 +78,7 @@ ipcMain.on("window-open", function () {
     height: 600,
     frame: false,
     webPreferences: {
+      enableRemoteModule: true,
       nodeIntegration: true
     }
   });
@@ -97,6 +99,7 @@ ipcMain.on("initial-open", function () {
     height: 1050,
     frame: false,
     webPreferences: {
+      enableRemoteModule: true,
       nodeIntegration: true
     }
   });
