@@ -1,7 +1,5 @@
-const { shell } = require("electron");
-var { remote, ipcRenderer } = require("electron");
-var { Menu, MenuItem, dialog } = remote;
-const app = remote.app;
+const { app, dialog, ipcRenderer, shell, remote } = require("electron");
+const { Menu, MenuItem } = remote;
 const fs = require("fs");
 const path = require("path");
 const Store = require("electron-store");
