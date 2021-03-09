@@ -21,15 +21,18 @@ class Setting {
    */
   loadAllSettings() {
     this.store = electronStore.store;
-    if (Object.keys(this.store).length === 0) {
-      this.version = this.appVersion;
-      this.usingBoardList = [];
-      this.definedBoardList = [];
-    } else {
-      this.version = this.store["version"];
-      this.usingBoardList = this.loadUsingBoardList();
-      this.definedBoardList = this.loadDefinedBoardList();
-    }
+    this.version = this.store["version"] || this.appVersion;
+    this.usingBoardList = this.loadUsingBoardList();
+    this.definedBoardList = this.loadDefinedBoardList();
+  }
+
+  /**
+   * 設定ファイルが有効な状態か
+   */
+  validate() {
+    return (
+      this.store && this.usingBoardList.length > 0 && this.definedBoardList.length > 0
+    );
   }
 
   /**
@@ -54,6 +57,8 @@ class Setting {
    * @return {[Board]}
    */
   loadBoardList(key) {
+    if (!this.store[key]) return [];
+
     return this.store[key].map(board => {
       return new Board({
         name: board["name"],
@@ -132,6 +137,14 @@ class Setting {
    */
   findUsingBoard(name) {
     return this.usingBoardList.find(board => board.name === name);
+  }
+
+  /**
+   * ボード名を元に使用中ボードのインデックスを取得する
+   * @param {string} name
+   */
+  findUsingBoardIndex(name) {
+    return this.usingBoardList.findIndex(board => board.name === name);
   }
 }
 

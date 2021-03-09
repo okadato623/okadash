@@ -2,20 +2,20 @@ const { app, dialog, ipcRenderer, shell, remote } = require("electron");
 const { Menu, MenuItem } = remote;
 const fs = require("fs");
 const path = require("path");
-const Store = require("electron-store");
-const store = new Store();
 const menu = require("./menu");
 const WebView = require("./components/webview");
-
-/**
- * このウィンドウが表示しているボードのインデックス
- */
-let currentBoardIndex = 0
+const Content = require("./models/content");
 
 /**
  * アプリケーションのバージョン情報
  */
 const VERSION = "1.8.0";
+
+/**
+ * アプリケーションの設定
+ */
+const Setting = require("./setting");
+const setting = new Setting(VERSION);
 
 /**
  * ボード全体のサイズ
@@ -25,14 +25,11 @@ const mainContentSize = {
   height: document.getElementById("main-content").clientHeight
 };
 
-/**
- * 初期描画するボードの情報
- */
-let json = loadSettings();
-
-let allWidth = json.contents[0].allWidth;
-let configWidth = json.contents[0].width;
-let configHeight = json.contents[1].height;
+// TODO: 仕様整理してグローバル変数やめる
+let sizeInfo;
+if (setting.validate()) {
+  sizeInfo = getCurrentBoard().getSizeInfo();
+}
 
 /**
  * ウィンドウサイズが変わるたびに、全て再描画し直す
@@ -57,26 +54,30 @@ const draggingBoarder = {
  */
 const webViews = {};
 
-function boardNameToIndex() {
-  const currentBoardName = remote.getCurrentWindow().boardName
-  if (currentBoardName) {
-    const res = store.get("boards").findIndex((board) => {
-      if (board["name"] === currentBoardName) {
-        return true
-      }
-    })
-
-    // 存在しないボードを参照したときには 0 番目を返す
-    return res === -1 ? 0 : res
-  } else {
-    return 0
-  }
-}
-
 /**
  * 初期化
  */
 initialize();
+
+/**
+ * 現在フォーカス中ボードのインデックスを取得する
+ */
+function getCurrentBoardIndex() {
+  const currentBoardName = remote.getCurrentWindow().boardName;
+  if (currentBoardName) {
+    const index = setting.findUsingBoardIndex(currentBoardName);
+    return index === -1 ? 0 : index; // 存在しないボードを参照したときには 0 番目を返す
+  } else {
+    return 0;
+  }
+}
+
+/**
+ * 現在フォーカス中ボードを取得する
+ */
+function getCurrentBoard() {
+  return setting.usingBoardList[getCurrentBoardIndex()];
+}
 
 /**
  * 縦のボーダー上でのマウスダウンをトリガーにドラッグ可視化用のゴーストバーを生成し、カーソル移動に追従させる
@@ -196,22 +197,21 @@ $(document).keydown(function (e) {
  * バージョン確認、設定ファイルの互換性確認、メニュー生成、ペインとWebViewの初期化
  */
 function initialize() {
-  if (store.size == 0) return;
+  if (!setting.validate()) {
+    ipcRenderer.send("initial-open");
+    return;
+  }
   getLatestVersion();
 
-  remote.getCurrentWindow().on('focus', () => {
+  remote.getCurrentWindow().on("focus", () => {
     initializeMenu(menu.menuTemplate);
-  })
+  });
   initializeMenu(menu.menuTemplate);
 
-  // 使用中のボードをStoreから参照し、ペインの初期描画を行う
-  const contents = json.contents;
-  contents.forEach(function (content) {
-    if (content["size"] === undefined) content["size"] = "small";
-    if (content["zoom"] === undefined) content["zoom"] = 1.0;
-    if (content["customUA"]  === undefined) content["customUA"] = ""
-    createPane(content, true);
-  });
+  // 使用中のボード設定を元にペインの初期描画を行う
+  const contents = getCurrentBoard().contents;
+  contents.forEach(content => createPane(content, true));
+
   // 描画されたWebviewを操作するためのUIを追加する
   getWebviews().forEach(function (webviewElm) {
     const webView = convertToWebViewInstance(webviewElm);
@@ -234,10 +234,7 @@ function initialize() {
  */
 function getLatestVersion() {
   const request = new XMLHttpRequest();
-  request.open(
-    "GET",
-    "https://api.github.com/repos/konoyono/okadash/releases/latest"
-  );
+  request.open("GET", "https://api.github.com/repos/konoyono/okadash/releases/latest");
   request.onreadystatechange = function () {
     if (request.readyState != 4) {
       // requesting
@@ -315,10 +312,8 @@ function createMenuItemForBoard() {
  * @param {string} index 対象ペイン要素のID
  */
 function createMenuItemForContextmenu(index) {
-  const options = store.get(`options.${currentBoardIndex}.contents`);
-  const content = getAdditionalPaneInfo(options);
-
-  return createContextMenuItems(content, index);
+  const contents = setting.definedBoardList[getCurrentBoardIndex()].contents;
+  return createContextMenuItems(contents, index);
 }
 
 /**
@@ -330,9 +325,8 @@ function createMenuItemForSmallPane() {
     label: "Open",
     submenu: []
   });
-  const options = store.get(`options.${currentBoardIndex}.contents`);
-  const content = getAdditionalPaneInfo(options);
-  const additionalPaneMenuItems = createAdditionalPaneMenuItems(content);
+  const contents = setting.definedBoardList[getCurrentBoardIndex()].contents;
+  const additionalPaneMenuItems = createAdditionalPaneMenuItems(contents);
 
   additionalPaneMenuItems.forEach(function (apMenuItem) {
     menuItem.submenu.append(apMenuItem);
@@ -347,14 +341,14 @@ function createMenuItemForSmallPane() {
  * 現在表示しているボードをJSON出力する
  */
 function exportUsingBoard() {
-  const usingBoard = store.get("boards")[currentBoardIndex];
+  const usingBoardObject = getCurrentBoard().toObject();
+  delete usingBoardObject.name;
+
   // jsonにしたものをファイルに吐き出す
   // allWidthとかとってこれる？
-  delete usingBoard.name;
   const win = remote.getCurrentWindow();
-  dialog.showSaveDialog(
-    win,
-    {
+  dialog
+    .showSaveDialog(win, {
       properties: ["openFile"],
       filters: [
         {
@@ -362,14 +356,14 @@ function exportUsingBoard() {
           extensions: ["json"]
         }
       ]
-    },
-  ).then(result => {
-    const fileName = result.filePath;
-    if (fileName) {
-      const data = JSON.stringify(usingBoard, null, 2);
-      writeFile(fileName, data);
-    }
-  })
+    })
+    .then(result => {
+      const fileName = result.filePath;
+      if (fileName) {
+        const data = JSON.stringify(usingBoardObject, null, 2);
+        writeFile(fileName, data);
+      }
+    });
 }
 
 /**
@@ -390,32 +384,18 @@ function writeFile(path, data) {
  * ボード切り替え用のメニューを生成する
  */
 function createBoardMenuItems() {
-  const allOptions = store.get("options");
-  const boardMenuItems = [];
-  for (i in allOptions) {
-    const index = i;
-    if (i == 0) {
-      boardMenuItems.push(
-        new MenuItem({
-          label: allOptions[i]["name"] + " [ default ]",
-          index: i
-        })
-      );
-    } else {
-      boardMenuItems.push(
-        new MenuItem({
-          label: allOptions[i]["name"],
-          accelerator: `CommandOrControl+Option+${i}`,
-          index: i,
-          click() {
-            openNewWindow(index);
-          }
-        })
-      );
-    }
-  }
+  const current = getCurrentBoardIndex();
 
-  return boardMenuItems;
+  return setting.definedBoardList.map((definedBoard, index) => {
+    return new MenuItem({
+      index,
+      label: current === index ? `${definedBoard.name} [current]` : definedBoard.name,
+      accelerator: `CommandOrControl+Option+${index}`,
+      click() {
+        openNewWindow(index);
+      }
+    });
+  });
 }
 
 /**
@@ -423,38 +403,35 @@ function createBoardMenuItems() {
  * @param {number} index 選択されたボードのインデックス
  */
 function openNewWindow(index) {
-  const allOptions = store.get("options");
-  const boardName = allOptions[index]["name"]
-  ipcRenderer.send("subwindow-open", boardName)
+  const boardName = setting.definedBoardList[index].name;
+  ipcRenderer.send("subwindow-open", boardName);
 }
 
 /**
  * ボード内のアイテムリスト情報を元に、ペイン追加用のメニューアイテムを生成する
- * @param {Array} contents
+ * @param {[Content]} contents
  */
 function createAdditionalPaneMenuItems(contents) {
-  const additionalPaneMenuItems = contents.map(function (content) {
+  return contents.map((content, index) => {
     return new MenuItem({
-      label: content["name"],
-      accelerator: `CommandOrControl+${content["index"] + 1}`,
+      label: content.name,
+      accelerator: `CommandOrControl+${index + 1}`,
       click() {
         loadAdditionalPage(content);
       }
     });
   });
-
-  return additionalPaneMenuItems;
 }
 
 /**
  * アイテムリストを元に、ペイン再生性用のメニューアイテムを作成する
- * @param {[any]}  contents
+ * @param {[Content]}  contents
  * @param {string} index 対象ペイン要素のID
  */
 function createContextMenuItems(contents, index) {
   const contextMenuItems = contents.map(function (content) {
     return new MenuItem({
-      label: content["name"],
+      label: content.name,
       click() {
         recreateSelectedPane(index, content);
       }
@@ -471,7 +448,7 @@ function createNewPaneFromURLMenuItem(index) {
   return new MenuItem({
     label: "Open new pane from URL",
     click() {
-      openNewPaneFromUrlDialog(index)
+      openNewPaneFromUrlDialog(index);
     }
   });
 }
@@ -487,20 +464,20 @@ function openNewPaneFromUrlDialog(index = null) {
 
   function onClose() {
     if (dlg.returnValue === "ok") {
-      const newContent = {
+      const newContent = new Content({
         name: dlg.querySelector(".name").value,
         url: dlg.querySelector(".url").value,
         zoom: 1,
         customCSS: []
-      }
+      });
 
       if (index !== null) {
-        recreateSelectedPane(index, newContent)
+        recreateSelectedPane(index, newContent);
       } else {
-        loadAdditionalPage(newContent)
+        loadAdditionalPage(newContent);
       }
     } else {
-      dlg.close()
+      dlg.close();
     }
     dlg.style.display = "none";
   }
@@ -519,38 +496,13 @@ function replacePaneFromUrlDialog(event) {
   const index = getWebviews().findIndex(webView => {
     return webView.id === id;
   });
-  const pane = store.get("boards")[currentBoardIndex].contents[index];
+  const content = getCurrentBoard().contents[index];
   dlg.querySelector(".url").value = url;
-  dlg.querySelector(".name").value = pane.name;
+  dlg.querySelector(".name").value = content.name;
 
   openNewPaneFromUrlDialog(index);
 }
 window.addEventListener("openReplaceUrlDialog", replacePaneFromUrlDialog);
-
-/**
- * ボード内アイテムリストを元に、メニュー用のオブジェクトリストを戻す
- * @param {Array} contents ボード内のアイテムリスト
- */
-function getAdditionalPaneInfo(contents) {
-  const content = contents.map(function (content, index) {
-    try {
-      url = new URL(content["url"]);
-    } catch {
-      alert(
-        "[Error] invalid URL format found in settings.  Maybe [workspace] in settings?"
-      );
-      ipcRenderer.send("window-open");
-    }
-    return {
-      name: content["name"],
-      url: content["url"],
-      zoom: content["zoom"],
-      customCSS: content["customCSS"],
-      index: index
-    };
-  });
-  return content;
-}
 
 /**
  * 現在描画されているWebviewの一覧を取得する
@@ -579,8 +531,9 @@ function removeSmallPane(index) {
   const parent = target.parentNode;
   const smallPanes = Array.from(document.getElementsByClassName("small"));
   const bars = Array.from(document.getElementsByClassName("dragbar-vertical-small"));
-  store.delete(`boards.${currentBoardIndex}.contents.${index}`);
-  saveNewContents();
+
+  getCurrentBoard().removeContent(index);
+  setting.saveAllSettings();
 
   smallPanes.forEach(function (pane) {
     if (pane.id > index) {
@@ -630,20 +583,15 @@ function createCloseButton(index) {
  * @param {string} toIndex   交換さきペイン要素のID
  */
 function swapSmallPane(fromIndex, toIndex) {
-  const settings = loadSettings();
   const fromPane = document.getElementById(fromIndex);
   const toPane = document.getElementById(toIndex);
 
   // 両ペインの定義済み設定を交換
-  storeUrl(fromIndex, settings.contents[toIndex]["url"]);
-  storeUrl(toIndex, settings.contents[fromIndex]["url"]);
-  storeZoom(fromIndex, settings.contents[toIndex]["zoom"]);
-  storeZoom(toIndex, settings.contents[fromIndex]["zoom"]);
-  storeCustomCSS(fromIndex, settings.contents[toIndex]["customCSS"]);
-  storeCustomCSS(toIndex, settings.contents[fromIndex]["customCSS"]);
-  storeCustomUA(fromIndex, settings.contents[toIndex]["customUA"]);
-  storeCustomUA(toIndex, settings.contents[fromIndex]["customUA"]);
+  getCurrentBoard().swapContent(fromIndex, toIndex);
+  setting.saveAllSettings();
 
+  // Webviewを交換
+  [webViews[fromIndex], webViews[toIndex]] = [webViews[toIndex], webViews[fromIndex]];
 
   // ペインのIDと表示位置を交換
   [fromPane.id, fromPane.style.order, toPane.id, toPane.style.order] = [
@@ -672,7 +620,7 @@ function maximize(index) {
   label.innerHTML = "Press Esc to Close";
   div.appendChild(label);
   main.appendChild(div);
-  const webview = createWebView(div.id, { url, forOverlay: true });
+  const webview = createWebView(div.id, new Content({ url }), true);
   div.appendChild(webview.element);
 }
 
@@ -810,22 +758,15 @@ function getPaneNum() {
 
 /**
  * smallペインを追加する
- * @param {object} params
- * @param {string} params.name
- * @param {string} params.url
- * @param {string} params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content} content
  */
-function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = ""}) {
+function loadAdditionalPage(content) {
   resetWindowSize();
-  const size = "small";
-  createPane({ size, url, zoom, customCSS, customUA });
-  storeName(getPaneNum() - 1, name);
-  storeSize(getPaneNum() - 1, size);
-  storeUrl(getPaneNum() - 1, url);
-  storeZoom(getPaneNum() - 1, zoom);
-  storeCustomCSS(getPaneNum() - 1, customCSS);
-  storeCustomUA(getPaneNum() - 1, customUA);
+  content.size = "small";
+
+  getCurrentBoard().addContent(content);
+  setting.saveAllSettings();
+  createPane(content);
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
   const webView = convertToWebViewInstance(webviewElm);
@@ -840,101 +781,37 @@ function loadAdditionalPage({ name, url, zoom = 1.0, customCSS = [], customUA = 
 /**
  * 対象ペインを再生成する
  * @param {string} index 対象ペイン要素のID
- * @param {object} params
- * @param {string} params.name
- * @param {string} params.url
- * @param {string} params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content} content
  */
-function recreateSelectedPane(index, {name, url, zoom, customCSS, customUA }) {
+function recreateSelectedPane(index, content) {
   const div = document.getElementById(`${index}`);
   const webViewElm = div.querySelector("webview");
   convertToWebViewInstance(webViewElm).dispose();
 
-  storeName(index, name);
-  storeUrl(index, url);
-  storeCustomCSS(index, customCSS);
-  storeZoom(index, zoom);
-  storeCustomUA(index, customUA)
+  getCurrentBoard().replaceContent(index, content);
+  setting.saveAllSettings();
 
-  const webview = createWebView(div.id, { url, zoom, customCSS, customUA });
+  const webview = createWebView(div.id, content);
   div.appendChild(webview.element);
-  addSearchbox(webview)
-}
-
-/**
- * 現在表示しているペインの名前を保存する
- * @param {string} index 対象ペインのID
- * @param {string} name
- */
-function storeName(index, name) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.name`, name);
-}
-
-/**
- * 現在表示しているペインのサイズを保存する
- * @param {string} index 対象ペインのID
- * @param {string} size
- */
-function storeSize(index, size) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.size`, size);
-}
-
-/**
- * 現在表示しているペインのURLを保存する
- * @param {string} index 対象ペインのID
- * @param {string} url
- */
-function storeUrl(index, url) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.url`, url);
-}
-
-/**
- * 現在表示しているペインの拡大率を保存する
- * @param {string} index 対象ペインのID
- * @param {string} zoom
- */
-function storeZoom(index, zoom) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.zoom`, zoom || 1.0);
-}
-
-/**
- * 現在表示しているペインのカスタムCSSを保存する
- * @param {string} index 対象ペインのID
- * @param {[string]} customCSS
- */
-function storeCustomCSS(index, customCSS) {
-  store.set(`boards.${currentBoardIndex}.contents.${index}.customCSS`, customCSS || []);
-}
-
-/**
- * 現在表示しているペインのカスタムUAを保存する
- * @param {string} index 対象ペインのID
- * @param {string} customUA
- */
-function storeCustomUA(index, customUA){
-  store.set(`boards.${currentBoardIndex}.contents.${index}.customUA`, customUA || "");
+  addSearchbox(webview);
 }
 
 /**
  * 新規ペインを描画する
- * @param {Object}   params
- * @param {string}   params.size
- * @param {number}   params.zoom
- * @param {[string]} params.customCSS
+ * @param {Content}  content
  * @param {boolean}  init  初期描画による作成であるか
  */
-function createPane({ size, url, zoom, customCSS, customUA }, init = false) {
-  let divContainer = createContainerDiv(size);
+function createPane(content, init = false) {
+  let divContainer = createContainerDiv(content.size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  const forSmallPane = size === "small";
-  const webview = createWebView(divContainer.id, { url, zoom, customCSS, forSmallPane, customUA});
+  const forSmallPane = content.size === "small";
+  const webview = createWebView(divContainer.id, content);
   divContainer.appendChild(webview.element);
 
-  createDraggableBar(size);
+  createDraggableBar(content.size);
   calcWindowSize(init);
 }
 
@@ -980,34 +857,18 @@ function createButtonDiv() {
 }
 
 /**
- * storeを元に初期描画するボードのオブジェクトを生成する
- */
-function loadSettings() {
-  if (store.size == 0) {
-    ipcRenderer.send("initial-open");
-    return;
-  }
-  currentBoardIndex = boardNameToIndex()
-  return buildJsonObjectFromStoredData(store.get("boards")[currentBoardIndex]);
-}
-
-/**
  * Webviewオブジェクトを生成する
  * @param {string}   id オブジェクトに紐付けるユニークな文字列
- * @param {Object}   params
- * @param {string}   params.url
- * @param {number}   params.zoom
- * @param {[string]} params.customCSS
- * @param {boolean}  params.forOverlay   オーバレイ用途であるか
- * @param {boolean}  params.forSmallPane smallペイン用途であるか
+ * @param {Content}  content
+ * @param {Boolean}  forOverlay オーバレイ用途であるか
  */
-function createWebView(id, { url, zoom, customCSS, customUA, forOverlay, forSmallPane }) {
-  const webview = new WebView({ url, zoom, customCSS, customUA });
+function createWebView(id, content, forOverlay = false) {
+  const webview = new WebView(content);
   webview.addShortcutKey("meta+l", openUrlChangeDialog);
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
-  } else if (forSmallPane) {
+  } else if (content.size === "small") {
     webview.addShortcutKey("meta+w", webview => removeSmallPane(webview.parentNode.id));
   }
   webViews[id] = webview;
@@ -1026,46 +887,21 @@ function convertToWebViewInstance(webViewElement) {
 }
 
 /**
- * ボード内の破棄されたペインをボードの定義から除外する
- */
-function saveNewContents() {
-  const contents = store.get(`boards.${currentBoardIndex}.contents`);
-  let newContents = [];
-  contents.forEach(function (content) {
-    if (content !== null) newContents.push(content);
-  });
-  store.set(`boards.${currentBoardIndex}.contents`, newContents);
-}
-
-/**
- * Storeから取得したボードオブジェクトを元に描画用のボードオブジェクトを生成する
- * @param {Object} board ボードオブジェクト
- */
-function buildJsonObjectFromStoredData(board) {
-  let newContents = [];
-  if (board === undefined) ipcRenderer.send("initial-open");
-  board["contents"].forEach(function (content) {
-    if (content !== null) newContents.push(content);
-  });
-  store.set(`boards.${currentBoardIndex}.contents`, newContents);
-  let jsonObj = {
-    name: board["name"],
-    contents: newContents
-  };
-
-  return jsonObj;
-}
-
-/**
  * ペインの数に応じてグリッドレイアウトを再設定する
  */
 function resetWindowSize() {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   ratio =
-    `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
-  columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
+    `${sizeInfo.configWidth}% 0% ` +
+    `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
+  columns = `grid-template-columns: ${ratio} !important;`;
+  rows = `
+    grid-template-rows: ${sizeInfo.configHeight}%
+    0%
+    ${100 - sizeInfo.configHeight}%
+    !important;
+  `;
   main.style = columns + rows;
   draggingBoarder.id = "";
 }
@@ -1078,10 +914,10 @@ function calcWindowSize(init = false) {
   const smallNum = document.getElementsByClassName("small").length;
   const main = document.getElementById("main-content");
   const largeWidth = $(".large")[0].clientWidth;
-  configWidth = (largeWidth / mainContentSize.width) * 100;
+  sizeInfo.configWidth = (largeWidth / mainContentSize.width) * 100;
   if ($(".medium")[0] !== undefined) {
     var mediumHheight = $(".medium")[0].clientHeight;
-    configHeight = (mediumHheight / mainContentSize.height) * 100;
+    sizeInfo.configHeight = (mediumHheight / mainContentSize.height) * 100;
   }
   let columns = "";
   let rows = "";
@@ -1107,11 +943,17 @@ function calcWindowSize(init = false) {
   } else {
     // リセット時の処理なので等分するだけ
     ratio =
-      `${configWidth}% 0% ` + `${(100 - configWidth) / smallNum}% 0% `.repeat(smallNum);
+      `${sizeInfo.configWidth}% 0% ` +
+      `${(100 - sizeInfo.configWidth) / smallNum}% 0% `.repeat(smallNum);
   }
-  columns = `grid-template-columns: ${ratio} !important ;`;
-  rows = `grid-template-rows: ${configHeight}% 0% ${100 - configHeight}% !important ;`;
-  if (init && allWidth !== undefined) columns = allWidth;
+  columns = `grid-template-columns: ${ratio} !important;`;
+  rows = `
+    grid-template-rows: ${sizeInfo.configHeight}%
+    0%
+    ${100 - sizeInfo.configHeight}%
+    !important;
+  `;
+  if (init && sizeInfo.allWidth !== undefined) columns = sizeInfo.allWidth;
   main.style = columns + rows;
   refreshButtons();
   const panes = Array.from(document.getElementsByClassName("small"));
@@ -1119,10 +961,13 @@ function calcWindowSize(init = false) {
     pane.style.width = "100%";
     pane.style.height = "100%";
   });
-  if (configHeight !== undefined) {
-    store.set(`boards.${currentBoardIndex}.contents.0.width`, configWidth);
-    store.set(`boards.${currentBoardIndex}.contents.0.allWidth`, columns);
-    store.set(`boards.${currentBoardIndex}.contents.1.height`, configHeight);
+  if (sizeInfo.configHeight !== undefined) {
+    getCurrentBoard().updateSizeInfo(
+      columns,
+      sizeInfo.configWidth,
+      sizeInfo.configHeight
+    );
+    setting.saveAllSettings();
   }
 
   // 各ペインの検索ボックスもリサイズ

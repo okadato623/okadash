@@ -3,6 +3,11 @@
  */
 class Content {
   /**
+   * 設定ファイルから直接設定するフィールド
+   */
+  static configuableFields = ["name", "url", "zoom", "customCSS", "customUA"];
+
+  /**
    * @param {object}   params
    * @param {string}   params.name
    * @param {string}   params.url
