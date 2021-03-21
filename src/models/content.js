@@ -12,7 +12,6 @@ class Content {
    * @param {string}   params.name
    * @param {string}   params.url
    * @param {string}   params.zoom
-   * @param {string}   params.size
    * @param {string}   params.allWidth
    * @param {string}   params.width
    * @param {string}   params.height
@@ -23,7 +22,6 @@ class Content {
     this.name = params.name || "";
     this.url = params.url || "";
     this.zoom = params.zoom || 1.0;
-    this.size = params.size || "small";
     this.allWidth = params.allWidth || undefined;
     this.width = params.width || undefined;
     this.height = params.height || undefined;
@@ -78,7 +76,6 @@ class Content {
       name: this.name,
       url: this.url,
       zoom: this.zoom,
-      size: this.size,
       allWidth: this.allWidth,
       width: this.width,
       height: this.height,

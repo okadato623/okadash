@@ -210,7 +210,7 @@ function initialize() {
 
   // 使用中のボード設定を元にペインの初期描画を行う
   const contents = getCurrentBoard().contents;
-  contents.forEach(content => createPane(content, true));
+  contents.forEach((content, index) => createPane(content, index, true));
 
   // 描画されたWebviewを操作するためのUIを追加する
   getWebviews().forEach(function (webviewElm) {
@@ -766,7 +766,7 @@ function loadAdditionalPage(content) {
 
   getCurrentBoard().addContent(content);
   setting.saveAllSettings();
-  createPane(content);
+  createPane(content, getPaneNum());
 
   const webviewElm = getWebviews()[getPaneNum() - 1];
   const webView = convertToWebViewInstance(webviewElm);
@@ -799,15 +799,22 @@ function recreateSelectedPane(index, content) {
 /**
  * 新規ペインを描画する
  * @param {Content}  content
+ * @param {number}   index
  * @param {boolean}  init  初期描画による作成であるか
  */
-function createPane(content, init = false) {
+function createPane(content, index, init = false) {
+  if (index === 0) {
+    content.size = "large"
+  } else if (index === 1) {
+    content.size = "medium"
+  } else {
+    content.size = "small"
+  }
   let divContainer = createContainerDiv(content.size);
   let divButtons = createButtonDiv();
 
   document.getElementById("main-content").appendChild(divContainer);
   divContainer.appendChild(divButtons);
-  const forSmallPane = content.size === "small";
   const webview = createWebView(divContainer.id, content);
   divContainer.appendChild(webview.element);
 
@@ -868,8 +875,6 @@ function createWebView(id, content, forOverlay = false) {
   if (forOverlay) {
     webview.addShortcutKey("Escape", _ => removeOverlay());
     webview.addShortcutKey("meta+w", _ => removeOverlay());
-  } else if (content.size === "small") {
-    webview.addShortcutKey("meta+w", webview => removeSmallPane(webview.parentNode.id));
   }
   webViews[id] = webview;
   return webview;
