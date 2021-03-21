@@ -9,7 +9,7 @@ const ContentForm = require("./components/contentForm");
 /**
  * アプリケーションのバージョン情報
  */
-const VERSION = "1.8.0";
+const VERSION = "1.9.0";
 
 /**
  * アプリケーションの設定
