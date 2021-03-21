@@ -1,5 +1,5 @@
-const { app, dialog, ipcRenderer, shell, remote } = require("electron");
-const { Menu, MenuItem } = remote;
+const { app, ipcRenderer, remote } = require("electron");
+const { Menu, MenuItem, dialog } = remote;
 const fs = require("fs");
 const path = require("path");
 const menu = require("./menu");
