@@ -2,3 +2,4 @@ node_modules
 settings.json
 settings_new.json
 dist
+build

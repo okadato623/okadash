@@ -42,6 +42,7 @@ function createBrowserWindow() {
       hasShadow: false,
       alwaysOnTop: false,
       nodeIntegration: true,
+      contextIsolation: false,
       enableRemoteModule: true,
       webviewTag: true
     }
@@ -51,6 +52,8 @@ function createBrowserWindow() {
 
   return browserWindow
 }
+
+app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy')
 
 app.on("window-all-closed", function () {
   trackEvent("main", "Close App");
@@ -79,7 +82,8 @@ ipcMain.on("window-open", function () {
     frame: false,
     webPreferences: {
       enableRemoteModule: true,
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     }
   });
   isSubOpen = true;
@@ -100,7 +104,8 @@ ipcMain.on("initial-open", function () {
     frame: false,
     webPreferences: {
       enableRemoteModule: true,
-      nodeIntegration: true
+      nodeIntegration: true,
+      contextIsolation: false
     }
   });
   isInitOpen = true;

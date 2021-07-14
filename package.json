@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^10.2.0",
+    "electron": "^12.0.14",
     "electron-builder": "^22.8.1",
     "prettier": "^2.1.2"
   },
@@ -27,5 +27,32 @@
     "trailingComma": "none",
     "printWidth": 90,
     "arrowParens": "avoid"
+  },
+  "build": {
+    "appId": "okadash",
+    "directories": {
+      "output": "build"
+    },
+    "dmg": {
+      "contents": [{
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "build/icons/icon.icns",
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.social-networking"
+    }
   }
 }
